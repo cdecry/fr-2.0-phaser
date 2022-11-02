@@ -18,5 +18,11 @@
 
 ## Technologies![image](https://user-images.githubusercontent.com/35664551/189512440-7b840683-7aef-4a8a-a6b2-d7c23eec514c.png)
 
+> Languages
 - HTML5
+- TypeScript
+
+> Technologies
+- Phaser
+- ViteJS
 - MongoDB
