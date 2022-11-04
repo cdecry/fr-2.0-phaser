@@ -35,6 +35,8 @@ io.on('connection', function (socket) {
         if (players!= null && players[socket.id] != null) {
             console.log('player disconnected: ' + players[socket.id].username);
             delete players[socket.id];
+            socket.broadcast.emit('removePlayer', socket.id);
+        // socket.to('downtown').emit('playerMoved', players[socket.id]);
         }
         else
             console.log('client disconnected');
@@ -66,6 +68,15 @@ io.on('connection', function (socket) {
             io.emit('login fail');
         }
     });
+
+    socket.on('playerMovement', function (movementData) {
+        players[socket.id].x = movementData.x;
+        players[socket.id].y = movementData.y;
+        players[socket.id].flipX = movementData.flipX;
+
+        socket.broadcast.emit('playerMoved', players[socket.id]);
+        // socket.to('downtown').emit('playerMoved', players[socket.id]);
+      });
 
     socket.on('game loaded', function() {
         io.emit('spawnCurrentPlayers', players);

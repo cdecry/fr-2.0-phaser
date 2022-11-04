@@ -1,4 +1,5 @@
-const localPlayer = null;
+// container = null;
+// player = null;
 
 //#region LoginScene
 var login = new Phaser.Scene('LoginScene');
@@ -89,8 +90,12 @@ loading.create = function() {
 //#endregion
 
 //#region GameScene
-var inGame = new Phaser.Scene('GameScene');
 
+var cursors;
+var container;
+var player = null;
+
+var inGame = new Phaser.Scene('GameScene');
 inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
@@ -107,39 +112,59 @@ inGame.preload = function() {
 
 inGame.create = function() {
 
-    this.otherPlayers = this.add.group();
+    cursors = this.input.keyboard.createCursorKeys();
+    var otherPlayers = this.add.group();
+    // var container = null;
 
     function createPlayer(playerInfo) {
-        console.log(JSON.stringify(playerInfo));
-        inGame.player = inGame.add.sprite(400, 200, 'body-' +  playerInfo.avatar['skinTone']);
-        inGame.container = inGame.add.container(playerInfo.x, playerInfo.y);
-        inGame.container.setSize(58, 89);
-        inGame.container.add(inGame.player);
+        console.log('creating player should be adding container ' + JSON.stringify(playerInfo));
+        player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
+
+        // inGame.physics.add.existing(player, false);
+        // player.body.setCollideWorldBounds(true);
+        var test = inGame.add.sprite(200, 300, 'body-' +  3);
+        container = inGame.add.container(playerInfo.x, playerInfo.y);
+        container.setSize(58, 89);
+        container.add(player);
+
+        inGame.physics.add.existing(container, false);
+        container.body.setCollideWorldBounds(true);
+
+        console.log('beep: ' + JSON.stringify(container) + ', BONK: ' + JSON.stringify(player));
     }
 
     function addOtherPlayers(playerInfo) {
         const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
         otherPlayer.id = playerInfo.id;
-        inGame.otherPlayers.add(otherPlayer);
+        otherPlayers.add(otherPlayer);
       }
 
     globalThis.socket.emit('game loaded');
 
     globalThis.socket.on('spawnCurrentPlayers', async (players) => {
         Object.keys(players).forEach(function (id) {
-            if (players[id].id === globalThis.socket.id) {
+            console.log('player obj: ' + player);
+            if (players[id].id === globalThis.socket.id && player == null) {
                 console.log('creating player ' + players[id].username);
                 createPlayer(players[id]);
-            } else {
+            } else if (players[id].id != globalThis.socket.id) {
                 console.log('adding other players ' + JSON.stringify(players));
                 addOtherPlayers(players[id]);
             }
           });
         console.log('Recieved msg from server: spawnCurrentPlayers');
     });
-    globalThis.socket.on('newPlayer', function (player) {
-        globalThis.addOtherPlayers(player);
+    globalThis.socket.on('newPlayer', function (p) {
+        addOtherPlayers(p);
     });
+
+    globalThis.socket.on('removePlayer', function (id) {
+        otherPlayers.getChildren().forEach(function (p) {
+          if (id === p.id) {
+            p.destroy();
+          }
+        });
+      });
 
     // list of players in room
     const playersHere = [];
@@ -148,6 +173,16 @@ inGame.create = function() {
     console.log('bonk');
 
     var bg = this.add.image(400, 260, 'roomBg');
+
+    globalThis.socket.on('playerMoved', function (playerInfo) {
+        otherPlayers.getChildren().forEach(function (p) {
+          if (playerInfo.id === p.id) {
+            p.flipX = playerInfo.flipX;
+            p.setPosition(playerInfo.x, playerInfo.y);
+          }
+        }.bind(this));
+    }.bind(this));
+
     let data = this.cache.json.get('avatarAnims');
     
     data.skins.forEach(skin => {
@@ -161,7 +196,6 @@ inGame.create = function() {
         })
     });
 
-
     // EXAMPLE
     // var tempNamespace = {};
     // var myString = "crystal";
@@ -172,7 +206,49 @@ inGame.create = function() {
 
 }
 
+inGame.update = function() {
+    if (container) {
+        container.body.setVelocity(0);
 
+        // Horizontal movement
+        if (cursors.left.isDown) {
+            container.body.setVelocityX(-80);
+        } else if (cursors.right.isDown) {
+            container.body.setVelocityX(80);
+        }
+        // Vertical movement
+        if (cursors.up.isDown) {
+            container.body.setVelocityY(-80);
+        } else if (cursors.down.isDown) {
+            container.body.setVelocityY(80);
+        }
+
+        if (cursors.left.isDown) {
+            player.flipX = false;
+        } else if (cursors.right.isDown) {
+            player.flipX = true;
+        }
+
+        // emit player movement
+        var x = container.x;
+        var y = container.y;
+        var flipX = player.flipX;
+        
+        if (container.oldPosition && (x !== container.oldPosition.x || y !== container.oldPosition.y || flipX !== container.oldPosition.flipX)) {
+            globalThis.socket.emit('playerMovement', { x, y, flipX });
+        }
+
+        // save old position data
+        container.oldPosition = {
+            x: container.x,
+            y: container.y,
+            flipX: player.flipX
+        };
+    }
+    else {
+        console.log('container null');
+    }
+}
 
 
 //#endregion
@@ -183,6 +259,12 @@ var config = {
     parent: 'app',
     width: 800,
     height: 520,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: true
+        }
+    },
     dom: {
         createContainer: true
         },
