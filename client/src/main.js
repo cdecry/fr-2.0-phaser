@@ -94,6 +94,7 @@ loading.create = function() {
 var cursors;
 var container;
 var player = null;
+var head, eyes;
 
 var inGame = new Phaser.Scene('GameScene');
 inGame.preload = function() {
@@ -105,6 +106,11 @@ inGame.preload = function() {
     for (let i = 0; i < 6; i++) {
         this.load.spritesheet('body-' + i.toString(), 'avatar/body-' + i.toString() + '.png', { frameWidth: 58, frameHeight: 89 });
         this.load.image('face-' + i.toString(), 'avatar/face-' + i.toString() + '.png');
+    }
+    
+    // load all avatar eyes
+    for (let i = 0; i < 15; i++) {
+        this.load.spritesheet('eyes-' + i.toString(), 'avatar/new-eyes-' + i.toString() + '.png', { frameWidth: 45, frameHeight: 48 });
     }
 
     this.load.json('avatarAnims', 'avatar/avatarAnims.json');
@@ -119,13 +125,12 @@ inGame.create = function() {
     function createPlayer(playerInfo) {
         console.log('creating player should be adding container ' + JSON.stringify(playerInfo));
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
+        head = inGame.add.sprite(-5, -28, 'face-' +  playerInfo.avatar['skinTone']);
+        eyes = inGame.add.sprite(-5, -28, 'eyes-' +  playerInfo.avatar['eyeType']);
 
-        // inGame.physics.add.existing(player, false);
-        // player.body.setCollideWorldBounds(true);
-        var test = inGame.add.sprite(200, 300, 'body-' +  3);
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(58, 89);
-        container.add(player);
+        container.add([player, head, eyes]);
 
         inGame.physics.add.existing(container, false);
         container.body.setCollideWorldBounds(true);
@@ -224,9 +229,17 @@ inGame.update = function() {
         }
 
         if (cursors.left.isDown) {
-            player.flipX = false;
+            // player.flipX = false;
+            container.setScale(1, 1);
+            // head.flipX = false;
+            // eyes.flipX = false;
+            console.log(JSON.stringify(container));
+
         } else if (cursors.right.isDown) {
-            player.flipX = true;
+            // player.flipX = true;
+            container.setScale(-1, 1);
+            // head.flipX = true;
+            // eyes.flipX = true;
         }
 
         // emit player movement
