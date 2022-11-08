@@ -1,6 +1,3 @@
-// container = null;
-// player = null;
-
 //#region LoginScene
 var login = new Phaser.Scene('LoginScene');
 
@@ -339,7 +336,6 @@ inGame.update = function() {
 
 
 //#endregion
-
 
 var config = {
     type: Phaser.AUTO,
