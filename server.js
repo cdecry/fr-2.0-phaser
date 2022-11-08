@@ -61,11 +61,11 @@ io.on('connection', function (socket) {
             // load game
             socket.join('downtown');
             // load local player
-            io.emit('login success');
+            io.to(socket.id).emit('login success');
         }
         else {
             console.log('Invalid username/password. Please try again.');
-            io.emit('login fail');
+            io.to(socket.id).emit('login fail');
         }
     });
 
