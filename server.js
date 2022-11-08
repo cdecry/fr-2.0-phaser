@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
 const { loginRequest, getUserAvatar } = require('./database/queries');
