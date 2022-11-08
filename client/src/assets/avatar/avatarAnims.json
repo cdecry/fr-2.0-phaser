@@ -20,6 +20,6 @@
 		"jump"	: [ 0, 5, 0, 5, 0 ]
 	},
 	
-	"repeat"	: -1,
+	"repeat"	: 1,
 	"frameRate"	: 5
 }
