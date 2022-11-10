@@ -88,14 +88,17 @@ loading.create = function() {
 //#region GameScene
 
 var cursors;
+var globalPointer = {
+    x: 0,
+    y: 0,
+}
+
+var clickOffsetY = 50;
+
 var container;
 var player = null;
-var onlinePlayers = null;
 var head, eyes;
 
-var playerOffset = 0;
-var headOffset = -5;
-var eyesOffset = -28;
 
 var inGame = new Phaser.Scene('GameScene');
 inGame.preload = function() {
@@ -105,13 +108,13 @@ inGame.preload = function() {
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
-        this.load.spritesheet('body-' + i.toString(), 'avatar/body-' + i.toString() + '.png', { frameWidth: 58, frameHeight: 89 });
+        this.load.spritesheet('body-' + i.toString(), 'avatar/body-' + i.toString() + '.png', { frameWidth: 80, frameHeight: 117 });
         this.load.image('face-' + i.toString(), 'avatar/face-' + i.toString() + '.png');
     }
     
     // load all avatar eyes
-    for (let i = 0; i < 15; i++) {
-        this.load.spritesheet('eyes-' + i.toString(), 'avatar/new-eyes-' + i.toString() + '.png', { frameWidth: 45, frameHeight: 48 });
+    for (let i = 0; i < 2; i++) {
+        this.load.spritesheet('eyes-' + i.toString(), 'avatar/eyes-' + i.toString() + '.png', { frameWidth: 80, frameHeight: 117 });
     }
 
     this.load.json('avatarAnims', 'avatar/avatarAnims.json');
@@ -119,17 +122,20 @@ inGame.preload = function() {
 
 inGame.create = function() {
 
+    var bg = this.add.image(400, 260, 'roomBg');
+    var otherPlayers = this.add.group();
+    let data = this.cache.json.get('avatarAnims');
+
     key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
     cursors = this.input.keyboard.createCursorKeys();
-    var otherPlayers = this.add.group();
-
+    
     function createPlayer(playerInfo) {
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
-        head = inGame.add.sprite(-5, -28, 'face-' +  playerInfo.avatar['skinTone']);
-        eyes = inGame.add.sprite(-5, -28, 'eyes-' +  playerInfo.avatar['eyeType']);
+        head = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
+        eyes = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
 
         container = inGame.add.container(playerInfo.x, playerInfo.y);
-        container.setSize(58, 89);
+        container.setSize(80, 117);
         container.add([head, eyes, player]);
 
 
@@ -144,16 +150,16 @@ inGame.create = function() {
 
     function addOtherPlayers(playerInfo) {
         const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
-        const otherHead = inGame.add.sprite(playerInfo.x - 5, playerInfo.y - 28, 'face-' + playerInfo.avatar['skinTone']);
-        const otherEyes = inGame.add.sprite(playerInfo.x - 5, playerInfo.y - 28, 'eyes-' + playerInfo.avatar['eyeType']);
+        const otherHead = inGame.add.sprite(playerInfo.x, playerInfo.y, 'face-' + playerInfo.avatar['skinTone']);
+        const otherEyes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'eyes-' + playerInfo.avatar['eyeType']);
 
         otherPlayer.flipX = playerInfo.flipX;
         otherHead.flipX = playerInfo.flipX;
         otherEyes.flipX = playerInfo.flipX;
 
         if (playerInfo.flipX) {
-            otherHead.setPosition(playerInfo.x + 5, playerInfo.y - 28);
-            otherEyes.setPosition(playerInfo.x + 5, playerInfo.y - 28);
+            otherHead.setPosition(playerInfo.x, playerInfo.y);
+            otherEyes.setPosition(playerInfo.x, playerInfo.y);
         }
 
         const otherContainer = inGame.add.container([otherHead, otherEyes, otherPlayer]);
@@ -181,6 +187,7 @@ inGame.create = function() {
         });
         console.log('Recieved msg from server: spawnCurrentPlayers');
     });
+
     globalThis.socket.on('spawnNewPlayer', function (p) {
         addOtherPlayers(p);
     });
@@ -202,14 +209,7 @@ inGame.create = function() {
                 otherPlayers.remove(p);
             }
         }
-        otherPlayers.getChildren().forEach(function (p) {
-            
-        });
       });
-
-    // list of players in room
-
-    var bg = this.add.image(400, 260, 'roomBg');
 
     globalThis.socket.on('playerMoved', function (playerInfo) {
         if (playerInfo.id !== globalThis.socket.id) {
@@ -222,13 +222,13 @@ inGame.create = function() {
                     p.x[i].flipX = p.flipX;
                 }
 
-                p.x[0].setPosition(playerInfo.x - 5, playerInfo.y - 28);
-                p.x[1].setPosition(playerInfo.x - 5, playerInfo.y - 28);
+                p.x[0].setPosition(playerInfo.x, playerInfo.y);
+                p.x[1].setPosition(playerInfo.x, playerInfo.y);
 
 
                 if (p.flipX) {
-                    p.x[0].setPosition(playerInfo.x + 5, playerInfo.y - 28);
-                    p.x[1].setPosition(playerInfo.x + 5, playerInfo.y - 28);
+                    p.x[0].setPosition(playerInfo.x, playerInfo.y);
+                    p.x[1].setPosition(playerInfo.x, playerInfo.y);
                 }
 
                 p.x[2].setPosition(playerInfo.x, playerInfo.y);
@@ -236,8 +236,6 @@ inGame.create = function() {
             }.bind(this));
         }
     }.bind(this));
-
-    let data = this.cache.json.get('avatarAnims');
     
     data.skins.forEach(skin => {
         data.keys.forEach(key => {
@@ -250,6 +248,11 @@ inGame.create = function() {
         })
     });
 
+    this.input.on('pointerdown', function (pointer) {
+        globalPointer.x = pointer.x;
+        globalPointer.y = pointer.y;
+        inGame.physics.moveTo(container, pointer.x, pointer.y - clickOffsetY, 150);
+    });
     // EXAMPLE
     // var tempNamespace = {};
     // var myString = "crystal";
@@ -257,7 +260,6 @@ inGame.create = function() {
     // tempNamespace[myString] = this.add.sprite(400, 260, 'body-0');;
 
     // tempNamespace[myString].play('body-0-jump');
-
 }
 
 
@@ -267,7 +269,7 @@ function moveX(currentPosX, currentPosY, direction) {
         x: currentPosX + direction*70,
         y: currentPosY,
         ease: 'Linear',
-        duration: 500,
+        duration: 600,
     });
 }
 
@@ -277,45 +279,70 @@ function moveY(currentPosX, currentPosY, direction) {
         x: currentPosX,
         y: currentPosY + direction*70,
         ease: 'Linear',
-        duration: 500,
+        duration: 600,
+    });
+}
+
+function moveXY(newPosX, newPosY) {
+	var tween = inGame.tweens.add({
+        targets: container,
+        x: newPosX,
+        y: newPosY,
+        ease: 'Linear',
     });
 }
 
 inGame.update = function() {
     if (container) {
 
+        //#region Arrow Key Movement
         // Horizontal movement
         if (cursors.left.isDown) {
+            container.body.setVelocity(0);
             moveX(container.x, container.y, -1);
 
         } else if (cursors.right.isDown) {
+            container.body.setVelocity(0);
             moveX(container.x, container.y, 1);
         }
+
         // Vertical movement
         if (cursors.up.isDown) {
+            container.body.setVelocity(0);
             moveY(container.x, container.y, -1);
 
         } else if (cursors.down.isDown) {
+            container.body.setVelocity(0);
             moveY(container.x, container.y, 1);
         }
 
-        if (cursors.left.isDown) {
+        // Flip
+        if (cursors.left.isDown || container.body.velocity.x < 0) {
             player.flipX = false;
-            // container.setScale(1, 1);
             head.flipX = false;
-            head.setPosition(-5, -28);
             eyes.flipX = false;
-            eyes.setPosition(-5, -28);
 
-        } else if (cursors.right.isDown) {
+        } else if (cursors.right.isDown || container.body.velocity.x > 0) {
             player.flipX = true;
-            // container.setScale(-1, 1);
             head.flipX = true;
             eyes.flipX = true;
-            head.setPosition(5, -28);
-            eyes.setPosition(5, -28);
+        }
+        //#endregion
+
+
+        // Click Movement
+        
+        var distance = Phaser.Math.Distance.Between(container.x, container.y, globalPointer.x, globalPointer.y - clickOffsetY);
+
+        if (container.body.speed > 0)
+        {
+            if (distance < 2)
+            {
+                container.body.reset(globalPointer.x, globalPointer.y - clickOffsetY);
+            }
         }
 
+        // Actions (CRRENTLY LOCAL ONLY)
         if (key1.isDown) {
             player.play('body-' + container.getData('skinTone') + '-wave');
         }
