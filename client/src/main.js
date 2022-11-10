@@ -24,7 +24,6 @@ login.create = function () {
 
             if (inputUsername.value !== '' && inputPassword.value!= '')
             {
-                console.log(inputUsername.value);
                 loginForm.removeListener('click');
                 globalThis.socket = io();
                 globalThis.socket.emit('login request', inputUsername.value, inputPassword.value);
@@ -125,7 +124,6 @@ inGame.create = function() {
     var otherPlayers = this.add.group();
 
     function createPlayer(playerInfo) {
-        console.log('creating player should be adding container ' + JSON.stringify(playerInfo));
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
         head = inGame.add.sprite(-5, -28, 'face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(-5, -28, 'eyes-' +  playerInfo.avatar['eyeType']);
@@ -142,9 +140,6 @@ inGame.create = function() {
         container.setData('username', playerInfo.username);
         
         container.setData('skinTone', playerInfo.avatar['skinTone']);
-        console.log(playerInfo.avatar['skinTone'] + ', ' + container.getData('skinTone'));
-
-        console.log('beep: ' + JSON.stringify(container) + ', BONK: ' + JSON.stringify(player));
     }
 
     function addOtherPlayers(playerInfo) {
@@ -167,54 +162,48 @@ inGame.create = function() {
         otherContainer.setData('username', playerInfo.username);
         otherContainer.setData('skinTone', playerInfo.skinTone);
         otherContainer.id = playerInfo.id;
-        console.log(otherContainer.id);
         otherPlayers.add(otherContainer);
       }
 
     globalThis.socket.emit('game loaded');
 
     globalThis.socket.on('spawnCurrentPlayers', async (players) => {
-        Object.keys(players).forEach(function (id) {
-                if (players[id].id === globalThis.socket.id && player == null) {
 
+        Object.keys(players).forEach(function (id) {
+
+                if (players[id].id === globalThis.socket.id && player == null) {
                     console.log('creating player ' + players[id].username);
                     createPlayer(players[id]);
+                    
                 } else if (players[id].id != globalThis.socket.id) {
-
-                    if (otherPlayers.getChildren().length === 0)
-                        addOtherPlayers(players[id]);
-                    else {
-                        otherPlayers.getChildren().forEach(function (p) {
-                            if (players[id].id  === p.id) {
-                                console.log('did not spawn another ' + players[id].username);
-                                return;
-                            }
-                            else {
-                                addOtherPlayers(players[id]);
-                                console.log('spawned other player ' + players[id].username);
-                            }
-                          });
-                    }
+                    addOtherPlayers(players[id]);
                 }
         });
         console.log('Recieved msg from server: spawnCurrentPlayers');
     });
-    globalThis.socket.on('newPlayer', function (p) {
+    globalThis.socket.on('spawnNewPlayer', function (p) {
         addOtherPlayers(p);
     });
 
     globalThis.socket.on('removePlayer', function (id) {
-        console.log('remove req received. player list: ' + JSON.stringify(otherPlayers.getChildren()));
-        otherPlayers.getChildren().forEach(function (p) {
+
+        for (let i = 0; i < otherPlayers.getLength(); i++) {
+            console.log(JSON.stringify(otherPlayers.getChildren()[i]));
+            var p = otherPlayers.getChildren()[i];
+
             console.log('otherplayer id: ' + p.getData('username'));
+            console.log('id, pid' + id + ',' + p.id);
             if (id === p.id) {
-                for (let i = 0; i < 3; i++) {
-                    p.x[i].destroy();
-                    p.y[i].destroy();
+                for (let j = 0; j < 3; j++) {
+                    p.x[j].destroy();
+                    p.y[j].destroy();
                 }
-            p.destroy();
-            otherPlayers.remove(p);
-          }
+                p.destroy();
+                otherPlayers.remove(p);
+            }
+        }
+        otherPlayers.getChildren().forEach(function (p) {
+            
         });
       });
 
@@ -223,8 +212,6 @@ inGame.create = function() {
     var bg = this.add.image(400, 260, 'roomBg');
 
     globalThis.socket.on('playerMoved', function (playerInfo) {
-        
-        console.log('lsit of players: ' + JSON.stringify(otherPlayers.getChildren()));
         if (playerInfo.id !== globalThis.socket.id) {
 
             otherPlayers.getChildren().forEach(function (p) {
@@ -235,16 +222,16 @@ inGame.create = function() {
                     p.x[i].flipX = p.flipX;
                 }
 
+                p.x[0].setPosition(playerInfo.x - 5, playerInfo.y - 28);
                 p.x[1].setPosition(playerInfo.x - 5, playerInfo.y - 28);
-                p.x[2].setPosition(playerInfo.x - 5, playerInfo.y - 28);
 
 
                 if (p.flipX) {
+                    p.x[0].setPosition(playerInfo.x + 5, playerInfo.y - 28);
                     p.x[1].setPosition(playerInfo.x + 5, playerInfo.y - 28);
-                    p.x[2].setPosition(playerInfo.x + 5, playerInfo.y - 28);
                 }
 
-                p.x[0].setPosition(playerInfo.x, playerInfo.y);
+                p.x[2].setPosition(playerInfo.x, playerInfo.y);
             }
             }.bind(this));
         }
@@ -273,21 +260,43 @@ inGame.create = function() {
 
 }
 
+
+function moveX(currentPosX, currentPosY, direction) {
+	var tween = inGame.tweens.add({
+        targets: container,
+        x: currentPosX + direction*70,
+        y: currentPosY,
+        ease: 'Linear',
+        duration: 500,
+    });
+}
+
+function moveY(currentPosX, currentPosY, direction) {
+	var tween = inGame.tweens.add({
+        targets: container,
+        x: currentPosX,
+        y: currentPosY + direction*70,
+        ease: 'Linear',
+        duration: 500,
+    });
+}
+
 inGame.update = function() {
     if (container) {
-        container.body.setVelocity(0);
 
         // Horizontal movement
         if (cursors.left.isDown) {
-            container.body.setVelocityX(-80);
+            moveX(container.x, container.y, -1);
+
         } else if (cursors.right.isDown) {
-            container.body.setVelocityX(80);
+            moveX(container.x, container.y, 1);
         }
         // Vertical movement
         if (cursors.up.isDown) {
-            container.body.setVelocityY(-80);
+            moveY(container.x, container.y, -1);
+
         } else if (cursors.down.isDown) {
-            container.body.setVelocityY(80);
+            moveY(container.x, container.y, 1);
         }
 
         if (cursors.left.isDown) {
@@ -308,8 +317,6 @@ inGame.update = function() {
         }
 
         if (key1.isDown) {
-            console.log(JSON.stringify(player));
-            console.log('1 key down' + container.getData('skinTone'));
             player.play('body-' + container.getData('skinTone') + '-wave');
         }
 
@@ -328,9 +335,6 @@ inGame.update = function() {
             y: container.y,
             flipX: player.flipX
         };
-    }
-    else {
-        console.log('container null');
     }
 }
 
