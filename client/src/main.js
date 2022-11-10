@@ -93,7 +93,7 @@ var globalPointer = {
     y: 0,
 }
 
-var clickOffsetY = 50;
+var clickOffsetY = 80;
 
 var container;
 var player = null;
@@ -113,7 +113,7 @@ inGame.preload = function() {
     }
     
     // load all avatar eyes
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 14; i++) {
         this.load.spritesheet('eyes-' + i.toString(), 'avatar/eyes-' + i.toString() + '.png', { frameWidth: 80, frameHeight: 117 });
     }
 
@@ -163,6 +163,7 @@ inGame.create = function() {
         }
 
         const otherContainer = inGame.add.container([otherHead, otherEyes, otherPlayer]);
+        
         otherContainer.flipX = playerInfo.flipX;
         otherContainer.setDataEnabled();
         otherContainer.setData('username', playerInfo.username);
