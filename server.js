@@ -80,7 +80,7 @@ io.on('connection', function (socket) {
       });
 
     socket.on('game loaded', function() {
-        io.emit('spawnCurrentPlayers', players);
+        io.to(socket.id).emit('spawnCurrentPlayers', players);
         socket.to("downtown").emit("spawnNewPlayer", players[socket.id]);
     });
 });
