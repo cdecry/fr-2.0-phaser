@@ -156,6 +156,7 @@ inGame.preload = function() {
     this.load.json('bodyAnims', 'anims/bodyAnims.json');
     this.load.json('bottomShoes', 'anims/bottomShoes.json');
     this.load.json('eyesAnims', 'anims/eyesAnims.json');
+    this.load.json('hairAnims', 'anims/hairAnims.json');
 }
 
 inGame.create = function() {
@@ -176,6 +177,7 @@ inGame.create = function() {
     let data = this.cache.json.get('bodyAnims');
     let dataFace = this.cache.json.get('bottomShoes');
     let dataEyes = this.cache.json.get('eyesAnims');
+    let dataHair = this.cache.json.get('hairAnims');
 
     key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
     key2 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
@@ -379,6 +381,17 @@ inGame.create = function() {
             });
         })
     });
+
+    dataHair.skins.forEach(skin => {
+        dataHair.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataHair.frames[key] }),
+                frameRate: dataHair.frameRate,
+                repeat: dataHair.repeat
+            });
+        })
+    });
     //#endregion
 
     this.input.on('pointerdown', function (pointer) {
@@ -500,7 +513,10 @@ inGame.update = function() {
             if (!player.anims.isPlaying) {
                 player.play('body-' + container.getData('skinTone') + '-cry');
                 head.play('face-' + container.getData('skinTone') + '-cry');
-                topItem.play('f-1-0-cry');
+                eyes.play('eyes-' + container.getData('eyeType') + '-cry');
+                hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-cry');
+                hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-cry');
+                topItem.play('f-1-' + container.getData('equipped')[1] + '-cry');
             }
         }
 
@@ -511,7 +527,7 @@ inGame.update = function() {
                 eyes.play('eyes-' + container.getData('eyeType') + '-jump');
                 hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-jump');
                 hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-jump');
-                topItem.play('f-1-0-jump');
+                topItem.play('f-1-' + container.getData('equipped')[1] + '-jump');
                 shoes.play('f-4-' + container.getData('equipped')[4] + '-jump');
             }
         }
