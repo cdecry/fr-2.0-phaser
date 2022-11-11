@@ -49,6 +49,7 @@ io.on('connection', function (socket) {
 
             // get avatar
             const avatar = await getUserAvatar(userId);
+            // console.log('server aet avatar' + avatar['equipped']);
 
             var player = new Player(socket.id, username, 'downtown', avatar, false, 400, 200);
             players[socket.id] = player;
@@ -57,7 +58,6 @@ io.on('connection', function (socket) {
                 rooms['downtown'] = [player];
             else
                 rooms['downtown'].push(player);
-
             console.log('Sucessfully logged in! Players online: ' + JSON.stringify(players));
             // load game
             socket.join('downtown');

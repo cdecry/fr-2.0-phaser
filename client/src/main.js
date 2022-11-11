@@ -94,13 +94,14 @@ var globalPointer = {
 }
 
 var usernameLabelCenter = 0;
-var clickOffsetY = 80;
+var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 5;
 
 var container;
 var player = null;
-var head, eyes, usernameTag, usernameLabel;
+var playerCollision;
+var head, eyes, brow, lips, hairUpper, hairLower, topItem, bottomItem, outfit, shoes, board, usernameTag, usernameLabel;
 
 
 var inGame = new Phaser.Scene('GameScene');
@@ -125,19 +126,36 @@ inGame.preload = function() {
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
-        this.load.spritesheet('body-' + i.toString(), 'avatar/body-' + i.toString() + '.png', { frameWidth: 80, frameHeight: 117 });
-        this.load.image('face-' + i.toString(), 'avatar/face-' + i.toString() + '.png');
+        this.load.spritesheet('body-' + i.toString(), 'avatar/body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('face-' + i.toString(), 'avatar/face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
     }
     
     // load all avatar eyes
     for (let i = 0; i < 14; i++) {
-        this.load.spritesheet('eyes-' + i.toString(), 'avatar/eyes-' + i.toString() + '.png', { frameWidth: 80, frameHeight: 117 });
+        this.load.spritesheet('eyes-' + i.toString(), 'avatar/eyes-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
     }
+
+    // load brows and lips
+    this.load.spritesheet('brow-0', 'avatar/brow-0.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('lips-0', 'avatar/lips-0.png', { frameWidth: 300, frameHeight: 250 });
+
+    // load items
+    this.load.spritesheet('f-0-0-1', 'item/f-0-0-1.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-0-0-2', 'item/f-0-0-2.png', { frameWidth: 300, frameHeight: 250 });
+
+    this.load.spritesheet('f-1-0', 'item/f-1-0.png', { frameWidth: 300, frameHeight: 250 });
+
+    this.load.spritesheet('f-4-0', 'item/f-4-0.png', { frameWidth: 300, frameHeight: 250 });
+
+
 
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
-    this.load.json('avatarAnims', 'avatar/avatarAnims.json');
+    // load anim data
+    this.load.json('bodyAnims', 'anims/bodyAnims.json');
+    this.load.json('bottomShoes', 'anims/bottomShoes.json');
+    this.load.json('eyesAnims', 'anims/eyesAnims.json');
 }
 
 inGame.create = function() {
@@ -154,46 +172,69 @@ inGame.create = function() {
     
     var bg = this.add.image(400, 260, 'roomBg');
     var otherPlayers = this.add.group();
-    let data = this.cache.json.get('avatarAnims');
+
+    let data = this.cache.json.get('bodyAnims');
+    let dataFace = this.cache.json.get('bottomShoes');
+    let dataEyes = this.cache.json.get('eyesAnims');
 
     key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+    key2 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+    key3 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+    key4 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR);
+
     cursors = this.input.keyboard.createCursorKeys();
     
     function createPlayer(playerInfo) {
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
         head = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
-        usernameTag = inGame.add.sprite(0, usernameOffsetY, 'username-tag');
+        lips = inGame.add.sprite(0, 0, 'lips-0');
 
+        hairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        hairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        
+        topItem = inGame.add.sprite(0, 0, 'f-1-0');
+        shoes = inGame.add.sprite(0, 0, 'f-4-0');
+//                             0 - Hair
+//                             1 - topItem
+//                             2 - bottomItem
+//                             3 - Outfit
+//                             4 - Shoes
+//                             5 - Board
+//                             6 - Head Acc.
+//                             7 - Face Acc.
+//                             8 - Body Acc.
 
-        // WebFont.load({
-        //     custom: {
-        //         families: [ 'usernameFont' ]
-        //     },
-        //     active: function ()
-        //     {
-        //         console.log('font loaded');
-        //     }
-        // });
+        // if not outfit
+        // if (playerInfo.avatar['equipped'][1] > -1) {
+        //     topItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-1-' + playerInfo.avatar['equipped'][1]);
+        // }
+        // else
+        //     outfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0]);
 
-        usernameLabel = inGame.add.text(0, 68, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        brow = inGame.add.sprite(0, 0, 'brow-0');
+        usernameTag = inGame.add.sprite(0, 0, 'username-tag');
+
+        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
         usernameLabel.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
-        usernameLabel.x = usernameLabelCenter + 5;
+        usernameLabel.x = usernameLabelCenter;
         usernameLabel.setStroke('#ffffff', 2);
         
         container = inGame.add.container(playerInfo.x, playerInfo.y);
-        container.setSize(80, 117);
+        container.setSize(300, 250);
 
-        container.add([head, eyes, player, usernameTag, usernameLabel]);
+        container.add([head, eyes, lips, hairLower, hairUpper, player, topItem, shoes, usernameTag, usernameLabel]);
 
         inGame.physics.add.existing(container, false);
-        container.body.setCollideWorldBounds(true);
+        container.body.setCollideWorldBounds(false);
 
         container.setDataEnabled();
         container.setData('username', playerInfo.username);
-        
         container.setData('skinTone', playerInfo.avatar['skinTone']);
+        container.setData('eyeType', playerInfo.avatar['eyeType']);
+        container.setData('gender', playerInfo.avatar['gender']);
+        container.setData('equipped', playerInfo.avatar['equipped']);
     }
 
     function addOtherPlayers(playerInfo) {
@@ -304,6 +345,8 @@ inGame.create = function() {
         }
     }.bind(this));
     
+
+    //#region Animations
     data.skins.forEach(skin => {
         data.keys.forEach(key => {
             this.anims.create({
@@ -314,6 +357,29 @@ inGame.create = function() {
             });
         })
     });
+
+    dataFace.skins.forEach(skin => {
+        dataFace.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataFace.frames[key] }),
+                frameRate: dataFace.frameRate,
+                repeat: dataFace.repeat
+            });
+        })
+    });
+
+    dataEyes.skins.forEach(skin => {
+        dataEyes.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataEyes.frames[key] }),
+                frameRate: dataEyes.frameRate,
+                repeat: dataEyes.repeat
+            });
+        })
+    });
+    //#endregion
 
     this.input.on('pointerdown', function (pointer) {
         globalPointer.x = pointer.x;
@@ -388,16 +454,24 @@ inGame.update = function() {
 
             player.flipX = false;
             head.flipX = false;
+            brow.flipX = false;
             eyes.flipX = false;
-            usernameTag.flipX = false;
-            usernameLabel.x = usernameLabelCenter + 5;
+            lips.flipX = false;
+            hairLower.flipX = false;
+            hairUpper.flipX = false;
+            topItem.flipX = false;
+            shoes.flipX = false;
 
         } else if (cursors.right.isDown || container.body.velocity.x > 0) {
             player.flipX = true;
             head.flipX = true;
+            brow.flipX = true;
             eyes.flipX = true;
-            usernameTag.flipX = true;
-            usernameLabel.x = usernameLabelCenter - 5;
+            lips.flipX = true;
+            hairLower.flipX = true;
+            hairUpper.flipX = true;
+            topItem.flipX = true;
+            shoes.flipX = true;
         }
         //#endregion
 
@@ -416,7 +490,36 @@ inGame.update = function() {
 
         // Actions (CRRENTLY LOCAL ONLY)
         if (key1.isDown) {
-            player.play('body-' + container.getData('skinTone') + '-wave');
+            if (!player.anims.isPlaying) {
+                player.play('body-' + container.getData('skinTone') + '-wave');
+                topItem.play('f-1-0-wave');
+            }
+        }
+
+        if (key2.isDown) {
+            if (!player.anims.isPlaying) {
+                player.play('body-' + container.getData('skinTone') + '-cry');
+                head.play('face-' + container.getData('skinTone') + '-cry');
+                topItem.play('f-1-0-cry');
+            }
+        }
+
+        if (key3.isDown) {
+            if (!player.anims.isPlaying) {
+                player.play('body-' + container.getData('skinTone') + '-jump');
+                head.play('face-' + container.getData('skinTone') + '-jump');
+                eyes.play('eyes-' + container.getData('eyeType') + '-jump');
+                hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-jump');
+                hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-jump');
+                topItem.play('f-1-0-jump');
+                shoes.play('f-4-' + container.getData('equipped')[4] + '-jump');
+            }
+        }
+
+        if (key4.isDown) {
+            if (!player.anims.isPlaying) {
+                eyes.play('eyes-' + container.getData('eyeType') + '-wink');
+            }
         }
 
         // emit player movement
@@ -448,7 +551,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
     dom: {
