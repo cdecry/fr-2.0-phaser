@@ -23,7 +23,7 @@ const avatarSchema = new mongoose.Schema({
     gender: String,
     eyeType: Number,    // 0-14
     skinTone: Number,   // 0-5
-    eqipped: [Number],  // list of numerical ids corres. to itemIds
+    equipped: [Number],  // list of numerical ids corres. to itemIds
 });
 
 const itemSchema = new mongoose.Schema({

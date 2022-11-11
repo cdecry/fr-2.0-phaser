@@ -86,6 +86,7 @@ exports.getUserAvatar = async function (userId) {
             avatarObj['eyeType'] = avatar.eyeType;
             avatarObj['skinTone'] = avatar.skinTone;
             avatarObj['equipped'] = avatar.equipped;
+            // console.log('equipped: ' + avatarObj.equipped);
             resolve(avatarObj);
         });
     });

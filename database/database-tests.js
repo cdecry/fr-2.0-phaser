@@ -1,15 +1,16 @@
 const mongoose = require('mongoose');
 
-const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem, updateInventory } = require("./queries");
+const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem, updateInventory, changeEquipped, getUserAvatar } = require("./queries");
 
 main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect('');
-    await registerUser(1, 'test_1', '123', 'f');
-    await registerUser(2, 'test_2', '123', 'f');
-    await addAvatar(1, 1, 'f', 0, 1, [0, 1, 2, 3, 4]);
-    await addAvatar(2, 2, 'f', 3, 2, [0, 1, 2, 3, 4]);
+    await changeEquipped(0, [0, 0, 0, -1, 0, 0, -1, -1, -1]);
+    // await registerUser(1, 'test_1', '123', 'f');
+    // await registerUser(2, 'test_2', '123', 'f');
+    // await addAvatar(1, 1, 'f', 0, 1, [0, 1, 2, 3, 4]);
+    // await addAvatar(2, 2, 'f', 3, 2, [0, 1, 2, 3, 4]);
 
     // ADD AVATAR
     // await addAvatar(0, 0, 'f', 1, 0, [0, 1, 2, 3, 4]);
