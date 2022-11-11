@@ -93,14 +93,31 @@ var globalPointer = {
     y: 0,
 }
 
+var usernameLabelCenter = 0;
 var clickOffsetY = 80;
+var usernameOffsetY = 30;
+var numContainerItems = 5;
 
 var container;
 var player = null;
-var head, eyes;
+var head, eyes, usernameTag, usernameLabel;
 
 
 var inGame = new Phaser.Scene('GameScene');
+
+
+inGame.init = function()
+{
+    //  inject css
+    var element = document.createElement('style');
+    document.head.appendChild(element);
+
+    var sheet = element.sheet;
+    var styles = '@font-face { font-family: "usernameFont"; src: url("src/assets/fonts/Cedora-RegularStd.otf") format("opentype"); }\n';
+
+    sheet.insertRule(styles, 0);
+}
+
 inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
@@ -117,11 +134,24 @@ inGame.preload = function() {
         this.load.spritesheet('eyes-' + i.toString(), 'avatar/eyes-' + i.toString() + '.png', { frameWidth: 80, frameHeight: 117 });
     }
 
+    this.load.image('username-tag', 'avatar/username-tag.png');
+    this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+
     this.load.json('avatarAnims', 'avatar/avatarAnims.json');
 }
 
 inGame.create = function() {
 
+    WebFont.load({
+        custom: {
+            families: [ 'usernameFont' ]
+        },
+        active: function ()
+        {
+            console.log('font loaded');
+        }
+    });
+    
     var bg = this.add.image(400, 260, 'roomBg');
     var otherPlayers = this.add.group();
     let data = this.cache.json.get('avatarAnims');
@@ -133,11 +163,29 @@ inGame.create = function() {
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
         head = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
+        usernameTag = inGame.add.sprite(0, usernameOffsetY, 'username-tag');
 
+
+        // WebFont.load({
+        //     custom: {
+        //         families: [ 'usernameFont' ]
+        //     },
+        //     active: function ()
+        //     {
+        //         console.log('font loaded');
+        //     }
+        // });
+
+        usernameLabel = inGame.add.text(0, 68, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        usernameLabel.originX = 0.5;
+        usernameLabelCenter = usernameLabel.getCenter().x;
+        usernameLabel.x = usernameLabelCenter + 5;
+        usernameLabel.setStroke('#ffffff', 2);
+        
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(80, 117);
-        container.add([head, eyes, player]);
 
+        container.add([head, eyes, player, usernameTag, usernameLabel]);
 
         inGame.physics.add.existing(container, false);
         container.body.setCollideWorldBounds(true);
@@ -152,22 +200,33 @@ inGame.create = function() {
         const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
         const otherHead = inGame.add.sprite(playerInfo.x, playerInfo.y, 'face-' + playerInfo.avatar['skinTone']);
         const otherEyes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'eyes-' + playerInfo.avatar['eyeType']);
+        var otherUsernameTag = inGame.add.sprite(playerInfo.x, playerInfo.y + usernameOffsetY, 'username-tag');
+
+        var otherUsernameLabel = inGame.add.text(Math.round(playerInfo.x), playerInfo.y + 68, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        
+        otherUsernameLabel.originX = 0.5;
+        var tempCenter = otherUsernameLabel.getCenter().x;
+        console.log('temp center: ', + tempCenter);
+        otherUsernameLabel.x = tempCenter+ 5;
+        otherUsernameLabel.setStroke('#ffffff', 2);
 
         otherPlayer.flipX = playerInfo.flipX;
         otherHead.flipX = playerInfo.flipX;
         otherEyes.flipX = playerInfo.flipX;
+        otherUsernameTag.flipX = playerInfo.flipX;
 
         if (playerInfo.flipX) {
             otherHead.setPosition(playerInfo.x, playerInfo.y);
             otherEyes.setPosition(playerInfo.x, playerInfo.y);
+            otherUsernameLabel.x = tempCenter - 5;
         }
 
-        const otherContainer = inGame.add.container([otherHead, otherEyes, otherPlayer]);
+        const otherContainer = inGame.add.container([otherHead, otherEyes, otherPlayer, otherUsernameTag, otherUsernameLabel]);
         
         otherContainer.flipX = playerInfo.flipX;
         otherContainer.setDataEnabled();
         otherContainer.setData('username', playerInfo.username);
-        otherContainer.setData('skinTone', playerInfo.skinTone);
+        otherContainer.setData('usernameLabelCenter', tempCenter);
         otherContainer.id = playerInfo.id;
         otherPlayers.add(otherContainer);
       }
@@ -202,7 +261,7 @@ inGame.create = function() {
             console.log('otherplayer id: ' + p.getData('username'));
             console.log('id, pid' + id + ',' + p.id);
             if (id === p.id) {
-                for (let j = 0; j < 3; j++) {
+                for (let j = 0; j < numContainerItems; j++) {
                     p.x[j].destroy();
                     p.y[j].destroy();
                 }
@@ -219,17 +278,24 @@ inGame.create = function() {
             if (playerInfo.id === p.id) {
                 p.flipX = playerInfo.flipX;
 
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 4; i++) {
                     p.x[i].flipX = p.flipX;
                 }
 
                 p.x[0].setPosition(playerInfo.x, playerInfo.y);
                 p.x[1].setPosition(playerInfo.x, playerInfo.y);
+                p.x[3].setPosition(playerInfo.x, playerInfo.y + usernameOffsetY);
+                console.log('data: ' + p.getData('usernameLabelCenter') + ', ' + p.x[4].getCenter().x);
+
+                p.x[4].originX = 0.5;
+                p.x[4].y = playerInfo.y + 68;
+                p.x[4].x = playerInfo.x + 5;
 
 
                 if (p.flipX) {
                     p.x[0].setPosition(playerInfo.x, playerInfo.y);
                     p.x[1].setPosition(playerInfo.x, playerInfo.y);
+                    p.x[4].x = playerInfo.x - 5;
                 }
 
                 p.x[2].setPosition(playerInfo.x, playerInfo.y);
@@ -319,14 +385,19 @@ inGame.update = function() {
 
         // Flip
         if (cursors.left.isDown || container.body.velocity.x < 0) {
+
             player.flipX = false;
             head.flipX = false;
             eyes.flipX = false;
+            usernameTag.flipX = false;
+            usernameLabel.x = usernameLabelCenter + 5;
 
         } else if (cursors.right.isDown || container.body.velocity.x > 0) {
             player.flipX = true;
             head.flipX = true;
             eyes.flipX = true;
+            usernameTag.flipX = true;
+            usernameLabel.x = usernameLabelCenter - 5;
         }
         //#endregion
 
@@ -337,7 +408,7 @@ inGame.update = function() {
 
         if (container.body.speed > 0)
         {
-            if (distance < 2)
+            if (distance < 4)
             {
                 container.body.reset(globalPointer.x, globalPointer.y - clickOffsetY);
             }
@@ -377,7 +448,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
     dom: {
