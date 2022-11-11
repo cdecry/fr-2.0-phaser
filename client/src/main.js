@@ -96,7 +96,7 @@ var globalPointer = {
 var usernameLabelCenter = 0;
 var clickOffsetY = 110;
 var usernameOffsetY = 30;
-var numContainerItems = 5;
+var numContainerItems = 10;
 
 var container;
 var player = null;
@@ -197,24 +197,7 @@ inGame.create = function() {
         
         topItem = inGame.add.sprite(0, 0, 'f-1-0');
         shoes = inGame.add.sprite(0, 0, 'f-4-0');
-//                             0 - Hair
-//                             1 - topItem
-//                             2 - bottomItem
-//                             3 - Outfit
-//                             4 - Shoes
-//                             5 - Board
-//                             6 - Head Acc.
-//                             7 - Face Acc.
-//                             8 - Body Acc.
-
-        // if not outfit
-        // if (playerInfo.avatar['equipped'][1] > -1) {
-        //     topItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-1-' + playerInfo.avatar['equipped'][1]);
-        // }
-        // else
-        //     outfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0]);
-
-        brow = inGame.add.sprite(0, 0, 'brow-0');
+        // brow = inGame.add.sprite(0, 0, 'brow-0');
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
 
         usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
@@ -243,28 +226,39 @@ inGame.create = function() {
         const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
         const otherHead = inGame.add.sprite(playerInfo.x, playerInfo.y, 'face-' + playerInfo.avatar['skinTone']);
         const otherEyes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'eyes-' + playerInfo.avatar['eyeType']);
-        var otherUsernameTag = inGame.add.sprite(playerInfo.x, playerInfo.y + usernameOffsetY, 'username-tag');
+        const otherLips = inGame.add.sprite(playerInfo.x, playerInfo.y, 'lips-0');
 
-        var otherUsernameLabel = inGame.add.text(Math.round(playerInfo.x), playerInfo.y + 68, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        const otherHairUpper = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        const otherHairLower = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        
+        const otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-1-0');
+
+        const otherShoes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-4-0');
+    
+        var otherUsernameTag = inGame.add.sprite(playerInfo.x, playerInfo.y, 'username-tag');
+        var otherUsernameLabel = inGame.add.text(playerInfo.x, playerInfo.y + 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
         
         otherUsernameLabel.originX = 0.5;
         var tempCenter = otherUsernameLabel.getCenter().x;
-        console.log('temp center: ', + tempCenter);
-        otherUsernameLabel.x = tempCenter+ 5;
+        otherUsernameLabel.x = tempCenter;
         otherUsernameLabel.setStroke('#ffffff', 2);
 
         otherPlayer.flipX = playerInfo.flipX;
         otherHead.flipX = playerInfo.flipX;
         otherEyes.flipX = playerInfo.flipX;
+        otherLips.flipX = playerInfo.flipX;
+        otherHairUpper.flipX = playerInfo.flipX;
+        otherHairLower.flipX = playerInfo.flipX;
+        otherTopItem.flipX = playerInfo.flipX;
+        otherShoes.flipX = playerInfo.flipX;
+
         otherUsernameTag.flipX = playerInfo.flipX;
 
         if (playerInfo.flipX) {
             otherHead.setPosition(playerInfo.x, playerInfo.y);
             otherEyes.setPosition(playerInfo.x, playerInfo.y);
-            otherUsernameLabel.x = tempCenter - 5;
         }
-
-        const otherContainer = inGame.add.container([otherHead, otherEyes, otherPlayer, otherUsernameTag, otherUsernameLabel]);
+        const otherContainer = inGame.add.container([otherHead, otherEyes, otherLips, otherHairLower, otherHairUpper, otherPlayer, otherTopItem, otherShoes, otherUsernameTag, otherUsernameLabel]);
         
         otherContainer.flipX = playerInfo.flipX;
         otherContainer.setDataEnabled();
@@ -321,27 +315,23 @@ inGame.create = function() {
             if (playerInfo.id === p.id) {
                 p.flipX = playerInfo.flipX;
 
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 8; i++) {
                     p.x[i].flipX = p.flipX;
                 }
 
                 p.x[0].setPosition(playerInfo.x, playerInfo.y);
                 p.x[1].setPosition(playerInfo.x, playerInfo.y);
-                p.x[3].setPosition(playerInfo.x, playerInfo.y + usernameOffsetY);
-                console.log('data: ' + p.getData('usernameLabelCenter') + ', ' + p.x[4].getCenter().x);
-
-                p.x[4].originX = 0.5;
-                p.x[4].y = playerInfo.y + 68;
-                p.x[4].x = playerInfo.x + 5;
-
-
-                if (p.flipX) {
-                    p.x[0].setPosition(playerInfo.x, playerInfo.y);
-                    p.x[1].setPosition(playerInfo.x, playerInfo.y);
-                    p.x[4].x = playerInfo.x - 5;
-                }
-
                 p.x[2].setPosition(playerInfo.x, playerInfo.y);
+                p.x[3].setPosition(playerInfo.x, playerInfo.y);
+                p.x[4].setPosition(playerInfo.x, playerInfo.y);
+                p.x[5].setPosition(playerInfo.x, playerInfo.y);
+                p.x[6].setPosition(playerInfo.x, playerInfo.y);
+                p.x[7].setPosition(playerInfo.x, playerInfo.y);
+                p.x[8].setPosition(playerInfo.x, playerInfo.y);
+
+                p.x[9].originX = 0.5;
+                p.x[9].y = playerInfo.y + 100;
+                p.x[9].x = playerInfo.x;
             }
             }.bind(this));
         }
@@ -467,7 +457,7 @@ inGame.update = function() {
 
             player.flipX = false;
             head.flipX = false;
-            brow.flipX = false;
+            // brow.flipX = false;
             eyes.flipX = false;
             lips.flipX = false;
             hairLower.flipX = false;
@@ -478,7 +468,7 @@ inGame.update = function() {
         } else if (cursors.right.isDown || container.body.velocity.x > 0) {
             player.flipX = true;
             head.flipX = true;
-            brow.flipX = true;
+            // brow.flipX = true;
             eyes.flipX = true;
             lips.flipX = true;
             hairLower.flipX = true;
