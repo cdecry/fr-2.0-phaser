@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            @font-face {
+                font-family: VAG;
+                src: url("./src/assets/fonts/VAG Rounded Bold.ttf");
+            }
+
+            #chat {
+                position: absolute;
+                align-items: center;
+                display: grid;
+                grid-auto-flow: column;
+                width: 425px;
+                height: 39px;
+                /* border: 1px solid greenyellow; */
+            }
+
+            .chatButton {
+                height: 36px;
+                width: 36px;
+            }
+
+            #sendButton {
+                height: 36px;
+                width: 49px;
+            }
+
+            #chatInput:focus {
+                outline: none;
+            }
+            #chatInput {
+                padding-left: 10px;
+                font-size: 12px;
+                font-family: Arial, Helvetica, sans-serif;
+                letter-spacing: 1px;
+                color: rgb(255, 255, 255);
+                width: 260px;
+                margin-top: 5px;
+                background-color: transparent;
+            }
+            button {
+                background-color: transparent;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="chat">
+            <button class="chatButton"></button>
+            <button class="chatButton"></button>
+            <button class="chatButton"></button>
+            <input id="chatInput" type="text" name="chat" spellcheck="false" autocomplete="off" placeholder="Click Here Or Press ENTER To Chat"/>
+            <button id="sendButton"></button>
+        </div>
+
+    </body>
+</html>

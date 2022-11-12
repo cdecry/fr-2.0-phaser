@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            @font-face {
+                font-family: VAG;
+                src: url("./src/assets/fonts/VAG Rounded Bold.ttf");
+            }
+            
+            #bar {
+                align-items: center;
+                position: absolute;
+                display: grid;
+                grid-auto-flow: column;
+                column-gap: 10px;
+                border: 1px solid red;
+                width: 780px;
+                height: 49px;
+            }
+
+            #chat {
+                align-items: center;
+                display: grid;
+                grid-auto-flow: column;
+                width: 425px;
+                height: 39px;
+                border: 1px solid greenyellow;
+            }
+
+            .uiButton {
+                height: 49px;
+                width: 49px;
+            }
+
+            .chatButton {
+                height: 36px;
+                width: 36px;
+            }
+
+            #sendButton {
+                height: 36px;
+                width: 49px;
+            }
+
+            #chatInput:focus {
+                outline: none;
+            }
+            #chatInput {
+                font-size: 13px;
+                font-family: Arial, Helvetica, sans-serif;
+                letter-spacing: 1px;
+                color: rgb(255, 255, 255);
+                width: 260px;
+                border: 1px solid red;
+                background-color: transparent;
+            }
+            button {
+                background-color: transparent;
+                border: 1px solid violet;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="bar">
+            <button class="uiButton"></button>
+            <button class="uiButton"></button>
+            <button class="uiButton"></button>
+                <button class="chatButton"></button>
+                <button class="chatButton"></button>
+                <button class="chatButton"></button>
+                <input id="chatInput" type="text" name="chat" spellcheck="false" autocomplete="off"/>
+                <button id="sendButton"></button>
+            <button class="uiButton"></button>
+            <button class="uiButton"></button>
+            <button class="uiButton"></button>
+        </div>
+    </body>
+</html>

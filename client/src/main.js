@@ -123,6 +123,9 @@ inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
     this.load.image('roomBg', 'scene/room-downtown.png');
+    this.load.image('uiBar', 'scene/ui-bar.png');
+    this.load.html('uiBottomBar', 'html/uibar.html');
+    this.load.html('chatBar', 'html/chatbar.html');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -181,6 +184,13 @@ inGame.create = function() {
     });
     
     var bg = this.add.image(400, 260, 'roomBg');
+    var uiBar = this.add.image(400, 490, 'uiBar');
+
+    // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
+    const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
+
+    uiBar.setDepth(1000);
+
     var otherPlayers = this.add.group();
 
     let data = this.cache.json.get('bodyAnims');
@@ -189,12 +199,15 @@ inGame.create = function() {
     let dataHair = this.cache.json.get('hairAnims');
     let dataLips = this.cache.json.get('lipsAnims');
 
-    key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
-    key2 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
-    key3 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
-    key4 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR);
+    key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE, false);
+    key2 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO, false);
+    key3 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE, false);
+    key4 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR, false);
 
-    cursors = this.input.keyboard.createCursorKeys();
+    keyLeft = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+    keyRight = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+    keyUp = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+    keyDown = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
     
     function createPlayer(playerInfo) {
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
@@ -535,27 +548,27 @@ inGame.update = function() {
         container.setDepth(container.y);
         //#region Arrow Key Movement
         // Horizontal movement
-        if (cursors.left.isDown) {
+        if (keyLeft.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, -1);
 
-        } else if (cursors.right.isDown) {
+        } else if (keyRight.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, 1);
         }
 
         // Vertical movement
-        if (cursors.up.isDown) {
+        if (keyUp.isDown) {
             container.body.setVelocity(0);
             moveY(container.x, container.y, -1);
 
-        } else if (cursors.down.isDown) {
+        } else if (keyDown.isDown) {
             container.body.setVelocity(0);
             moveY(container.x, container.y, 1);
         }
 
         // Flip
-        if (cursors.left.isDown || container.body.velocity.x < 0) {
+        if (keyLeft.isDown || container.body.velocity.x < 0) {
 
             player.flipX = false;
             head.flipX = false;
@@ -569,7 +582,7 @@ inGame.update = function() {
             bottomItem.flipX = false;
             shoes.flipX = false;
 
-        } else if (cursors.right.isDown || container.body.velocity.x > 0) {
+        } else if (keyRight.isDown || container.body.velocity.x > 0) {
             player.flipX = true;
             head.flipX = true;
             brow.flipX = true;
