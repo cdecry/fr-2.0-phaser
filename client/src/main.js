@@ -96,7 +96,7 @@ var globalPointer = {
 var usernameLabelCenter = 0;
 var clickOffsetY = 110;
 var usernameOffsetY = 30;
-var numContainerItems = 10;
+var numContainerItems = 13;
 
 var container;
 var player = null;
@@ -226,6 +226,8 @@ inGame.create = function() {
         container.add([head, eyes, lips, board, hairLower, hairUpper, brow, player, bottomItem, topItem, shoes, usernameTag, usernameLabel]);
 
         inGame.physics.add.existing(container, false);
+
+        container.setDepth(container.y);
         container.body.setCollideWorldBounds(false);
 
         container.setDataEnabled();
@@ -241,11 +243,14 @@ inGame.create = function() {
         const otherEyes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'eyes-' + playerInfo.avatar['eyeType']);
         const otherLips = inGame.add.sprite(playerInfo.x, playerInfo.y, 'lips-0');
 
+        const otherBoard = inGame.add.sprite(playerInfo.x, playerInfo.y, 'n-5-' + playerInfo.avatar['equipped'][5]);
+
         const otherHairLower = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
         const otherHairUpper = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
         const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
 
         const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
+        const otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-2-' + playerInfo.avatar['equipped'][2]);
         const otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-1-' + playerInfo.avatar['equipped'][1]);
         const otherShoes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-4-' + playerInfo.avatar['equipped'][4]);
     
@@ -261,8 +266,12 @@ inGame.create = function() {
         otherHead.flipX = playerInfo.flipX;
         otherEyes.flipX = playerInfo.flipX;
         otherLips.flipX = playerInfo.flipX;
+
+        otherBoard.flipX = playerInfo.flipX;
+
         otherHairUpper.flipX = playerInfo.flipX;
         otherHairLower.flipX = playerInfo.flipX;
+        otherBottomItem.flipX = playerInfo.flipX;
         otherTopItem.flipX = playerInfo.flipX;
         otherShoes.flipX = playerInfo.flipX;
 
@@ -272,7 +281,22 @@ inGame.create = function() {
             otherHead.setPosition(playerInfo.x, playerInfo.y);
             otherEyes.setPosition(playerInfo.x, playerInfo.y);
         }
-        const otherContainer = inGame.add.container([otherHead, otherEyes, otherLips, otherHairLower, otherHairUpper, otherBrow, otherPlayer, otherTopItem, otherShoes, otherUsernameTag, otherUsernameLabel]);
+
+        const otherContainer = inGame.add.container([otherHead, otherEyes, otherLips, otherBoard, otherHairLower, otherHairUpper, otherBrow, otherPlayer, otherBottomItem, otherTopItem, otherShoes, otherUsernameTag, otherUsernameLabel]);
+        
+        otherHead.setDepth(playerInfo.y);
+        otherEyes.setDepth(playerInfo.y);
+        otherLips.setDepth(playerInfo.y);
+        otherBoard.setDepth(playerInfo.y);
+        otherHairLower.setDepth(playerInfo.y);
+        otherHairUpper.setDepth(playerInfo.y);
+        otherBrow.setDepth(playerInfo.y);
+        otherPlayer.setDepth(playerInfo.y);
+        otherBottomItem.setDepth(playerInfo.y);
+        otherTopItem.setDepth(playerInfo.y);
+        otherShoes.setDepth(playerInfo.y);
+        otherUsernameTag.setDepth(playerInfo.y);
+        otherUsernameLabel.setDepth(playerInfo.y);
         
         otherContainer.flipX = playerInfo.flipX;
         otherContainer.setDataEnabled();
@@ -334,16 +358,19 @@ inGame.create = function() {
             if (playerInfo.id === p.id) {
                 p.flipX = playerInfo.flipX;
 
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 11; i++) {
                     p.x[i].flipX = p.flipX;
                     p.x[i].setPosition(playerInfo.x, playerInfo.y);
+                    p.x[i].setDepth(playerInfo.y);
                 }
 
-                p.x[8].setPosition(playerInfo.x, playerInfo.y);
+                p.x[11].setPosition(playerInfo.x, playerInfo.y);
+                p.x[11].setDepth(playerInfo.y);
 
-                p.x[9].originX = 0.5;
-                p.x[9].y = playerInfo.y + 100;
-                p.x[9].x = playerInfo.x;
+                p.x[12].originX = 0.5;
+                p.x[12].y = playerInfo.y + 100;
+                p.x[12].x = playerInfo.x;
+                p.x[12].setDepth(playerInfo.y);
             }
             }.bind(this));
         }
@@ -351,36 +378,51 @@ inGame.create = function() {
 
     globalThis.socket.on('playerWaveResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.x[5].anims.isPlaying && !p.x[1].anims.isPlaying) {
-                p.x[5].play(JSON.parse(JSON.stringify(p.x[5])).textureKey + '-wave');
-                p.x[6].play(JSON.parse(JSON.stringify(p.x[6])).textureKey + '-wave');
+            if (playerInfo.id === p.id) { // && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying
+                p.x[7].play(JSON.parse(JSON.stringify(p.x[7])).textureKey + '-wave');
+                p.x[2].play(JSON.parse(JSON.stringify(p.x[2])).textureKey + '-wave');
+                p.x[9].play(JSON.parse(JSON.stringify(p.x[9])).textureKey + '-wave');
                 }
             }.bind(this));
     }.bind(this));
 
     globalThis.socket.on('playerCryResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.x[5].anims.isPlaying && !p.x[1].anims.isPlaying) {
-                    for (let i = 0; i < 7; i++) {
+            if (playerInfo.id === p.id) {
+                    for (let i = 0; i < 8; i++) {
                         p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-cry');
                     }
+                    p.x[9].play(JSON.parse(JSON.stringify(p.x[9])).textureKey + '-cry');
                 }
             }.bind(this));
     }.bind(this));
 
     globalThis.socket.on('playerJumpResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.x[5].anims.isPlaying && !p.x[1].anims.isPlaying) {
-                    for (let i = 0; i < 8; i++) {
+            if (playerInfo.id === p.id) {
+                    for (let i = 0; i < 3; i++) {
                         p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-jump');
                     }
+                    for (let i = 4; i < 11; i++) {
+                        p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-jump');
+                    }
+                //     player.play('body-' + container.getData('skinTone') + '-jump');
+                // head.play('face-' + container.getData('skinTone') + '-jump');
+                // eyes.play('eyes-' + container.getData('eyeType') + '-jump');
+                // lips.play('lips-0-jump');
+                // hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-jump');
+                // hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-jump');
+                // brow.play('brow-0-jump');
+                // topItem.play('f-1-' + container.getData('equipped')[1] + '-jump');
+                // bottomItem.play('f-2-' + container.getData('equipped')[2] + '-jump');
+                // shoes.play('f-4-' + container.getData('equipped')[4] + '-jump');
                 }
             }.bind(this));
     }.bind(this));
 
     globalThis.socket.on('playerWinkResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.x[5].anims.isPlaying && !p.x[1].anims.isPlaying) {
+            if (playerInfo.id === p.id && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying) {
                 p.x[1].play(JSON.parse(JSON.stringify(p.x[1])).textureKey + '-wink');
             }
             }.bind(this));
@@ -490,7 +532,7 @@ function moveXY(newPosX, newPosY) {
 
 inGame.update = function() {
     if (container) {
-
+        container.setDepth(container.y);
         //#region Arrow Key Movement
         // Horizontal movement
         if (cursors.left.isDown) {
@@ -520,6 +562,7 @@ inGame.update = function() {
             brow.flipX = false;
             eyes.flipX = false;
             lips.flipX = false;
+            board.flipX = false;
             hairLower.flipX = false;
             hairUpper.flipX = false;
             topItem.flipX = false;
@@ -532,6 +575,7 @@ inGame.update = function() {
             brow.flipX = true;
             eyes.flipX = true;
             lips.flipX = true;
+            board.flipX = true;
             hairLower.flipX = true;
             hairUpper.flipX = true;
             topItem.flipX = true;
@@ -553,7 +597,7 @@ inGame.update = function() {
             }
         }
 
-        // Actions (CRRENTLY LOCAL ONLY)
+        // Actions
         if (key1.isDown) {
             if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
@@ -615,16 +659,6 @@ inGame.update = function() {
             flipX: player.flipX
         };
     }
-}
-
-inGame.awayUpdate = function() {
-    if (this.lastUpdateMoment>this.forcedUpdateMoment+5000){
-        this.forcedUpdateMoment = this.lastUpdateMoment
-        
-    } else {
-        this.update(this.forcedUpdateMoment+10000, 10000)
-        this.forcedUpdateMoment = this.lastUpdateMoment;
-        }
 }
 
 //#endregion
