@@ -1,0 +1,18 @@
+{
+	"skins"	:	[
+        "lips-0"
+	],
+	
+	"keys"	: [
+        "wave",
+		"jump"
+	],
+	
+	"frames"	: {
+        "wave"	: [ 1, 1, 1, 1, 1, 0 ],
+		"jump"	: [ 1, 1, 1, 0]
+	},
+	
+	"repeat"	: 0,
+	"frameRate"	: 4
+}

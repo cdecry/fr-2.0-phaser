@@ -49,6 +49,7 @@ io.on('connection', function (socket) {
 
             // get avatar
             const avatar = await getUserAvatar(userId);
+            // console.log('server aet avatar' + avatar['equipped']);
 
             var player = new Player(socket.id, username, 'downtown', avatar, false, 400, 200);
             players[socket.id] = player;
@@ -57,7 +58,6 @@ io.on('connection', function (socket) {
                 rooms['downtown'] = [player];
             else
                 rooms['downtown'].push(player);
-
             console.log('Sucessfully logged in! Players online: ' + JSON.stringify(players));
             // load game
             socket.join('downtown');
@@ -70,6 +70,11 @@ io.on('connection', function (socket) {
         }
     });
 
+    socket.on('game loaded', function() {
+        io.to(socket.id).emit('spawnCurrentPlayers', players);
+        socket.to("downtown").emit("spawnNewPlayer", players[socket.id]);
+    });
+
     socket.on('playerMovement', function (movementData) {
         players[socket.id].x = movementData.x;
         players[socket.id].y = movementData.y;
@@ -77,12 +82,23 @@ io.on('connection', function (socket) {
 
         socket.broadcast.emit('playerMoved', players[socket.id]);
         // socket.to('downtown').emit('playerMoved', players[socket.id]);
-      });
-
-    socket.on('game loaded', function() {
-        io.to(socket.id).emit('spawnCurrentPlayers', players);
-        socket.to("downtown").emit("spawnNewPlayer", players[socket.id]);
     });
+
+    socket.on('playerWave', function() {
+        socket.broadcast.to('downtown').emit('playerWaveResponse', players[socket.id]);
+    })
+
+    socket.on('playerCry', function() {
+        socket.broadcast.to('downtown').emit('playerCryResponse', players[socket.id]);
+    })
+
+    socket.on('playerJump', function() {
+        socket.broadcast.to('downtown').emit('playerJumpResponse', players[socket.id]);
+    })
+
+    socket.on('playerWink', function() {
+        socket.broadcast.to('downtown').emit('playerWinkResponse', players[socket.id]);
+    })
 });
 
 server.listen(8081, function () {
