@@ -14,12 +14,13 @@
                 grid-auto-flow: column;
                 width: 425px;
                 height: 39px;
-                /* border: 1px solid greenyellow; */
+                border: none;
             }
 
             .chatButton {
                 height: 36px;
                 width: 36px;
+                border: none;
             }
 
             #sendButton {
@@ -31,17 +32,22 @@
                 outline: none;
             }
             #chatInput {
+                border: none;
                 padding-left: 10px;
                 font-size: 12px;
                 font-family: Arial, Helvetica, sans-serif;
                 letter-spacing: 1px;
                 color: rgb(255, 255, 255);
-                width: 260px;
+                width: 255px;
                 margin-top: 5px;
                 background-color: transparent;
             }
             button {
                 background-color: transparent;
+                border: none;
+            }
+            button:active{
+                background-color: rgba(255, 255, 255, 0.25)
             }
         </style>
     </head>
@@ -51,8 +57,8 @@
             <button class="chatButton"></button>
             <button class="chatButton"></button>
             <button class="chatButton"></button>
-            <input id="chatInput" type="text" name="chat" spellcheck="false" autocomplete="off" placeholder="Click Here Or Press ENTER To Chat"/>
-            <button id="sendButton"></button>
+            <input id="chatInput" type="text" name="chatInput" spellcheck="false" autocomplete="off"/>
+            <button id="sendButton" name="sendChatButton"></button>
         </div>
 
     </body>

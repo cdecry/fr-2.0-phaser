@@ -99,6 +99,10 @@ io.on('connection', function (socket) {
     socket.on('playerWink', function() {
         socket.broadcast.to('downtown').emit('playerWinkResponse', players[socket.id]);
     })
+
+    socket.on('chatMessage', function(msg) {
+        io.in('downtown').emit('chatMessageResponse', players[socket.id], msg);
+    })
 });
 
 server.listen(8081, function () {
