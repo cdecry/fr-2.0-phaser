@@ -68,7 +68,7 @@ loading.create = function() {
         setTimeout(() => {
             this.scene.transition( {
                 target: 'GameScene',
-                moveBelow: true
+                moveBelow: true,
             });
         }, 1000);
     });
@@ -173,6 +173,8 @@ inGame.preload = function() {
 
 inGame.create = function() {
 
+    var isTyping = false;
+
     WebFont.load({
         custom: {
             families: [ 'usernameFont' ]
@@ -189,7 +191,53 @@ inGame.create = function() {
     // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
     const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
 
+    var inputChat = chatBar.getChildByName('chatInput');
+
+
+    var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
+
+    setTimeout(() => {
+        inputChat.value = defaultChatBarMessage;
+    }, 1000);
+
     uiBar.setDepth(1000);
+
+    // inGame.addListener('click');
+    // inGame.on('click', function (event) {
+    //     if (event.target.name === 'sendChatButton')
+    //     { 
+    //     }
+    // });
+
+    inGame.input.keyboard.on('keydown-ENTER', function (event) {
+
+        if (isTyping === false) {
+            inputChat.value = '';
+            inputChat.focus();
+            isTyping = true;
+        }
+        else if (inputChat.value !== ''){
+            socket.emit('chatMessage', inputChat.value);
+            inputChat.value = '';
+        }
+    });
+
+    inputChat.addEventListener('focus', (event) => {
+        inputChat.value = '';
+        isTyping = true;
+      });
+
+    chatBar.addListener('click');
+    chatBar.on('click', function (event) {
+        if (event.target.name === 'sendChatButton')
+        {   
+            if (inputChat.value !== '')
+            {
+                socket.emit('chatMessage', inputChat.value);
+                inputChat.value = '';
+            }
+        }
+    });
 
     var otherPlayers = this.add.group();
 
@@ -208,6 +256,8 @@ inGame.create = function() {
     keyRight = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
     keyUp = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
     keyDown = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+
+    keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     
     function createPlayer(playerInfo) {
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
@@ -440,6 +490,10 @@ inGame.create = function() {
             }
             }.bind(this));
     }.bind(this));
+
+    globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
+        console.log(playerInfo.username + ': ' + msg);
+    }.bind(this));
     
 
     //#region Animations
@@ -500,6 +554,10 @@ inGame.create = function() {
     //#endregion
 
     this.input.on('pointerdown', function (pointer) {
+        isTyping = false;
+        inputChat.value = defaultChatBarMessage;
+        inputChat.blur();
+        
         globalPointer.x = pointer.x;
         globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, pointer.x, pointer.y - clickOffsetY, 150);
