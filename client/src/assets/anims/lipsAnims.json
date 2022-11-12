@@ -1,15 +1,16 @@
 {
 	"skins"	:	[
-        "f-2-0",
-        "f-4-0"
+        "lips-0"
 	],
 	
 	"keys"	: [
+        "wave",
 		"jump"
 	],
 	
 	"frames"	: {
-		"jump"	: [1, 0, 1, 0 ]
+        "wave"	: [ 1, 1, 1, 1, 1, 0 ],
+		"jump"	: [ 1, 1, 1, 0]
 	},
 	
 	"repeat"	: 0,
