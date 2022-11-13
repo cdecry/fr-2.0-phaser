@@ -103,6 +103,7 @@ var player = null;
 var playerCollision;
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, outfit, shoes, board, usernameTag, usernameLabel;
 
+var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 
 var inGame = new Phaser.Scene('GameScene');
 
@@ -120,20 +121,22 @@ inGame.init = function()
 }
 
 inGame.preload = function() {
-
-    this.load.scenePlugin({
-        key: 'rexLifeTime',
-        url: 'src/plugins/rexlifetimeplugin.js',
-    });
-
     this.load.setBaseURL('/src/assets')
+
+    // this.load.plugin({
+    //     key: 'rexlifetimeplugin',
+    //     url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js',
+    //     sceneKey: 'rexLifeTime'
+    // });
+
+    this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
 
     this.load.image('roomBg', 'scene/room-downtown.png');
     this.load.image('uiBar', 'scene/ui-bar.png');
     this.load.html('uiBottomBar', 'html/uibar.html');
     this.load.html('chatBar', 'html/chatbar.html');
     this.load.html('messageWidth', 'html/messagewidth.html');
-    this.load.html('chatMessage', 'html/chatmessage.html');
+    this.load.html('chatMessageHTML', 'html/chatmessage.html');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -384,14 +387,27 @@ inGame.create = function() {
     function createSpeechBubble (x, y, quote)
     {
         
-        const chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessage');
+        chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
         var chatMessageContent = chatMessage.getChildByID('message');
         chatMessageContent.innerHTML = quote;
 
         var divHeight = chatMessageContent.clientHeight;
         var lines = divHeight / 15;
 
-        const chatBubble = inGame.add.image(0, -125, 'message-' + lines.toString());
+        chatBubble = inGame.add.image(0, -125, 'message-' + lines.toString());
+
+        bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        });        
+
+        messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        });        
+
         container.add([chatBubble, chatMessage]);
     }      
 
@@ -514,6 +530,12 @@ inGame.create = function() {
 
     globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
         // local only
+        if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+            bubbleLifeTime.stop();
+            messageLifeTime.stop();
+            chatBubble.destroy()
+            chatMessage.destroy();
+        }
         createSpeechBubble(400, 200, msg);
         // console.log(playerInfo.username + ': ' + msg);
     }.bind(this));
@@ -772,7 +794,16 @@ var config = {
         createContainer: true
         },
     pixelArt: true,
-    scene: [login, loading, inGame],
+    scene: [login, loading, inGame]
+    // plugins: {
+    //     global: [{
+    //         key: 'rexLifeTimePlugin',
+    //         plugin: LifeTimePlugin,
+    //         start: true
+    //     },
+    //     // ...
+    //     ]
+    // }
 };
 
 var game = new Phaser.Game(config);
