@@ -120,12 +120,20 @@ inGame.init = function()
 }
 
 inGame.preload = function() {
+
+    this.load.scenePlugin({
+        key: 'rexLifeTime',
+        url: 'src/plugins/rexlifetimeplugin.js',
+    });
+
     this.load.setBaseURL('/src/assets')
 
     this.load.image('roomBg', 'scene/room-downtown.png');
     this.load.image('uiBar', 'scene/ui-bar.png');
     this.load.html('uiBottomBar', 'html/uibar.html');
     this.load.html('chatBar', 'html/chatbar.html');
+    this.load.html('messageWidth', 'html/messagewidth.html');
+    this.load.html('chatMessage', 'html/chatmessage.html');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -163,6 +171,13 @@ inGame.preload = function() {
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
+    // load chat message containers
+    // load all avatar eyes
+    for (let i = 1; i < 11; i++) {
+        this.load.image('message-' + i.toString(), 'scene/message-' + i.toString() + '.png');
+    }
+
+
     // load anim data
     this.load.json('bodyAnims', 'anims/bodyAnims.json');
     this.load.json('bottomShoes', 'anims/bottomShoes.json');
@@ -192,8 +207,6 @@ inGame.create = function() {
     const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
 
     var inputChat = chatBar.getChildByName('chatInput');
-
-
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
     setTimeout(() => {
@@ -201,13 +214,6 @@ inGame.create = function() {
     }, 1000);
 
     uiBar.setDepth(1000);
-
-    // inGame.addListener('click');
-    // inGame.on('click', function (event) {
-    //     if (event.target.name === 'sendChatButton')
-    //     { 
-    //     }
-    // });
 
     inGame.input.keyboard.on('keydown-ENTER', function (event) {
 
@@ -374,6 +380,21 @@ inGame.create = function() {
         otherPlayers.add(otherContainer);
       }
 
+
+    function createSpeechBubble (x, y, quote)
+    {
+        
+        const chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessage');
+        var chatMessageContent = chatMessage.getChildByID('message');
+        chatMessageContent.innerHTML = quote;
+
+        var divHeight = chatMessageContent.clientHeight;
+        var lines = divHeight / 15;
+
+        const chatBubble = inGame.add.image(0, -125, 'message-' + lines.toString());
+        container.add([chatBubble, chatMessage]);
+    }      
+
     globalThis.socket.emit('game loaded');
 
     globalThis.socket.on('spawnCurrentPlayers', async (players) => {
@@ -492,7 +513,9 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
-        console.log(playerInfo.username + ': ' + msg);
+        // local only
+        createSpeechBubble(400, 200, msg);
+        // console.log(playerInfo.username + ': ' + msg);
     }.bind(this));
     
 
@@ -742,14 +765,14 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
     dom: {
         createContainer: true
         },
     pixelArt: true,
-    scene: [login, loading, inGame]
+    scene: [login, loading, inGame],
 };
 
 var game = new Phaser.Game(config);
