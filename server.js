@@ -80,8 +80,7 @@ io.on('connection', function (socket) {
         players[socket.id].y = movementData.y;
         players[socket.id].flipX = movementData.flipX;
 
-        socket.broadcast.emit('playerMoved', players[socket.id]);
-        // socket.to('downtown').emit('playerMoved', players[socket.id]);
+        socket.to('downtown').emit('playerMoved', players[socket.id]);
     });
 
     socket.on('playerWave', function() {
@@ -98,6 +97,10 @@ io.on('connection', function (socket) {
 
     socket.on('playerWink', function() {
         socket.broadcast.to('downtown').emit('playerWinkResponse', players[socket.id]);
+    })
+
+    socket.on('chatMessage', function(msg) {
+        socket.broadcast.to('downtown').emit('chatMessageResponse', players[socket.id], msg);
     })
 });
 
