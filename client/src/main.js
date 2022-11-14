@@ -97,6 +97,7 @@ var usernameLabelCenter = 0;
 var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 13;
+var chatBubbleOffsetY = -125;
 
 var container;
 var player = null;
@@ -226,7 +227,16 @@ inGame.create = function() {
             isTyping = true;
         }
         else if (inputChat.value !== ''){
+
+            if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+                bubbleLifeTime.stop();
+                messageLifeTime.stop();
+                chatBubble.destroy()
+                chatMessage.destroy();
+            }
+            createSpeechBubble(400, 200, inputChat.value);
             socket.emit('chatMessage', inputChat.value);
+            
             inputChat.value = '';
         }
     });
@@ -242,6 +252,14 @@ inGame.create = function() {
         {   
             if (inputChat.value !== '')
             {
+                if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+                    bubbleLifeTime.stop();
+                    messageLifeTime.stop();
+                    chatBubble.destroy()
+                    chatMessage.destroy();
+                }
+                createSpeechBubble(400, 200, inputChat.value);
+
                 socket.emit('chatMessage', inputChat.value);
                 inputChat.value = '';
             }
@@ -377,6 +395,7 @@ inGame.create = function() {
         otherContainer.setData('eyeType', playerInfo.avatar['eyeType']);
         otherContainer.setData('gender', playerInfo.avatar['gender']);
         otherContainer.setData('equipped', playerInfo.avatar['equipped']);
+        otherContainer.setData('messageData', { hasMessage: false, otherChatBubble: null, otherChatMessage: null, otherBubbleLifeTime: null, otherMessageLifeTime: null });
 
         otherContainer.id = playerInfo.id;
 
@@ -394,22 +413,64 @@ inGame.create = function() {
         var divHeight = chatMessageContent.clientHeight;
         var lines = divHeight / 15;
 
-        chatBubble = inGame.add.image(0, -125, 'message-' + lines.toString());
+        chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
+
+        chatBubble.setDepth(900);
+        chatMessage.setDepth(900);
 
         bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
             lifeTime: 5000,
             destroy: true,
             start: true
-        });        
+        });
 
         messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
             lifeTime: 5000,
             destroy: true,
             start: true
-        });        
+        });
 
         container.add([chatBubble, chatMessage]);
-    }      
+    }
+    
+    function createOtherSpeechBubble (otherPlayer, x, y, quote)
+    {
+        var otherChatMessage = inGame.add.dom(x, y).createFromCache('chatMessageHTML');
+        var otherChatMessageContent = otherChatMessage.getChildByID('message');
+        otherChatMessageContent.innerHTML = quote;
+
+        var divHeight = otherChatMessageContent.clientHeight;
+        var lines = divHeight / 15;
+
+        var otherChatBubble = inGame.add.image(x, y + chatBubbleOffsetY, 'message-' + lines.toString());
+
+        otherChatBubble.setDepth(900);
+        otherChatMessage.setDepth(900);
+        
+        var otherBubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatBubble, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        }).on('complete', function () {
+            otherPlayer.setData('messageData', {    'hasMessage': false,
+                                                'otherChatBubble': null,
+                                                'otherChatMessage': null,
+                                                'otherBubbleLifeTime': null,
+                                                'otherMessageLifeTime': null });
+        });
+
+        var otherMessageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatMessage, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        });
+
+        otherPlayer.setData('messageData', {    'hasMessage': true,
+                                                'otherChatBubble': otherChatBubble,
+                                                'otherChatMessage': otherChatMessage,
+                                                'otherBubbleLifeTime': otherBubbleLifeTime,
+                                                'otherMessageLifeTime': otherMessageLifeTime });
+    } 
 
     globalThis.socket.emit('game loaded');
 
@@ -456,6 +517,13 @@ inGame.create = function() {
 
             otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) {
+
+                var msgData = p.getData('messageData');
+                if (msgData['hasMessage']) {
+                    msgData['otherChatBubble'].setPosition(playerInfo.x, playerInfo.y + chatBubbleOffsetY);
+                    msgData['otherChatMessage'].setPosition(playerInfo.x, playerInfo.y);
+                }
+
                 p.flipX = playerInfo.flipX;
 
                 for (let i = 0; i < 11; i++) {
@@ -529,15 +597,20 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
-        // local only
-        if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
-            bubbleLifeTime.stop();
-            messageLifeTime.stop();
-            chatBubble.destroy()
-            chatMessage.destroy();
-        }
-        createSpeechBubble(400, 200, msg);
-        // console.log(playerInfo.username + ': ' + msg);
+        otherPlayers.getChildren().forEach(function (p) {
+            if (playerInfo.id === p.id && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying) {
+
+                var msgData = p.getData('messageData');
+                if (msgData['hasMessage']) {
+                    msgData['otherBubbleLifeTime'].stop();
+                    msgData['otherMessageLifeTime'].stop();
+                    msgData['otherChatBubble'].destroy();
+                    msgData['otherChatMessage'].destroy();
+                }
+                createOtherSpeechBubble(p, playerInfo.x, playerInfo.y, msg);
+            }
+            }.bind(this));
+
     }.bind(this));
     
 
@@ -787,7 +860,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
     dom: {
