@@ -124,12 +124,6 @@ inGame.init = function()
 inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
-    // this.load.plugin({
-    //     key: 'rexlifetimeplugin',
-    //     url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js',
-    //     sceneKey: 'rexLifeTime'
-    // });
-
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
 
     this.load.image('roomBg', 'scene/room-downtown.png');
@@ -205,6 +199,8 @@ inGame.create = function() {
     });
     
     var bg = this.add.image(400, 260, 'roomBg');
+    bg.setDepth(-500);
+
     var uiBar = this.add.image(400, 490, 'uiBar');
 
     // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
@@ -407,6 +403,7 @@ inGame.create = function() {
     {
         
         chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
+        chatMessage.setInteractive;
         var chatMessageContent = chatMessage.getChildByID('message');
         chatMessageContent.innerHTML = quote;
 
@@ -670,7 +667,7 @@ inGame.create = function() {
         })
     });
     //#endregion
-
+    
     this.input.on('pointerdown', function (pointer) {
         isTyping = false;
         inputChat.value = defaultChatBarMessage;
@@ -679,6 +676,7 @@ inGame.create = function() {
         globalPointer.x = pointer.x;
         globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, pointer.x, pointer.y - clickOffsetY, 150);
+        // moveXY(pointer.x, pointer.y - clickOffsetY);
     });
     // EXAMPLE
     // var tempNamespace = {};
@@ -689,9 +687,11 @@ inGame.create = function() {
     // tempNamespace[myString].play('body-0-jump');
 }
 
+var tween;
+var movedRight = false;
 
 function moveX(currentPosX, currentPosY, direction) {
-	var tween = inGame.tweens.add({
+	tween = inGame.tweens.add({
         targets: container,
         x: currentPosX + direction*70,
         y: currentPosY,
@@ -701,7 +701,7 @@ function moveX(currentPosX, currentPosY, direction) {
 }
 
 function moveY(currentPosX, currentPosY, direction) {
-	var tween = inGame.tweens.add({
+	tween = inGame.tweens.add({
         targets: container,
         x: currentPosX,
         y: currentPosY + direction*70,
@@ -711,11 +711,27 @@ function moveY(currentPosX, currentPosY, direction) {
 }
 
 function moveXY(newPosX, newPosY) {
-	var tween = inGame.tweens.add({
+
+    if (tween != undefined && tween != null)
+        tween.stop();
+
+    if (newPosX - container.x > 0)
+        movedRight = true;
+    else if (newPosX - container.x < 0)
+        movedRight = false;
+
+    var distanceX = Math.abs(newPosX - container.x);
+    var distanceY = Math.abs(newPosY - container.y);
+    var distanceXY = Math.sqrt(distanceX ** 2 + distanceY ** 2);
+
+    var time = distanceXY / 150 * 1000;
+
+	tween = inGame.tweens.add({
         targets: container,
         x: newPosX,
         y: newPosY,
         ease: 'Linear',
+        duration: time,
     });
 }
 

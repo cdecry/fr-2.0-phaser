@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                background-color: burlywood;
+            }
+
+            #im-window {
+                position: absolute;
+                left: 100px;
+                top: 50px;
+                width: 350px;
+                height: 250px;
+                min-width: 200px;
+                min-height: 200px;
+                border-radius: 5px;
+                background: linear-gradient(to bottom, #597898 0px, #597898 12.5px, #15406d 12.5px, #15406d 100%);
+                overflow: hidden;
+                resize: both;
+            }
+
+            #im-header {
+                position: absolute;
+                width: 100%;
+                height: 34px;
+                background-color: transparent;
+            }
+
+            #im-title {
+                position: absolute;
+                left: 20px;
+                top: 6.5px;
+            }
+
+            #im-close-button {
+                position: absolute;
+                top: 4px;
+                right: 5px;
+                border-radius: 100%;
+            }
+
+            #im-container {
+                position: absolute;
+                top: 34px;
+                left: 4px;
+                /* border: 1px solid green; */
+                width: calc(100% - 8px);
+                height: calc(100% - 37px);
+                border-radius: 5px;
+                background-color: white;
+            }
+
+            #chat-tabs-container {
+                position: absolute;
+                /* background-color: green; */
+                left: 2px;
+                width: calc(100% - 4px);
+                height: 56px;
+            }
+
+            #chat-tabs-flexbox {
+                position: absolute;
+                top: 8px;
+                width: calc(100% - 70px);
+                height: calc(100% - 8px);
+                display: grid;
+                grid-auto-flow: column;
+                overflow-x: scroll;
+                overflow-y: hidden;
+                /* display: flex;
+                flex-direction: row; */
+            }
+
+            .chat-tab {
+                /* flex-shrink: 1; */
+                float: left;
+                width: 113px;
+                max-width: 113px;
+                height: calc(100%);
+                border-radius: 7px;
+                border-top: 1px solid #189af6;
+                border-left: 1px solid #189af6;
+                border-right: 1px solid #189af6;
+                background: white;
+            }
+
+            #new-chat-icon {
+                position: absolute;
+                top: 10px;
+                right: 11px;
+            }
+
+            #chat-tabs-bottom {
+                position: absolute;
+                top: 30px;
+                width: 100%;
+                height: calc(100% - 30px);
+                border-radius: 5px;
+                background: linear-gradient(to bottom, #20a0f0, #3fccf0, #42d0f0);
+            }
+
+            #chat-icon {
+                position: absolute;
+                left: 4px;
+                bottom: 3px;
+            }
+
+            #chat-content-container {
+                position: absolute;
+                /* background-color: red; */
+                height: calc(100% - 121px);
+                width: calc(100% - 25px);
+                top: 56px;
+                left: 2px;
+            }
+
+            .selectDisable {
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -o-user-select: none;
+                user-select: none;
+                pointer-events: none;
+            }
+
+            .selectEnable { 
+                -webkit-user-select: text;
+                -khtml-user-select: text;
+                -moz-user-select: text;
+                -o-user-select: text;
+                user-select: text;
+            }
+        </style>
+    </head>
+    <body>
+       
+
+        <div id="im-window">
+            <div id="im-header"></div>
+            <img class="selectDisable" id="im-title" src="/Users/crystal/Documents/Projects/FantageRewritten/client/src/assets/scene/instant-messager-title.png"/>
+            <div id="im-close-button">
+                <img class="selectDisable" src="/Users/crystal/Documents/Projects/FantageRewritten/client/src/assets/scene/im-close-button.png"/>
+            </div>
+
+            <div id="im-container">
+
+                <div id="chat-tabs-container">
+                    <div id="chat-tabs-flexbox">
+                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
+                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
+                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
+                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
+                    </div>
+
+                    <img class="selectDisable" id="new-chat-icon" src="/Users/crystal/Documents/Projects/FantageRewritten/client/src/assets/scene/new-chat-icon.png"/>
+
+                    <div id="chat-tabs-bottom">
+                        <img class="selectDisable" id="chat-icon" src="/Users/crystal/Documents/Projects/FantageRewritten/client/src/assets/scene/chat-icon.png"/>
+                    </div>
+                </div>
+
+                <div id="chat-content-container">
+                    <p>user1: hi this is a chat message</p>
+                </div>
+                <div id="chat-input-container"></div>
+            </div>
+        </div>
+
+        <script>
+            // make window draggable
+            dragElement(document.getElementById("im-window"));
+            
+            function dragElement(elmnt) {
+                var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+                document.getElementById('im-header').onmousedown = dragMouseDown;
+            
+                function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+
+                document.onmousemove = elementDrag;
+                }
+            
+                function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                }
+            
+                function closeDragElement() {
+
+                document.onmouseup = null;
+                document.onmousemove = null;
+                }
+            }
+            
+            function clickChatTab(elmnt) {
+                const tabs = document.querySelectorAll('.chat-tab');
+                tabs.forEach(tab => {
+                    tab.style.background = 'white';
+                });
+                elmnt.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+            }
+       </script>
+
+    </body>
+</html>
