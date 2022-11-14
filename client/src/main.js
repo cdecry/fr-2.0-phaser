@@ -68,7 +68,7 @@ loading.create = function() {
         setTimeout(() => {
             this.scene.transition( {
                 target: 'GameScene',
-                moveBelow: true
+                moveBelow: true,
             });
         }, 1000);
     });
@@ -97,12 +97,14 @@ var usernameLabelCenter = 0;
 var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 13;
+var chatBubbleOffsetY = -125;
 
 var container;
 var player = null;
 var playerCollision;
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, outfit, shoes, board, usernameTag, usernameLabel;
 
+var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 
 var inGame = new Phaser.Scene('GameScene');
 
@@ -122,7 +124,20 @@ inGame.init = function()
 inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
+    // this.load.plugin({
+    //     key: 'rexlifetimeplugin',
+    //     url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js',
+    //     sceneKey: 'rexLifeTime'
+    // });
+
+    this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+
     this.load.image('roomBg', 'scene/room-downtown.png');
+    this.load.image('uiBar', 'scene/ui-bar.png');
+    this.load.html('uiBottomBar', 'html/uibar.html');
+    this.load.html('chatBar', 'html/chatbar.html');
+    this.load.html('messageWidth', 'html/messagewidth.html');
+    this.load.html('chatMessageHTML', 'html/chatmessage.html');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -160,6 +175,13 @@ inGame.preload = function() {
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
+    // load chat message containers
+    // load all avatar eyes
+    for (let i = 1; i < 11; i++) {
+        this.load.image('message-' + i.toString(), 'scene/message-' + i.toString() + '.png');
+    }
+
+
     // load anim data
     this.load.json('bodyAnims', 'anims/bodyAnims.json');
     this.load.json('bottomShoes', 'anims/bottomShoes.json');
@@ -169,6 +191,8 @@ inGame.preload = function() {
 }
 
 inGame.create = function() {
+
+    var isTyping = false;
 
     WebFont.load({
         custom: {
@@ -181,6 +205,67 @@ inGame.create = function() {
     });
     
     var bg = this.add.image(400, 260, 'roomBg');
+    var uiBar = this.add.image(400, 490, 'uiBar');
+
+    // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
+    const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
+
+    var inputChat = chatBar.getChildByName('chatInput');
+    var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
+
+    setTimeout(() => {
+        inputChat.value = defaultChatBarMessage;
+    }, 1000);
+
+    uiBar.setDepth(1000);
+
+    inGame.input.keyboard.on('keydown-ENTER', function (event) {
+
+        if (isTyping === false) {
+            inputChat.value = '';
+            inputChat.focus();
+            isTyping = true;
+        }
+        else if (inputChat.value !== ''){
+
+            if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+                bubbleLifeTime.stop();
+                messageLifeTime.stop();
+                chatBubble.destroy()
+                chatMessage.destroy();
+            }
+            createSpeechBubble(400, 200, inputChat.value);
+            socket.emit('chatMessage', inputChat.value);
+            
+            inputChat.value = '';
+        }
+    });
+
+    inputChat.addEventListener('focus', (event) => {
+        inputChat.value = '';
+        isTyping = true;
+      });
+
+    chatBar.addListener('click');
+    chatBar.on('click', function (event) {
+        if (event.target.name === 'sendChatButton')
+        {   
+            if (inputChat.value !== '')
+            {
+                if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+                    bubbleLifeTime.stop();
+                    messageLifeTime.stop();
+                    chatBubble.destroy()
+                    chatMessage.destroy();
+                }
+                createSpeechBubble(400, 200, inputChat.value);
+
+                socket.emit('chatMessage', inputChat.value);
+                inputChat.value = '';
+            }
+        }
+    });
+
     var otherPlayers = this.add.group();
 
     let data = this.cache.json.get('bodyAnims');
@@ -189,12 +274,17 @@ inGame.create = function() {
     let dataHair = this.cache.json.get('hairAnims');
     let dataLips = this.cache.json.get('lipsAnims');
 
-    key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
-    key2 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
-    key3 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
-    key4 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR);
+    key1 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE, false);
+    key2 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO, false);
+    key3 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE, false);
+    key4 = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR, false);
 
-    cursors = this.input.keyboard.createCursorKeys();
+    keyLeft = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+    keyRight = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+    keyUp = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+    keyDown = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+
+    keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     
     function createPlayer(playerInfo) {
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
@@ -305,11 +395,82 @@ inGame.create = function() {
         otherContainer.setData('eyeType', playerInfo.avatar['eyeType']);
         otherContainer.setData('gender', playerInfo.avatar['gender']);
         otherContainer.setData('equipped', playerInfo.avatar['equipped']);
+        otherContainer.setData('messageData', { hasMessage: false, otherChatBubble: null, otherChatMessage: null, otherBubbleLifeTime: null, otherMessageLifeTime: null });
 
         otherContainer.id = playerInfo.id;
 
         otherPlayers.add(otherContainer);
       }
+
+
+    function createSpeechBubble (x, y, quote)
+    {
+        
+        chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
+        var chatMessageContent = chatMessage.getChildByID('message');
+        chatMessageContent.innerHTML = quote;
+
+        var divHeight = chatMessageContent.clientHeight;
+        var lines = divHeight / 15;
+
+        chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
+
+        chatBubble.setDepth(900);
+        chatMessage.setDepth(900);
+
+        bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        });
+
+        messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        });
+
+        container.add([chatBubble, chatMessage]);
+    }
+    
+    function createOtherSpeechBubble (otherPlayer, x, y, quote)
+    {
+        var otherChatMessage = inGame.add.dom(x, y).createFromCache('chatMessageHTML');
+        var otherChatMessageContent = otherChatMessage.getChildByID('message');
+        otherChatMessageContent.innerHTML = quote;
+
+        var divHeight = otherChatMessageContent.clientHeight;
+        var lines = divHeight / 15;
+
+        var otherChatBubble = inGame.add.image(x, y + chatBubbleOffsetY, 'message-' + lines.toString());
+
+        otherChatBubble.setDepth(900);
+        otherChatMessage.setDepth(900);
+        
+        var otherBubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatBubble, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        }).on('complete', function () {
+            otherPlayer.setData('messageData', {    'hasMessage': false,
+                                                'otherChatBubble': null,
+                                                'otherChatMessage': null,
+                                                'otherBubbleLifeTime': null,
+                                                'otherMessageLifeTime': null });
+        });
+
+        var otherMessageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatMessage, {
+            lifeTime: 5000,
+            destroy: true,
+            start: true
+        });
+
+        otherPlayer.setData('messageData', {    'hasMessage': true,
+                                                'otherChatBubble': otherChatBubble,
+                                                'otherChatMessage': otherChatMessage,
+                                                'otherBubbleLifeTime': otherBubbleLifeTime,
+                                                'otherMessageLifeTime': otherMessageLifeTime });
+    } 
 
     globalThis.socket.emit('game loaded');
 
@@ -356,6 +517,13 @@ inGame.create = function() {
 
             otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) {
+
+                var msgData = p.getData('messageData');
+                if (msgData['hasMessage']) {
+                    msgData['otherChatBubble'].setPosition(playerInfo.x, playerInfo.y + chatBubbleOffsetY);
+                    msgData['otherChatMessage'].setPosition(playerInfo.x, playerInfo.y);
+                }
+
                 p.flipX = playerInfo.flipX;
 
                 for (let i = 0; i < 11; i++) {
@@ -427,6 +595,23 @@ inGame.create = function() {
             }
             }.bind(this));
     }.bind(this));
+
+    globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
+        otherPlayers.getChildren().forEach(function (p) {
+            if (playerInfo.id === p.id && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying) {
+
+                var msgData = p.getData('messageData');
+                if (msgData['hasMessage']) {
+                    msgData['otherBubbleLifeTime'].stop();
+                    msgData['otherMessageLifeTime'].stop();
+                    msgData['otherChatBubble'].destroy();
+                    msgData['otherChatMessage'].destroy();
+                }
+                createOtherSpeechBubble(p, playerInfo.x, playerInfo.y, msg);
+            }
+            }.bind(this));
+
+    }.bind(this));
     
 
     //#region Animations
@@ -487,6 +672,10 @@ inGame.create = function() {
     //#endregion
 
     this.input.on('pointerdown', function (pointer) {
+        isTyping = false;
+        inputChat.value = defaultChatBarMessage;
+        inputChat.blur();
+        
         globalPointer.x = pointer.x;
         globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, pointer.x, pointer.y - clickOffsetY, 150);
@@ -535,27 +724,27 @@ inGame.update = function() {
         container.setDepth(container.y);
         //#region Arrow Key Movement
         // Horizontal movement
-        if (cursors.left.isDown) {
+        if (keyLeft.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, -1);
 
-        } else if (cursors.right.isDown) {
+        } else if (keyRight.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, 1);
         }
 
         // Vertical movement
-        if (cursors.up.isDown) {
+        if (keyUp.isDown) {
             container.body.setVelocity(0);
             moveY(container.x, container.y, -1);
 
-        } else if (cursors.down.isDown) {
+        } else if (keyDown.isDown) {
             container.body.setVelocity(0);
             moveY(container.x, container.y, 1);
         }
 
         // Flip
-        if (cursors.left.isDown || container.body.velocity.x < 0) {
+        if (keyLeft.isDown || container.body.velocity.x < 0) {
 
             player.flipX = false;
             head.flipX = false;
@@ -569,7 +758,7 @@ inGame.update = function() {
             bottomItem.flipX = false;
             shoes.flipX = false;
 
-        } else if (cursors.right.isDown || container.body.velocity.x > 0) {
+        } else if (keyRight.isDown || container.body.velocity.x > 0) {
             player.flipX = true;
             head.flipX = true;
             brow.flipX = true;
@@ -679,6 +868,15 @@ var config = {
         },
     pixelArt: true,
     scene: [login, loading, inGame]
+    // plugins: {
+    //     global: [{
+    //         key: 'rexLifeTimePlugin',
+    //         plugin: LifeTimePlugin,
+    //         start: true
+    //     },
+    //     // ...
+    //     ]
+    // }
 };
 
 var game = new Phaser.Game(config);
