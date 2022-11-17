@@ -126,12 +126,13 @@ inGame.preload = function() {
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
 
-    this.load.image('roomBg', 'scene/room-downtown.png');
-    this.load.image('uiBar', 'scene/ui-bar.png');
+    this.load.image('roomBg', 'scene/location/room-downtown.png');
+    this.load.image('uiBar', 'scene/chat/ui-bar.png');
     this.load.html('uiBottomBar', 'html/uibar.html');
     this.load.html('chatBar', 'html/chatbar.html');
     this.load.html('messageWidth', 'html/messagewidth.html');
     this.load.html('chatMessageHTML', 'html/chatmessage.html');
+    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -151,20 +152,33 @@ inGame.preload = function() {
     // load items
 
     // load hairs
+    for (let i = 0; i < 10; i++) {
+        this.load.spritesheet('f-0-' + i.toString() + '-1', 'item/f-0-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('f-0-' + i.toString() + '-2', 'item/f-0-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
+    }
+
     this.load.spritesheet('f-0-0-1', 'item/f-0-0-1.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-0-0-2', 'item/f-0-0-2.png', { frameWidth: 300, frameHeight: 250 });
 
     // load bottoms
-    this.load.spritesheet('f-2-0', 'item/f-2-0.png', { frameWidth: 300, frameHeight: 250 });
+    for (let i = 0; i < 16; i++) {
+        this.load.spritesheet('f-2-' + i.toString(), 'item/f-2-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
 
     // load tops
-    this.load.spritesheet('f-1-0', 'item/f-1-0.png', { frameWidth: 300, frameHeight: 250 });
+    for (let i = 0; i < 16; i++) {
+        this.load.spritesheet('f-1-' + i.toString(), 'item/f-1-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
 
     // load shoes
-    this.load.spritesheet('f-4-0', 'item/f-4-0.png', { frameWidth: 300, frameHeight: 250 });
+    for (let i = 0; i < 5; i++) {
+        this.load.spritesheet('f-4-' + i.toString(), 'item/f-4-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
 
     // load boards
-    this.load.spritesheet('n-5-0', 'item/n-5-0.png', { frameWidth: 300, frameHeight: 250 });
+    for (let i = 0; i < 1; i++) {
+        this.load.spritesheet('n-5-' + i.toString(), 'item/n-5-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
 
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
@@ -172,7 +186,7 @@ inGame.preload = function() {
     // load chat message containers
     // load all avatar eyes
     for (let i = 1; i < 11; i++) {
-        this.load.image('message-' + i.toString(), 'scene/message-' + i.toString() + '.png');
+        this.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
     }
 
 
@@ -205,6 +219,54 @@ inGame.create = function() {
 
     // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
     const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
+    // const instantMessenger = this.add.dom(0, 0).createFromCache('instantMessengerHTML');
+
+        // make window draggable
+        // dragElement(instantMessenger.getChildByID("im-window"));
+        
+        // function dragElement(elmnt) {
+        //     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        //     instantMessenger.getChildByID('im-header').onmousedown = dragMouseDown;
+        
+        //     function dragMouseDown(e) {
+        //     e = e || window.event;
+        //     e.preventDefault();
+
+        //     pos3 = e.clientX;
+        //     pos4 = e.clientY;
+        //     instantMessenger.onmouseup = closeDragElement;
+
+        //     instantMessenger.onmousemove = elementDrag;
+        //     }
+        
+        //     function elementDrag(e) {
+        //     e = e || window.event;
+        //     e.preventDefault();
+
+        //     pos1 = pos3 - e.clientX;
+        //     pos2 = pos4 - e.clientY;
+        //     pos3 = e.clientX;
+        //     pos4 = e.clientY;
+
+        //     elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        //     elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        //     }
+        
+        //     function closeDragElement() {
+
+        //         instantMessenger.onmouseup = null;
+        //         instantMessenger.onmousemove = null;
+        //     }
+        // }
+        
+        // function clickChatTab(elmnt) {
+        //     const tabs = instantMessenger.querySelectorAll('.chat-tab');
+        //     tabs.forEach(tab => {
+        //         tab.style.background = 'white';
+        //     });
+        //     elmnt.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+        // }
 
     var inputChat = chatBar.getChildByName('chatInput');
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
