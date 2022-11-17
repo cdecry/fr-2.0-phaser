@@ -102,7 +102,7 @@ var chatBubbleOffsetY = -125;
 var container;
 var player = null;
 var playerCollision;
-var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, outfit, shoes, board, usernameTag, usernameLabel;
+var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel;
 
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 
@@ -170,6 +170,11 @@ inGame.preload = function() {
         this.load.spritesheet('f-1-' + i.toString(), 'item/f-1-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
     }
 
+    // load outfits
+    for (let i = 0; i < 13; i++) {
+        this.load.spritesheet('f-3-' + i.toString(), 'item/f-3-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
+
     // load shoes
     for (let i = 0; i < 5; i++) {
         this.load.spritesheet('f-4-' + i.toString(), 'item/f-4-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
@@ -180,11 +185,13 @@ inGame.preload = function() {
         this.load.spritesheet('n-5-' + i.toString(), 'item/n-5-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
     }
 
+    // load placeholder
+    this.load.spritesheet('null', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
     // load chat message containers
-    // load all avatar eyes
     for (let i = 1; i < 11; i++) {
         this.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
     }
@@ -219,54 +226,6 @@ inGame.create = function() {
 
     // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
     const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
-    // const instantMessenger = this.add.dom(0, 0).createFromCache('instantMessengerHTML');
-
-        // make window draggable
-        // dragElement(instantMessenger.getChildByID("im-window"));
-        
-        // function dragElement(elmnt) {
-        //     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-        //     instantMessenger.getChildByID('im-header').onmousedown = dragMouseDown;
-        
-        //     function dragMouseDown(e) {
-        //     e = e || window.event;
-        //     e.preventDefault();
-
-        //     pos3 = e.clientX;
-        //     pos4 = e.clientY;
-        //     instantMessenger.onmouseup = closeDragElement;
-
-        //     instantMessenger.onmousemove = elementDrag;
-        //     }
-        
-        //     function elementDrag(e) {
-        //     e = e || window.event;
-        //     e.preventDefault();
-
-        //     pos1 = pos3 - e.clientX;
-        //     pos2 = pos4 - e.clientY;
-        //     pos3 = e.clientX;
-        //     pos4 = e.clientY;
-
-        //     elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-        //     elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-        //     }
-        
-        //     function closeDragElement() {
-
-        //         instantMessenger.onmouseup = null;
-        //         instantMessenger.onmousemove = null;
-        //     }
-        // }
-        
-        // function clickChatTab(elmnt) {
-        //     const tabs = instantMessenger.querySelectorAll('.chat-tab');
-        //     tabs.forEach(tab => {
-        //         tab.style.background = 'white';
-        //     });
-        //     elmnt.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-        // }
 
     var inputChat = chatBar.getChildByName('chatInput');
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
@@ -355,8 +314,17 @@ inGame.create = function() {
         hairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
         hairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
         
-        bottomItem = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-        topItem = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        if (playerInfo.avatar['equipped'][3] === -1) {
+            bottomItem = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
+            topItem = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        }
+        else {
+            bottomItem = inGame.add.sprite(0, 0, 'null');
+            topItem = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
+        }
+
+        console.log(playerInfo.avatar['equipped'][3]);
+        
         
         shoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
         brow = inGame.add.sprite(0, 0, 'brow-0');
@@ -398,8 +366,19 @@ inGame.create = function() {
         const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
 
         const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
-        const otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-2-' + playerInfo.avatar['equipped'][2]);
-        const otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-1-' + playerInfo.avatar['equipped'][1]);
+
+        var otherBottomItem, otherTopItem;
+
+        if (playerInfo.avatar['equipped'][3] === -1) {
+            otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-2-' + playerInfo.avatar['equipped'][2]);
+            otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        }
+        else {
+            otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'null');
+            otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-3-' + playerInfo.avatar['equipped'][3]);
+        }
+
+        
         const otherShoes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-4-' + playerInfo.avatar['equipped'][4]);
     
         var otherUsernameTag = inGame.add.sprite(playerInfo.x, playerInfo.y, 'username-tag');
@@ -869,7 +848,12 @@ inGame.update = function() {
             if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
                 player.play('body-' + container.getData('skinTone') + '-wave');
-                topItem.play('f-1-' + container.getData('equipped')[1] + '-wave');
+
+                if (container.getData('equipped')[3] === -1)
+                    topItem.play('f-1-' + container.getData('equipped')[1] + '-wave');
+                else
+                    topItem.play('f-3-' + container.getData('equipped')[3] + '-wave');
+                    
                 lips.play('lips-0-wave');
             }
         }
@@ -883,7 +867,11 @@ inGame.update = function() {
                 hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-cry');
                 hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-cry');
                 brow.play('brow-0-cry');
-                topItem.play('f-1-' + container.getData('equipped')[1] + '-cry');
+
+                if (container.getData('equipped')[3] === -1)
+                    topItem.play('f-1-' + container.getData('equipped')[1] + '-cry');
+                else
+                    topItem.play('f-3-' + container.getData('equipped')[3] + '-cry');
             }
         }
 
@@ -897,7 +885,12 @@ inGame.update = function() {
                 hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-jump');
                 hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-jump');
                 brow.play('brow-0-jump');
-                topItem.play('f-1-' + container.getData('equipped')[1] + '-jump');
+
+                if (container.getData('equipped')[3] === -1)
+                    topItem.play('f-1-' + container.getData('equipped')[1] + '-jump');
+                else
+                    topItem.play('f-3-' + container.getData('equipped')[3] + '-jump');
+                
                 bottomItem.play('f-2-' + container.getData('equipped')[2] + '-jump');
                 shoes.play('f-4-' + container.getData('equipped')[4] + '-jump');
             }
