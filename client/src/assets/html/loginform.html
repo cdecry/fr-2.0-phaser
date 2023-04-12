@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            @font-face {
+                font-family: VAG;
+                src: url("./src/assets/fonts/VAG Rounded Bold.ttf");
+            }
+            #input-form input:focus {
+                outline: none;
+            }
+            #input-form {
+                position: absolute;
+                border: none;
+                display: grid;
+                grid-auto-flow: row;
+                row-gap: 36px;
+            }
+            #input-form input {
+                font-size: 17px;
+                font-family: VAG;
+                letter-spacing: 1px;
+                color: rgb(1, 94, 116);
+                width: 198px;
+                height: 23px;
+                border: none;
+                background-color: transparent;
+            }
+            button:active{
+                background-color: rgba(255, 255, 255, 0.25)
+            }
+            button {
+                background-color: transparent;
+                border: none;
+                margin-top: 49px;
+                height: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="input-form">
+            <input type="text" name="username" spellcheck="false" autocomplete="off"/>
+            <input type="password" name="password" spellcheck="false" autocomplete="off"/>
+            <button name="loginButton"></button>
+        </div>
+    </body>
+</html>
