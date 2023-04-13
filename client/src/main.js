@@ -98,13 +98,180 @@ var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 13;
 var chatBubbleOffsetY = -125;
+var globalInputChat;
 
+var stopMoving = false;
 var container;
 var player = null;
-var playerCollision;
+var leftBound = null;
+var playerCollision, rightBound;
+var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, startY: 5, endX: 205, endY: 105 } ]
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel;
-
+var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
+
+
+function createSpeechBubble (x, y, quote)
+{
+    chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
+    chatMessage.setInteractive;
+    var chatMessageContent = chatMessage.getChildByID('message');
+    chatMessageContent.innerHTML = quote;
+
+    var divHeight = chatMessageContent.clientHeight;
+    var lines = divHeight / 15;
+
+    chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
+
+    chatBubble.setDepth(900);
+    chatMessage.setDepth(900);
+
+    bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
+        lifeTime: 5000,
+        destroy: true,
+        start: true
+    });
+
+    messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
+        lifeTime: 5000,
+        destroy: true,
+        start: true
+    });
+
+    container.add([chatBubble, chatMessage]);
+}
+
+function createOtherSpeechBubble (otherPlayer, x, y, quote)
+{
+    var otherChatMessage = inGame.add.dom(x, y).createFromCache('chatMessageHTML');
+    var otherChatMessageContent = otherChatMessage.getChildByID('message');
+    otherChatMessageContent.innerHTML = quote;
+
+    var divHeight = otherChatMessageContent.clientHeight;
+    var lines = divHeight / 15;
+
+    var otherChatBubble = inGame.add.image(x, y + chatBubbleOffsetY, 'message-' + lines.toString());
+
+    otherChatBubble.setDepth(900);
+    otherChatMessage.setDepth(900);
+    
+    var otherBubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatBubble, {
+        lifeTime: 5000,
+        destroy: true,
+        start: true
+    }).on('complete', function () {
+        otherPlayer.setData('messageData', {    'hasMessage': false,
+                                            'otherChatBubble': null,
+                                            'otherChatMessage': null,
+                                            'otherBubbleLifeTime': null,
+                                            'otherMessageLifeTime': null });
+    });
+
+    var otherMessageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatMessage, {
+        lifeTime: 5000,
+        destroy: true,
+        start: true
+    });
+
+    otherPlayer.setData('messageData', {    'hasMessage': true,
+                                            'otherChatBubble': otherChatBubble,
+                                            'otherChatMessage': otherChatMessage,
+                                            'otherBubbleLifeTime': otherBubbleLifeTime,
+                                            'otherMessageLifeTime': otherMessageLifeTime });
+} 
+
+var uiScene = new Phaser.Scene('UIScene');
+
+uiScene.preload = function() {
+    this.load.setBaseURL('/src/assets');
+    this.load.image('uiBar', 'scene/chat/ui-bar.png');
+    this.load.html('uiBottomBar', 'html/uibar.html');
+    this.load.html('chatBar', 'html/chatbar.html');
+    this.load.html('messageWidth', 'html/messagewidth.html');
+    this.load.html('chatMessageHTML', 'html/chatmessage.html');
+    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+    this.load.image('bound', 'item/null.png');
+}
+
+uiScene.create = function() {
+
+    leftBound = inGame.physics.add.sprite(38, 260, 'bound');
+        leftBound.setBodySize(75, 520);
+        
+    rightBound = inGame.physics.add.sprite(762, 260, 'bound');
+    rightBound.setBodySize(75, 520);
+
+    WebFont.load({
+        custom: {
+            families: [ 'usernameFont' ]
+        },
+        active: function ()
+        {
+            console.log('font loaded');
+        }
+    });
+
+    var uiBar = this.add.image(400, 490, 'uiBar');
+    const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
+
+    var inputChat = chatBar.getChildByName('chatInput');
+    globalInputChat = inputChat;
+    var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
+
+    setTimeout(() => {
+        inputChat.value = defaultChatBarMessage;
+    }, 1000);
+
+    uiBar.setDepth(1000);
+
+    inGame.input.keyboard.on('keydown-ENTER', function (event) {
+
+        if (isTyping === false) {
+            globalInputChat.value = '';
+            globalInputChat.focus();
+            isTyping = true;
+        }
+        else if (inputChat.value !== ''){
+
+            if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+                bubbleLifeTime.stop();
+                messageLifeTime.stop();
+                chatBubble.destroy()
+                chatMessage.destroy();
+            }
+            createSpeechBubble(400, 200, inputChat.value);
+            socket.emit('chatMessage', inputChat.value);
+            
+            inputChat.value = '';
+        }
+    });
+
+    inputChat.addEventListener('focus', (event) => {
+        globalInputChat.value = '';
+        isTyping = true;
+      });
+
+    chatBar.addListener('click');
+    chatBar.on('click', function (event) {
+        if (event.target.name === 'sendChatButton')
+        {   
+            if (globalInputChat.value !== '')
+            {
+                if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+                    bubbleLifeTime.stop();
+                    messageLifeTime.stop();
+                    chatBubble.destroy()
+                    chatMessage.destroy();
+                }
+                createSpeechBubble(400, 200, inputChat.value);
+
+                socket.emit('chatMessage', inputChat.value);
+                globalInputChat.value = '';
+            }
+        }
+    });
+}
 
 var inGame = new Phaser.Scene('GameScene');
 
@@ -125,14 +292,8 @@ inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-
-    this.load.image('roomBg', 'scene/location/room-downtown.png');
-    this.load.image('uiBar', 'scene/chat/ui-bar.png');
-    this.load.html('uiBottomBar', 'html/uibar.html');
-    this.load.html('chatBar', 'html/chatbar.html');
-    this.load.html('messageWidth', 'html/messagewidth.html');
-    this.load.html('chatMessageHTML', 'html/chatmessage.html');
-    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    this.load.image('roomBg', 'scene/location/beach.png');
+    this.load.image('avatarCollider', 'avatar/avatarCollider.png');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -196,7 +357,6 @@ inGame.preload = function() {
         this.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
     }
 
-
     // load anim data
     this.load.json('bodyAnims', 'anims/bodyAnims.json');
     this.load.json('bottomShoes', 'anims/bottomShoes.json');
@@ -205,83 +365,21 @@ inGame.preload = function() {
     this.load.json('lipsAnims', 'anims/lipsAnims.json');
 }
 
+var camPosX = 0;
+var camPosY = 0;
+
 inGame.create = function() {
 
-    var isTyping = false;
-
-    WebFont.load({
-        custom: {
-            families: [ 'usernameFont' ]
-        },
-        active: function ()
-        {
-            console.log('font loaded');
-        }
-    });
+    this.cameras.main.setSize(800, 520);
+    camPosX = 400;
+    camPosY = 260;
+    this.scene.launch(uiScene);
     
     var bg = this.add.image(400, 260, 'roomBg');
+
     bg.setDepth(-500);
 
-    var uiBar = this.add.image(400, 490, 'uiBar');
-
-    // const uiBottomBar = this.add.dom(7, 464).createFromCache('uiBottomBar');
-    const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
-
-    var inputChat = chatBar.getChildByName('chatInput');
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
-
-    setTimeout(() => {
-        inputChat.value = defaultChatBarMessage;
-    }, 1000);
-
-    uiBar.setDepth(1000);
-
-    inGame.input.keyboard.on('keydown-ENTER', function (event) {
-
-        if (isTyping === false) {
-            inputChat.value = '';
-            inputChat.focus();
-            isTyping = true;
-        }
-        else if (inputChat.value !== ''){
-
-            if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
-                bubbleLifeTime.stop();
-                messageLifeTime.stop();
-                chatBubble.destroy()
-                chatMessage.destroy();
-            }
-            createSpeechBubble(400, 200, inputChat.value);
-            socket.emit('chatMessage', inputChat.value);
-            
-            inputChat.value = '';
-        }
-    });
-
-    inputChat.addEventListener('focus', (event) => {
-        inputChat.value = '';
-        isTyping = true;
-      });
-
-    chatBar.addListener('click');
-    chatBar.on('click', function (event) {
-        if (event.target.name === 'sendChatButton')
-        {   
-            if (inputChat.value !== '')
-            {
-                if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
-                    bubbleLifeTime.stop();
-                    messageLifeTime.stop();
-                    chatBubble.destroy()
-                    chatMessage.destroy();
-                }
-                createSpeechBubble(400, 200, inputChat.value);
-
-                socket.emit('chatMessage', inputChat.value);
-                inputChat.value = '';
-            }
-        }
-    });
 
     var otherPlayers = this.add.group();
 
@@ -304,6 +402,7 @@ inGame.create = function() {
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     
     function createPlayer(playerInfo) {
+        playerCollision =  inGame.physics.add.image(0, 110, 'avatarCollider');
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
         head = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
@@ -323,8 +422,7 @@ inGame.create = function() {
             topItem = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
         }
 
-        console.log(playerInfo.avatar['equipped'][3]);
-        
+        // console.log(playerInfo.avatar['equipped'][3]);
         
         shoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
         brow = inGame.add.sprite(0, 0, 'brow-0');
@@ -339,12 +437,16 @@ inGame.create = function() {
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(300, 250);
 
-        container.add([head, eyes, lips, board, hairLower, hairUpper, brow, player, bottomItem, topItem, shoes, usernameTag, usernameLabel]);
+        container.add([playerCollision, head, eyes, lips, board, hairLower, hairUpper, brow, player, bottomItem, topItem, shoes, usernameTag, usernameLabel]);
 
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
         container.body.setCollideWorldBounds(false);
+        playerCollision.body.setCollideWorldBounds(false);
+
+        if (leftBound != null)
+            inGame.physics.add.collider(playerCollision, leftBound);
 
         container.setDataEnabled();
         container.setData('username', playerInfo.username);
@@ -439,77 +541,6 @@ inGame.create = function() {
         otherPlayers.add(otherContainer);
       }
 
-
-    function createSpeechBubble (x, y, quote)
-    {
-        
-        chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
-        chatMessage.setInteractive;
-        var chatMessageContent = chatMessage.getChildByID('message');
-        chatMessageContent.innerHTML = quote;
-
-        var divHeight = chatMessageContent.clientHeight;
-        var lines = divHeight / 15;
-
-        chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
-
-        chatBubble.setDepth(900);
-        chatMessage.setDepth(900);
-
-        bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
-            lifeTime: 5000,
-            destroy: true,
-            start: true
-        });
-
-        messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
-            lifeTime: 5000,
-            destroy: true,
-            start: true
-        });
-
-        container.add([chatBubble, chatMessage]);
-    }
-    
-    function createOtherSpeechBubble (otherPlayer, x, y, quote)
-    {
-        var otherChatMessage = inGame.add.dom(x, y).createFromCache('chatMessageHTML');
-        var otherChatMessageContent = otherChatMessage.getChildByID('message');
-        otherChatMessageContent.innerHTML = quote;
-
-        var divHeight = otherChatMessageContent.clientHeight;
-        var lines = divHeight / 15;
-
-        var otherChatBubble = inGame.add.image(x, y + chatBubbleOffsetY, 'message-' + lines.toString());
-
-        otherChatBubble.setDepth(900);
-        otherChatMessage.setDepth(900);
-        
-        var otherBubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatBubble, {
-            lifeTime: 5000,
-            destroy: true,
-            start: true
-        }).on('complete', function () {
-            otherPlayer.setData('messageData', {    'hasMessage': false,
-                                                'otherChatBubble': null,
-                                                'otherChatMessage': null,
-                                                'otherBubbleLifeTime': null,
-                                                'otherMessageLifeTime': null });
-        });
-
-        var otherMessageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(otherChatMessage, {
-            lifeTime: 5000,
-            destroy: true,
-            start: true
-        });
-
-        otherPlayer.setData('messageData', {    'hasMessage': true,
-                                                'otherChatBubble': otherChatBubble,
-                                                'otherChatMessage': otherChatMessage,
-                                                'otherBubbleLifeTime': otherBubbleLifeTime,
-                                                'otherMessageLifeTime': otherMessageLifeTime });
-    } 
-
     globalThis.socket.emit('game loaded');
 
     globalThis.socket.on('spawnCurrentPlayers', async (players) => {
@@ -534,12 +565,20 @@ inGame.create = function() {
     globalThis.socket.on('removePlayer', function (id) {
 
         for (let i = 0; i < otherPlayers.getLength(); i++) {
-            console.log(JSON.stringify(otherPlayers.getChildren()[i]));
             var p = otherPlayers.getChildren()[i];
 
             console.log('otherplayer id: ' + p.getData('username'));
             console.log('id, pid' + id + ',' + p.id);
             if (id === p.id) {
+
+                var msgData = p.getData('messageData');
+                if (msgData['hasMessage']) {
+                    msgData['otherBubbleLifeTime'].stop();
+                    msgData['otherMessageLifeTime'].stop();
+                    msgData['otherChatBubble'].destroy();
+                    msgData['otherChatMessage'].destroy();
+                }
+
                 for (let j = 0; j < numContainerItems; j++) {
                     p.x[j].destroy();
                     p.y[j].destroy();
@@ -612,16 +651,6 @@ inGame.create = function() {
                     for (let i = 4; i < 11; i++) {
                         p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-jump');
                     }
-                //     player.play('body-' + container.getData('skinTone') + '-jump');
-                // head.play('face-' + container.getData('skinTone') + '-jump');
-                // eyes.play('eyes-' + container.getData('eyeType') + '-jump');
-                // lips.play('lips-0-jump');
-                // hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-jump');
-                // hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-jump');
-                // brow.play('brow-0-jump');
-                // topItem.play('f-1-' + container.getData('equipped')[1] + '-jump');
-                // bottomItem.play('f-2-' + container.getData('equipped')[2] + '-jump');
-                // shoes.play('f-4-' + container.getData('equipped')[4] + '-jump');
                 }
             }.bind(this));
     }.bind(this));
@@ -710,9 +739,10 @@ inGame.create = function() {
     //#endregion
     
     this.input.on('pointerdown', function (pointer) {
+        console.log("POINTER IS DOWN");
         isTyping = false;
-        inputChat.value = defaultChatBarMessage;
-        inputChat.blur();
+        globalInputChat.value = defaultChatBarMessage;
+        globalInputChat.blur();
         
         globalPointer.x = pointer.x;
         globalPointer.y = pointer.y;
@@ -726,12 +756,19 @@ inGame.create = function() {
     // tempNamespace[myString] = this.add.sprite(400, 260, 'body-0');;
 
     // tempNamespace[myString].play('body-0-jump');
+
+    // this.physics.world.on('worldbounds', function() {
+    //     stopMoving = true;
+    //     container.body.setVelocity(0);
+    // });
 }
 
 var tween;
 var movedRight = false;
 
 function moveX(currentPosX, currentPosY, direction) {
+    if (stopMoving)
+        return;
 	tween = inGame.tweens.add({
         targets: container,
         x: currentPosX + direction*70,
@@ -777,7 +814,10 @@ function moveXY(newPosX, newPosY) {
 }
 
 inGame.update = function() {
+
     if (container) {
+        // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
+        //     console.log('hit left bound');
         container.setDepth(container.y);
         //#region Arrow Key Movement
         // Horizontal movement
@@ -785,9 +825,17 @@ inGame.update = function() {
             container.body.setVelocity(0);
             moveX(container.x, container.y, -1);
 
+            // camera left test
+            camPosX = camPosX - 100;
+            this.cameras.main.pan(camPosX, camPosY, 1500);
+
         } else if (keyRight.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, 1);
+
+            // camera right test
+            camPosX = camPosX + 100;
+            this.cameras.main.pan(camPosX, camPosY, 1500);
         }
 
         // Vertical movement
@@ -938,16 +986,7 @@ var config = {
         createContainer: true
         },
     pixelArt: true,
-    scene: [login, loading, inGame]
-    // plugins: {
-    //     global: [{
-    //         key: 'rexLifeTimePlugin',
-    //         plugin: LifeTimePlugin,
-    //         start: true
-    //     },
-    //     // ...
-    //     ]
-    // }
+    scene: [login, loading, inGame, uiScene]
 };
 
 var game = new Phaser.Game(config);
