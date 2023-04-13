@@ -94,6 +94,7 @@ var globalPointer = {
 }
 
 var usernameLabelCenter = 0;
+var clickOffsetX = 0;
 var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 13;
@@ -367,6 +368,7 @@ inGame.preload = function() {
 
 var camPosX = 0;
 var camPosY = 0;
+var isPanning = false;
 
 inGame.create = function() {
 
@@ -744,9 +746,9 @@ inGame.create = function() {
         globalInputChat.value = defaultChatBarMessage;
         globalInputChat.blur();
         
-        globalPointer.x = pointer.x;
+        globalPointer.x = pointer.x + clickOffsetX;
         globalPointer.y = pointer.y;
-        inGame.physics.moveTo(container, pointer.x, pointer.y - clickOffsetY, 150);
+        inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
         // moveXY(pointer.x, pointer.y - clickOffsetY);
     });
     // EXAMPLE
@@ -814,7 +816,9 @@ function moveXY(newPosX, newPosY) {
 }
 
 inGame.update = function() {
-
+    this.cameras.main.once('camerapancomplete', function () {
+        isPanning = false;
+    });
     if (container) {
         // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
         //     console.log('hit left bound');
@@ -824,18 +828,27 @@ inGame.update = function() {
         if (keyLeft.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, -1);
-
+            
             // camera left test
-            camPosX = camPosX - 100;
-            this.cameras.main.pan(camPosX, camPosY, 1500);
+            if (camPosX > -400 && isPanning === false) {
+                // console.log(camPosX);
+                isPanning = true;
+                camPosX -= 400;
+                clickOffsetX -= 400;
+                this.cameras.main.pan(camPosX, camPosY, 1500);
+            }
 
         } else if (keyRight.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, 1);
-
+            console.log(camPosX);
             // camera right test
-            camPosX = camPosX + 100;
-            this.cameras.main.pan(camPosX, camPosY, 1500);
+            if (camPosX < 1200 && isPanning == false) {
+                isPanning = true;
+                camPosX += 400;
+                clickOffsetX += 400;
+                this.cameras.main.pan(camPosX, camPosY, 1500);
+            }
         }
 
         // Vertical movement
