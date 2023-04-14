@@ -181,12 +181,42 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherMessageLifeTime': otherMessageLifeTime });
 } 
 
+function openInventory ()
+{
+    inventory = inGame.add.image(0, 0, 'inventory')
+    // var chatMessageContent = chatMessage.getChildByID('message');
+    // chatMessageContent.innerHTML = quote;
+
+    // var divHeight = chatMessageContent.clientHeight;
+    // var lines = divHeight / 15;
+
+    // chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
+
+    // chatBubble.setDepth(900);
+    // chatMessage.setDepth(900);
+
+    // bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
+    //     lifeTime: 5000,
+    //     destroy: true,
+    //     start: true
+    // });
+
+    // messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
+    //     lifeTime: 5000,
+    //     destroy: true,
+    //     start: true
+    // });
+
+    // container.add([chatBubble, chatMessage]);
+}
+
 var uiScene = new Phaser.Scene('UIScene');
 
 uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
-    this.load.html('uiBottomBar', 'html/uibar.html');
+    // this.load.html('uiBottomBar', 'html/uibar.html');
+    this.load.html('inventoryButton', 'html/inventoryButton.html');
     this.load.html('chatBar', 'html/chatbar.html');
     this.load.html('messageWidth', 'html/messagewidth.html');
     this.load.html('chatMessageHTML', 'html/chatmessage.html');
@@ -214,6 +244,8 @@ uiScene.create = function() {
     });
 
     var uiBar = this.add.image(400, 490, 'uiBar');
+    var inventory;
+    const inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
     const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
 
     var inputChat = chatBar.getChildByName('chatInput');
@@ -271,6 +303,12 @@ uiScene.create = function() {
                 globalInputChat.value = '';
             }
         }
+    });
+
+    inventoryButton.addListener('click');
+    inventoryButton.on('click', function (event) {
+        console.log("hi");
+        openInventory();
     });
 }
 
@@ -426,7 +464,7 @@ inGame.create = function() {
             bottomItem = inGame.add.sprite(0, 0, 'null');
             topItem = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
         }
-        
+
         shoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
         brow = inGame.add.sprite(0, 0, 'brow-0');
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
