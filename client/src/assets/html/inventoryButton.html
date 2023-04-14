@@ -6,9 +6,11 @@
                 font-family: VAG;
                 src: url("./src/assets/fonts/VAG Rounded Bold.ttf");
             }
-            .uiButton {
+
+            .inventoryButton {
                 height: 49px;
                 width: 49px;
+                /* border: 1px solid red; */
             }
 
             button {
@@ -18,26 +20,12 @@
             button:active{
                 background-color: rgba(255, 255, 255, 0.25)
             }
-
-            #uiLeft {
-                position: absolute;
-                align-items: center;
-                display: grid;
-                grid-auto-flow: column;
-                width: 425px;
-                height: 39px;
-                border: 1px solid red;
-            }
-
         </style>
     </head>
     <body>
 
-        <div id="uiLeft">
-            <button class="uiButton"></button>
-            <button class="uiButton"></button>
-            <button class="uiButton"></button>
-        </div>
+        <button class="inventoryButton">
+        </button>
 
     </body>
 </html>
