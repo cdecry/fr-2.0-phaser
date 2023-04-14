@@ -293,7 +293,9 @@ inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-    this.load.image('roomBg', 'scene/location/beach.png');
+    this.load.image('downtownBg', 'scene/location/downtown.png');
+    this.load.image('beachBg', 'scene/location/beach.png');
+
     this.load.image('avatarCollider', 'avatar/avatarCollider.png');
 
     // load all avatar bases
@@ -369,7 +371,7 @@ inGame.preload = function() {
 var camPosX = 0;
 var camPosY = 0;
 var isPanning = false;
-
+var bg;
 inGame.create = function() {
 
     this.cameras.main.setSize(800, 520);
@@ -377,8 +379,7 @@ inGame.create = function() {
     camPosY = 260;
     this.scene.launch(uiScene);
     
-    var bg = this.add.image(400, 260, 'roomBg');
-
+    bg = this.add.image(400, 260, 'downtownBg');
     bg.setDepth(-500);
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
@@ -400,6 +401,8 @@ inGame.create = function() {
     keyRight = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
     keyUp = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
     keyDown = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+
+    keySpace = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     
@@ -423,8 +426,6 @@ inGame.create = function() {
             bottomItem = inGame.add.sprite(0, 0, 'null');
             topItem = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
         }
-
-        // console.log(playerInfo.avatar['equipped'][3]);
         
         shoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
         brow = inGame.add.sprite(0, 0, 'brow-0');
@@ -444,11 +445,9 @@ inGame.create = function() {
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
-        container.body.setCollideWorldBounds(false);
-        playerCollision.body.setCollideWorldBounds(false);
-
-        if (leftBound != null)
-            inGame.physics.add.collider(playerCollision, leftBound);
+        
+        // container.body.setCollideWorldBounds(true);
+        // playerCollision.body.setCollideWorldBounds(false);
 
         container.setDataEnabled();
         container.setData('username', playerInfo.username);
@@ -564,6 +563,7 @@ inGame.create = function() {
         addOtherPlayers(p);
     });
 
+    // Everyone removes the player with this id
     globalThis.socket.on('removePlayer', function (id) {
 
         for (let i = 0; i < otherPlayers.getLength(); i++) {
@@ -589,7 +589,30 @@ inGame.create = function() {
                 otherPlayers.remove(p);
             }
         }
-      });
+    });
+
+    // Sent only to one person, who removes everyone else
+    globalThis.socket.on('removePlayers', function () {
+
+        for (let i = 0; i < otherPlayers.getLength(); i++) {
+            var p = otherPlayers.getChildren()[i];
+
+                var msgData = p.getData('messageData');
+                if (msgData['hasMessage']) {
+                    msgData['otherBubbleLifeTime'].stop();
+                    msgData['otherMessageLifeTime'].stop();
+                    msgData['otherChatBubble'].destroy();
+                    msgData['otherChatMessage'].destroy();
+                }
+
+                for (let j = 0; j < numContainerItems; j++) {
+                    p.x[j].destroy();
+                    p.y[j].destroy();
+                }
+                p.destroy();
+                otherPlayers.remove(p);
+        }
+    });
 
     globalThis.socket.on('playerMoved', function (playerInfo) {
         if (playerInfo.id !== globalThis.socket.id) {
@@ -681,7 +704,6 @@ inGame.create = function() {
             }.bind(this));
 
     }.bind(this));
-    
 
     //#region Animations
     data.skins.forEach(skin => {
@@ -816,9 +838,21 @@ function moveXY(newPosX, newPosY) {
 }
 
 inGame.update = function() {
+    // Camera can't pan if already panning
     this.cameras.main.once('camerapancomplete', function () {
         isPanning = false;
     });
+
+    // Change rooms test
+    if (keySpace.isDown) {
+        console.log("hi, moving to new room...");
+        socket.emit('changeRoom', "beach");
+        bg.destroy();
+        bg = this.add.image(400, 260, 'beachBg');
+        //bg.setDepth(-500);
+    }
+
+    // Player input
     if (container) {
         // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
         //     console.log('hit left bound');
@@ -830,25 +864,25 @@ inGame.update = function() {
             moveX(container.x, container.y, -1);
             
             // camera left test
-            if (camPosX > -400 && isPanning === false) {
-                // console.log(camPosX);
-                isPanning = true;
-                camPosX -= 400;
-                clickOffsetX -= 400;
-                this.cameras.main.pan(camPosX, camPosY, 1500);
-            }
+            // if (camPosX > -400 && isPanning === false) {
+            //     // console.log(camPosX);
+            //     isPanning = true;
+            //     camPosX -= 400;
+            //     clickOffsetX -= 400;
+            //     this.cameras.main.pan(camPosX, camPosY, 1500);
+            // }
 
         } else if (keyRight.isDown) {
             container.body.setVelocity(0);
             moveX(container.x, container.y, 1);
             console.log(camPosX);
             // camera right test
-            if (camPosX < 1200 && isPanning == false) {
-                isPanning = true;
-                camPosX += 400;
-                clickOffsetX += 400;
-                this.cameras.main.pan(camPosX, camPosY, 1500);
-            }
+            // if (camPosX < 1200 && isPanning == false) {
+            //     isPanning = true;
+            //     camPosX += 400;
+            //     clickOffsetX += 400;
+            //     this.cameras.main.pan(camPosX, camPosY, 1500);
+            // }
         }
 
         // Vertical movement
