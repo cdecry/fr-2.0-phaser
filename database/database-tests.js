@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem, updateInventory, changeEquipped, getUserAvatar, changeEyeType, addToInventory, getItem } = require("./queries");
@@ -5,7 +6,7 @@ const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem,
 main().catch(err => console.log(err));
 
 async function main() {
-    await mongoose.connect('mongodb+srv://root:jcohnKil2BDsyVMr@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
+    await mongoose.connect('mongodb+srv://root:${process.env.DB_URI}@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
     // await changeEquipped(0, [0, 15, 13, -1, 2, 0, -1, -1, -1, -1]);
     // REGISTER USER
     var newId = await getNumberOfUsers();
