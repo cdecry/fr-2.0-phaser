@@ -32,9 +32,9 @@ exports.registerUser =  async function (id, username, password, gender) {
 
 exports.loginRequest = async function (username, password) {
     return new Promise((resolve, reject) => {
-        User.findOne({ 'username': username }, 'id username password', function (err, user) {
+        User.findOne({ 'username': username }, 'id username password inventory', function (err, user) {
             if (user != null && password === user.password)
-                resolve(user.id);
+                resolve(user);
             else
                 resolve(null);
         });
@@ -75,21 +75,39 @@ exports.updateInventory = async function (id, inventory) {
 }
 
 
-exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
-    return new Promise((resolve, reject) => {
-        User.findOne({ 'id': userId }, 'inventory', function (err, user) {
-            if (user != null) {
-                var inventoryObj = user.inventory;
+// exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
+//     return new Promise((resolve, reject) => {
+//         User.findOne({ 'id': userId }, 'inventory', function (err, user) {
+//             if (user != null) {
+//                 var inventoryObj = user.inventory;
                 
-                inventoryObj[itemType.toString()].push({id: itemTypeId, coined: coined});
+//                 inventoryObj[itemType.toString()].push({id: itemTypeId, coined: coined});
 
-                User.updateOne({ 'id': userId }, { $set: { 'inventory': inventoryObj } }, function (err, count) {resolve();});
-            }
-            console.log('Added to inventory');
-            resolve();
-        });
-    });
-}
+//                 User.updateOne({ 'id': userId }, { $set: { 'inventory': inventoryObj } }, function (err, count) {resolve();});
+//             }
+//             console.log('Added to inventory');
+//             resolve();
+//         });
+//     });
+// }
+
+exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
+    const query = { 'id': userId };
+    const update = {
+      $push: {
+        [`inventory.${itemType.toString()}`]: { id: itemTypeId, coined: coined }
+      }
+    };
+    const options = { upsert: true };
+  
+    try {
+        await User.findOneAndUpdate(query, update, options).exec();
+        console.log('Added to inventory');
+    } catch (error) {
+        console.error('Error adding item to inventory:', error);
+    }
+  };
+  
 
 //#endregion
 

@@ -64,7 +64,8 @@ loading.create = function() {
     this.anims.create(animConfig);
     sprite.play('load');
 
-    globalThis.socket.on('login success', () => {
+    globalThis.socket.on('login success', (inventory) => {
+        myInventory = inventory;
         setTimeout(() => {
             this.scene.transition( {
                 target: 'GameScene',
@@ -115,15 +116,16 @@ var myPlayerInfo;
 var avatarPreview = null;
 
 // Inventory Load:
-var iHair = null;
-var iTops = null;
-var iBottoms = null;
-var iOutfits = null;
-var iShoes = null;
-var iBoards = null;
-var iFaceAcc = null;
-var iHeadAcc = null;
-var iBodyAcc = null;
+var myInventory;
+var iHair = [];
+var iTops = [];
+var iBottoms = [];
+var iOutfits = [];
+var iShoes = [];
+var iBoards = [];
+var iFaceAcc = [];
+var iHeadAcc = [];
+var iBodyAcc = [];
 
 function createSpeechBubble (x, y, quote)
 {
@@ -263,11 +265,15 @@ uiScene.create = function() {
     });
 
     var uiBar = this.add.image(400, 490, 'uiBar');
-    var inventory;
-    var inventoryUI;
+    var inventory = inGame.add.image(400, 260, 'inventoryWindow');
+    var inventoryUI = inGame.add.dom(763,20).createFromCache('inventoryUI');
     var inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
-    var chatBar = this.add.dom(185, 470).createFromCache('chatBar');
+    
+    inventory.setDepth(1000);
+    inventory.setVisible(false);
+    inventoryUI.setVisible(false);
 
+    var chatBar = this.add.dom(185, 470).createFromCache('chatBar');
     var inputChat = chatBar.getChildByName('chatInput');
     globalInputChat = inputChat;
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
@@ -329,32 +335,34 @@ uiScene.create = function() {
     inventoryButton.addListener('click');
     inventoryButton.on('click', function (event) {
         disableInput = true;
-        inventory = inGame.add.image(400, 260, 'inventoryWindow');
-        inventoryUI = inGame.add.dom(763,20).createFromCache('inventoryUI');
-        inventory.setDepth(1000);
-        uiBar.setAlpha(0);
-        inventoryButton.node.style.display = "none";
-        chatBar.node.style.display = "none";
+        inventory.setVisible(true);
+        inventoryUI.setVisible(true);
+        uiBar.setVisible(false);
+        inventoryButton.setVisible(false);
+        chatBar.setVisible(false);
 
         loadInventory();
 
         inventoryUI.addListener('click');
         inventoryUI.on('click', function (event) {
-            disableInput = false;
-            uiBar.setAlpha(1);
-            inventoryButton.node.style.display = "unset";
-            chatBar.node.style.display = "unset";
-            inventory.destroy();
-            inventoryUI.node.style.display = "none";
+            if (event.target.id === 'closeInventoryButton') {
+                disableInput = false;
 
-            // hide loaded clothes, avatar preview
-            for (let i = 0; i < iTops.length; i++)
-                iTops[i].visible = false;
-            avatarPreview.visible = false;
+                inventoryButton.setVisible(true);
+                chatBar.setVisible(true);
+                uiBar.setVisible(true);
+
+                inventory.setVisible(false);
+                inventoryUI.setVisible(false);
+
+                // hide loaded clothes, avatar preview
+                for (let i = 0; i < inventory.length; i++)
+                    iHair[i].visible = false;
+                avatarPreview.visible = false;
+            }
         });
     });
 
-    function loadInventory() {
         if (iTops == null) {
             iTops = [];
             var top;
@@ -364,21 +372,107 @@ uiScene.create = function() {
                 top.setDepth(1001);
                 iTops.push(top);
             }
+
+
+    // Define a variable for the current page index
+    let currentPage = 0;
+
+    // Create the inventory items for the current page
+    function createInventoryItems(typeId) {
+        // Clear any existing inventory items
+        inventoryItems.forEach(item => item.destroy());
+        inventoryItems = [];
+
+        // Get the items for the current page
+        const startIndex = currentPage * gridWidth * gridHeight;
+        const endIndex = Math.min(startIndex + gridWidth * gridHeight, myInventory[typeId].length);
+
+        // Create the items for the current page
+        for (let i = startIndex; i < endIndex; i++) {
+            const item = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-1', 4);
+            item.setDepth(1001);
+            inventoryItems.push(item);
         }
-        else {
-            for (let i = 0; i < iTops.length; i++)
-                iTops[i].visible = true;
-        }
-    
-        Phaser.Actions.GridAlign(iTops, {
-            width: 8,
-            height:2,
-            cellWidth: 60,
-            cellHeight: 60,
-            x: -50,
-            y: 30
+
+        // Align the items in a grid layout
+        Phaser.Actions.GridAlign(inventoryItems, {
+            width: gridWidth,
+            height: gridHeight,
+            cellWidth: cellWidth,
+            cellHeight: cellHeight,
+            x: gridX,
+            y: gridY
         });
-    
+
+        // // Update the visibility of the navigation buttons
+        // prevButton.visible = currentPage > 0;
+        // nextButton.visible = endIndex < myInventory[0].length;
+    }
+
+    // Create the navigation buttons
+    function createNavigationButtons(typeId) {
+        // Create the "previous page" button
+        prevButton = inGame.add.sprite(50, 350, 'inventoryBackButton');
+        prevButton.setDepth(1001);
+        prevButton.setInteractive();
+        prevButton.on('pointerdown', () => {
+            currentPage--;
+            createInventoryItems(typeId);
+        });
+
+        // Create the "next page" button
+        nextButton = inGame.add.sprite(730, 350, 'inventoryNextButton');
+        nextButton.setDepth(1001);
+        nextButton.setScale(-1, 1);
+        nextButton.setInteractive();
+        nextButton.on('pointerdown', () => {
+            currentPage++;
+            createInventoryItems(typeId);
+        });
+    }
+
+    function loadInventory() {
+        // Default tab is Hair
+
+        // iHair = [];
+        // var item;
+        // for (var i = 0; i < myInventory[0].length; i++) {
+        //     item = inGame.add.sprite(0, 0, 'f-0-' + myInventory[0][i].id.toString() + '-1', 4);
+        //     item.setDepth(1001);
+        //     iHair.push(item);
+        // }
+
+        // Phaser.Actions.GridAlign(iHair, {
+        //     width: 8,
+        //     height: 4,
+        //     cellWidth: 80,
+        //     cellHeight: 80,
+        //     x: -30,
+        //     y: 100
+        // });
+
+        // Call the functions to create the initial inventory items and navigation buttons
+        createInventoryItems(0);
+        // createNavigationButtons();
+
+        
+        // //  Tops
+        // iTops = [];
+        // for (var i = 0; i < myInventory[1].length; i++) {
+        //     item = inGame.add.sprite(0, 0, 'f-0-' + myInventory[1][i].id.toString());
+        //     item.setDepth(1001);
+        //     iTops.push(item);
+        // }
+
+        // Phaser.Actions.GridAlign(iTops, {
+        //     width: 8,
+        //     height:2,
+        //     cellWidth: 60,
+        //     cellHeight: 60,
+        //     x: -50,
+        //     y: 30
+        // });
+
         if (avatarPreview == null)
             createAvatarPreview(myPlayerInfo);
         else
@@ -438,8 +532,8 @@ inGame.preload = function() {
         this.load.spritesheet('f-0-' + i.toString() + '-2', 'item/f-0-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
     }
 
-    this.load.spritesheet('f-0-0-1', 'item/f-0-0-1.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-0-0-2', 'item/f-0-0-2.png', { frameWidth: 300, frameHeight: 250 });
+    // this.load.spritesheet('f-0-0-1', 'item/f-0-0-1.png', { frameWidth: 300, frameHeight: 250 });
+    // this.load.spritesheet('f-0-0-2', 'item/f-0-0-2.png', { frameWidth: 300, frameHeight: 250 });
 
     // load bottoms
     for (let i = 0; i < 16; i++) {
@@ -490,17 +584,17 @@ var camPosY = 0;
 var isPanning = false;
 var bg;
 inGame.create = function() {
-
+    // Init Camera
     this.cameras.main.setSize(800, 520);
     camPosX = 400;
     camPosY = 260;
     this.scene.launch(uiScene);
     
+    // Load background
     bg = this.add.image(400, 260, 'downtownBg');
     bg.setDepth(-500);
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
-
     var otherPlayers = this.add.group();
 
     let data = this.cache.json.get('bodyAnims');
@@ -519,10 +613,10 @@ inGame.create = function() {
     keyUp = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
     keyDown = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
 
-    keySpace = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    // keySpace = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-    
+
     function createPlayer(playerInfo) {
         myPlayerInfo = playerInfo;
 
@@ -684,7 +778,7 @@ inGame.create = function() {
 
     // Everyone removes the player with this id
     globalThis.socket.on('removePlayer', function (id) {
-
+        console.log("received remove player msg");
         for (let i = 0; i < otherPlayers.getLength(); i++) {
             var p = otherPlayers.getChildren()[i];
 
@@ -704,8 +798,11 @@ inGame.create = function() {
                     p.x[j].destroy();
                     p.y[j].destroy();
                 }
+
+                p.setVisible(false);
                 p.destroy();
                 otherPlayers.remove(p);
+                
             }
         }
     });
@@ -964,13 +1061,12 @@ inGame.update = function() {
     });
 
     // Change rooms test
-    if (keySpace.isDown) {
-        console.log("hi, moving to new room...");
-        socket.emit('changeRoom', "beach");
-        bg.destroy();
-        bg = this.add.image(400, 260, 'beachBg');
-        //bg.setDepth(-500);
-    }
+    // if (keySpace.isDown) {
+    //     console.log("hi, moving to new room...");
+    //     socket.emit('changeRoom', "beach");
+    //     bg.destroy();
+    //     bg = this.add.image(400, 260, 'beachBg');
+    // }
 
     // Player input
     if (container) {
@@ -1148,7 +1244,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
     dom: {
