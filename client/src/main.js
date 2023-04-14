@@ -114,6 +114,17 @@ var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 var myPlayerInfo;
 var avatarPreview = null;
 
+// Inventory Load:
+var iHair = null;
+var iTops = null;
+var iBottoms = null;
+var iOutfits = null;
+var iShoes = null;
+var iBoards = null;
+var iFaceAcc = null;
+var iHeadAcc = null;
+var iBodyAcc = null;
+
 function createSpeechBubble (x, y, quote)
 {
     chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
@@ -337,21 +348,29 @@ uiScene.create = function() {
             inventoryUI.node.style.display = "none";
 
             // hide loaded clothes, avatar preview
+            for (let i = 0; i < iTops.length; i++)
+                iTops[i].visible = false;
             avatarPreview.visible = false;
         });
     });
 
     function loadInventory() {
-        const tops = [];
-        var top;
-        var x = 10;
-        for (var i = 0; i < x; i++) {
-            top = inGame.add.sprite(0, 0, 'f-1-5');
-            top.setDepth(1001);
-            tops.push(top);
+        if (iTops == null) {
+            iTops = [];
+            var top;
+            var x = 10;
+            for (var i = 0; i < x; i++) {
+                top = inGame.add.sprite(0, 0, 'f-1-5');
+                top.setDepth(1001);
+                iTops.push(top);
+            }
+        }
+        else {
+            for (let i = 0; i < iTops.length; i++)
+                iTops[i].visible = true;
         }
     
-        Phaser.Actions.GridAlign(tops, {
+        Phaser.Actions.GridAlign(iTops, {
             width: 8,
             height:2,
             cellWidth: 60,
