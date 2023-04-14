@@ -101,6 +101,7 @@ var numContainerItems = 13;
 var chatBubbleOffsetY = -125;
 var globalInputChat;
 
+var disableInput = false;
 var stopMoving = false;
 var container;
 var player = null;
@@ -181,42 +182,14 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherMessageLifeTime': otherMessageLifeTime });
 } 
 
-function openInventory ()
-{
-    inventory = inGame.add.image(0, 0, 'inventory')
-    // var chatMessageContent = chatMessage.getChildByID('message');
-    // chatMessageContent.innerHTML = quote;
-
-    // var divHeight = chatMessageContent.clientHeight;
-    // var lines = divHeight / 15;
-
-    // chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
-
-    // chatBubble.setDepth(900);
-    // chatMessage.setDepth(900);
-
-    // bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
-    //     lifeTime: 5000,
-    //     destroy: true,
-    //     start: true
-    // });
-
-    // messageLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatMessage, {
-    //     lifeTime: 5000,
-    //     destroy: true,
-    //     start: true
-    // });
-
-    // container.add([chatBubble, chatMessage]);
-}
-
 var uiScene = new Phaser.Scene('UIScene');
 
 uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
-    // this.load.html('uiBottomBar', 'html/uibar.html');
+    this.load.image('inventoryWindow', 'scene/ui/inventory.png');
     this.load.html('inventoryButton', 'html/inventoryButton.html');
+    this.load.html('inventoryUI', 'html/inventoryUI.html');
     this.load.html('chatBar', 'html/chatbar.html');
     this.load.html('messageWidth', 'html/messagewidth.html');
     this.load.html('chatMessageHTML', 'html/chatmessage.html');
@@ -245,13 +218,15 @@ uiScene.create = function() {
 
     var uiBar = this.add.image(400, 490, 'uiBar');
     var inventory;
-    const inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
-    const chatBar = this.add.dom(185, 470).createFromCache('chatBar');
+    var inventoryUI;
+    var inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
+    var chatBar = this.add.dom(185, 470).createFromCache('chatBar');
 
     var inputChat = chatBar.getChildByName('chatInput');
     globalInputChat = inputChat;
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
+    
     setTimeout(() => {
         inputChat.value = defaultChatBarMessage;
     }, 1000);
@@ -259,7 +234,7 @@ uiScene.create = function() {
     uiBar.setDepth(1000);
 
     inGame.input.keyboard.on('keydown-ENTER', function (event) {
-
+        if (disableInput) return;
         if (isTyping === false) {
             globalInputChat.value = '';
             globalInputChat.focus();
@@ -307,8 +282,23 @@ uiScene.create = function() {
 
     inventoryButton.addListener('click');
     inventoryButton.on('click', function (event) {
-        console.log("hi");
-        openInventory();
+        disableInput = true;
+        inventory = inGame.add.image(400, 260, 'inventoryWindow');
+        inventoryUI = inGame.add.dom(763,20).createFromCache('inventoryUI');
+        inventory.setDepth(1000);
+        uiBar.setAlpha(0);
+        inventoryButton.node.style.display = "none";
+        chatBar.node.style.display = "none";
+
+        inventoryUI.addListener('click');
+        inventoryUI.on('click', function (event) {
+            disableInput = false;
+            uiBar.setAlpha(1);
+            inventoryButton.node.style.display = "unset";
+            chatBar.node.style.display = "unset";
+            inventory.destroy();
+            inventoryUI.node.style.display = "none";
+        });
     });
 }
 
@@ -333,6 +323,7 @@ inGame.preload = function() {
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
     this.load.image('downtownBg', 'scene/location/downtown.png');
     this.load.image('beachBg', 'scene/location/beach.png');
+
 
     this.load.image('avatarCollider', 'avatar/avatarCollider.png');
 
@@ -801,6 +792,7 @@ inGame.create = function() {
     //#endregion
     
     this.input.on('pointerdown', function (pointer) {
+        if (disableInput) return;
         console.log("POINTER IS DOWN");
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
@@ -891,7 +883,7 @@ inGame.update = function() {
     }
 
     // Player input
-    if (container) {
+    if (container && !disableInput) {
         // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
         //     console.log('hit left bound');
         container.setDepth(container.y);
@@ -968,7 +960,7 @@ inGame.update = function() {
         
         var distance = Phaser.Math.Distance.Between(container.x, container.y, globalPointer.x, globalPointer.y - clickOffsetY);
 
-        if (container.body.speed > 0)
+        if (container.body.speed > 0 && !disableInput)
         {
             if (distance < 4)
             {
