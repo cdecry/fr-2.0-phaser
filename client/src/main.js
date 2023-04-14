@@ -111,7 +111,8 @@ var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, 
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel;
 var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
-
+var myPlayerInfo;
+var avatarPreview = null;
 
 function createSpeechBubble (x, y, quote)
 {
@@ -199,6 +200,40 @@ uiScene.preload = function() {
 }
 
 uiScene.create = function() {
+
+    function createAvatarPreview(playerInfo) {
+
+        bodyPreview = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
+        headPreview = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
+        eyesPreview = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
+        lipsPreview = inGame.add.sprite(0, 0, 'lips-0');
+        boardPreview = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5]);
+        hairUpperPreview = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        hairLowerPreview = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        
+        if (playerInfo.avatar['equipped'][3] === -1) {
+            bottomItemPreview = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
+            topItemPreview = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        }
+        else {
+            bottomItemPreview = inGame.add.sprite(0, 0, 'null');
+            topItemPreview = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
+        }
+
+        shoesPreview = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        browPreview = inGame.add.sprite(0, 0, 'brow-0');
+        usernameTagPreview = inGame.add.sprite(0, 0, 'username-tag');
+        usernameLabelPreview = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        usernameLabelPreview.originX = 0.5;
+        usernameLabelCenter = usernameLabel.getCenter().x;
+        usernameLabelPreview.x = usernameLabelCenter;
+        usernameLabelPreview.setStroke('#ffffff', 2);
+        
+        var children  = [headPreview, eyesPreview, lipsPreview, boardPreview, hairLowerPreview, hairUpperPreview, browPreview, bodyPreview, bottomItemPreview, topItemPreview, shoesPreview, usernameTagPreview, usernameLabelPreview];
+            avatarPreview = inGame.add.container(0, 0);
+            avatarPreview.add(children);
+            avatarPreview.setDepth(1001);
+    }
 
     leftBound = inGame.physics.add.sprite(38, 260, 'bound');
         leftBound.setBodySize(75, 520);
@@ -290,6 +325,8 @@ uiScene.create = function() {
         inventoryButton.node.style.display = "none";
         chatBar.node.style.display = "none";
 
+        loadInventory();
+
         inventoryUI.addListener('click');
         inventoryUI.on('click', function (event) {
             disableInput = false;
@@ -298,9 +335,41 @@ uiScene.create = function() {
             chatBar.node.style.display = "unset";
             inventory.destroy();
             inventoryUI.node.style.display = "none";
+
+            // hide loaded clothes, avatar preview
+            avatarPreview.visible = false;
         });
     });
+
+    function loadInventory() {
+        const tops = [];
+        var top;
+        var x = 10;
+        for (var i = 0; i < x; i++) {
+            top = inGame.add.sprite(0, 0, 'f-1-5');
+            top.setDepth(1001);
+            tops.push(top);
+        }
+    
+        Phaser.Actions.GridAlign(tops, {
+            width: 8,
+            height:2,
+            cellWidth: 60,
+            cellHeight: 60,
+            x: -50,
+            y: 30
+        });
+    
+        if (avatarPreview == null)
+            createAvatarPreview(myPlayerInfo);
+        else
+            avatarPreview.visible = true;
+
+        avatarPreview.setPosition(675, 250);
+    }
 }
+
+
 
 var inGame = new Phaser.Scene('GameScene');
 
@@ -436,6 +505,8 @@ inGame.create = function() {
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     
     function createPlayer(playerInfo) {
+        myPlayerInfo = playerInfo;
+
         playerCollision =  inGame.physics.add.image(0, 110, 'avatarCollider');
         player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
         head = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
@@ -465,7 +536,7 @@ inGame.create = function() {
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabel.x = usernameLabelCenter;
         usernameLabel.setStroke('#ffffff', 2);
-        
+    
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(300, 250);
 
@@ -883,92 +954,81 @@ inGame.update = function() {
     }
 
     // Player input
-    if (container && !disableInput) {
+    if (container) {
         // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
         //     console.log('hit left bound');
         container.setDepth(container.y);
+
+        if (!disableInput) {
         //#region Arrow Key Movement
         // Horizontal movement
-        if (keyLeft.isDown) {
-            container.body.setVelocity(0);
-            moveX(container.x, container.y, -1);
-            
-            // camera left test
-            // if (camPosX > -400 && isPanning === false) {
-            //     // console.log(camPosX);
-            //     isPanning = true;
-            //     camPosX -= 400;
-            //     clickOffsetX -= 400;
-            //     this.cameras.main.pan(camPosX, camPosY, 1500);
-            // }
+            if (keyLeft.isDown) {
+                container.body.setVelocity(0);
+                moveX(container.x, container.y, -1);
+                
+                // camera left test
+                // if (camPosX > -400 && isPanning === false) {
+                //     // console.log(camPosX);
+                //     isPanning = true;
+                //     camPosX -= 400;
+                //     clickOffsetX -= 400;
+                //     this.cameras.main.pan(camPosX, camPosY, 1500);
+                // }
 
-        } else if (keyRight.isDown) {
-            container.body.setVelocity(0);
-            moveX(container.x, container.y, 1);
-            console.log(camPosX);
-            // camera right test
-            // if (camPosX < 1200 && isPanning == false) {
-            //     isPanning = true;
-            //     camPosX += 400;
-            //     clickOffsetX += 400;
-            //     this.cameras.main.pan(camPosX, camPosY, 1500);
-            // }
-        }
-
-        // Vertical movement
-        if (keyUp.isDown) {
-            container.body.setVelocity(0);
-            moveY(container.x, container.y, -1);
-
-        } else if (keyDown.isDown) {
-            container.body.setVelocity(0);
-            moveY(container.x, container.y, 1);
-        }
-
-        // Flip
-        if (keyLeft.isDown || container.body.velocity.x < 0) {
-
-            player.flipX = false;
-            head.flipX = false;
-            brow.flipX = false;
-            eyes.flipX = false;
-            lips.flipX = false;
-            board.flipX = false;
-            hairLower.flipX = false;
-            hairUpper.flipX = false;
-            topItem.flipX = false;
-            bottomItem.flipX = false;
-            shoes.flipX = false;
-
-        } else if (keyRight.isDown || container.body.velocity.x > 0) {
-            player.flipX = true;
-            head.flipX = true;
-            brow.flipX = true;
-            eyes.flipX = true;
-            lips.flipX = true;
-            board.flipX = true;
-            hairLower.flipX = true;
-            hairUpper.flipX = true;
-            topItem.flipX = true;
-            bottomItem.flipX = true;
-            shoes.flipX = true;
-        }
-        //#endregion
-
-
-        // Click Movement
-        
-        var distance = Phaser.Math.Distance.Between(container.x, container.y, globalPointer.x, globalPointer.y - clickOffsetY);
-
-        if (container.body.speed > 0 && !disableInput)
-        {
-            if (distance < 4)
-            {
-                container.body.reset(globalPointer.x, globalPointer.y - clickOffsetY);
+            } else if (keyRight.isDown) {
+                container.body.setVelocity(0);
+                moveX(container.x, container.y, 1);
+                console.log(camPosX);
+                // camera right test
+                // if (camPosX < 1200 && isPanning == false) {
+                //     isPanning = true;
+                //     camPosX += 400;
+                //     clickOffsetX += 400;
+                //     this.cameras.main.pan(camPosX, camPosY, 1500);
+                // }
             }
-        }
 
-        // Actions
+            // Vertical movement
+            if (keyUp.isDown) {
+                container.body.setVelocity(0);
+                moveY(container.x, container.y, -1);
+
+            } else if (keyDown.isDown) {
+                container.body.setVelocity(0);
+                moveY(container.x, container.y, 1);
+            }
+
+            // Flip
+            if (keyLeft.isDown || container.body.velocity.x < 0) {
+
+                player.flipX = false;
+                head.flipX = false;
+                brow.flipX = false;
+                eyes.flipX = false;
+                lips.flipX = false;
+                board.flipX = false;
+                hairLower.flipX = false;
+                hairUpper.flipX = false;
+                topItem.flipX = false;
+                bottomItem.flipX = false;
+                shoes.flipX = false;
+
+            } else if (keyRight.isDown || container.body.velocity.x > 0) {
+                player.flipX = true;
+                head.flipX = true;
+                brow.flipX = true;
+                eyes.flipX = true;
+                lips.flipX = true;
+                board.flipX = true;
+                hairLower.flipX = true;
+                hairUpper.flipX = true;
+                topItem.flipX = true;
+                bottomItem.flipX = true;
+                shoes.flipX = true;
+            }
+            //#endregion
+
+            // Actions
         if (key1.isDown) {
             if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
@@ -1025,6 +1085,19 @@ inGame.update = function() {
             if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
                 globalThis.socket.emit('playerWink');
                 eyes.play('eyes-' + container.getData('eyeType') + '-wink');
+            }
+        }
+        }
+
+        // Click Movement
+        
+        var distance = Phaser.Math.Distance.Between(container.x, container.y, globalPointer.x, globalPointer.y - clickOffsetY);
+
+        if (container.body.speed > 0)
+        {
+            if (distance < 4)
+            {
+                container.body.reset(globalPointer.x, globalPointer.y - clickOffsetY);
             }
         }
 
