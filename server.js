@@ -35,9 +35,8 @@ io.on('connection', function (socket) {
         // if this user was logged in, delee from plyer list
         if (players!= null && players[socket.id] != null) {
             console.log('player disconnected: ' + players[socket.id].username);
+            socket.to(players[socket.id].room).emit('removePlayer', socket.id);
             delete players[socket.id];
-            socket.broadcast.emit('removePlayer', socket.id);
-        // socket.to('downtown').emit('playerMoved', players[socket.id]);
         }
         else
             console.log('client disconnected');
@@ -71,7 +70,9 @@ io.on('connection', function (socket) {
     });
 
     socket.on('game loaded', function() {
-        io.to(socket.id).emit('spawnCurrentPlayers', players);
+        // assume everyone spawns in downtown
+        let playersInThisRoom =  Object.values(players).filter(player => player.room === "downtown");
+        io.to(socket.id).emit('spawnCurrentPlayers', playersInThisRoom);
         socket.to("downtown").emit("spawnNewPlayer", players[socket.id]);
     });
 
@@ -80,28 +81,49 @@ io.on('connection', function (socket) {
         players[socket.id].y = movementData.y;
         players[socket.id].flipX = movementData.flipX;
 
-        socket.to('downtown').emit('playerMoved', players[socket.id]);
+        socket.to(players[socket.id].room).emit('playerMoved', players[socket.id]);
     });
 
     socket.on('playerWave', function() {
-        socket.broadcast.to('downtown').emit('playerWaveResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerWaveResponse', players[socket.id]);
     })
 
     socket.on('playerCry', function() {
-        socket.broadcast.to('downtown').emit('playerCryResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerCryResponse', players[socket.id]);
     })
 
     socket.on('playerJump', function() {
-        socket.broadcast.to('downtown').emit('playerJumpResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerJumpResponse', players[socket.id]);
     })
 
     socket.on('playerWink', function() {
-        socket.broadcast.to('downtown').emit('playerWinkResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerWinkResponse', players[socket.id]);
     })
 
     socket.on('chatMessage', function(msg) {
-        socket.broadcast.to('downtown').emit('chatMessageResponse', players[socket.id], msg);
+        socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
     })
+
+    socket.on('changeRoom', function(room) {
+        let currentRoom = players[socket.id].room;
+
+        // for all the players in this player's room, remove this player
+        // for this player, remove all the players in the current room.
+        socket.to(currentRoom).emit('removePlayer', socket.id);
+        io.to(socket.id).emit('removePlayers');
+
+        // for all the players in the new room, spawn this player
+        // for this player, spawn all other players in the room
+        socket.to(room).emit('spawnNewPlayer', players[socket.id]);//    THIS SI GIVING ME PROBLEMS
+        
+        let playersInThisRoom =  Object.values(players).filter(player => player.room === room);
+        io.to(socket.id).emit('spawnCurrentPlayers', playersInThisRoom);
+        
+        players[socket.id].room = room;
+        socket.leave(currentRoom);
+        socket.join(room);
+    })
+
 });
 
 server.listen(8081, function () {
