@@ -95,8 +95,8 @@ var globalPointer = {
 }
 
 var usernameLabelCenter = 0;
-var clickOffsetX = 0;
-var clickOffsetY = 110;
+// var clickOffsetX = 0;
+// var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 13;
 var chatBubbleOffsetY = -125;
@@ -106,7 +106,6 @@ var disableInput = false;
 var stopMoving = false;
 var container;
 var player = null;
-var leftBound = null;
 var playerCollision, rightBound;
 var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, startY: 5, endX: 205, endY: 105 } ]
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel;
@@ -202,6 +201,8 @@ uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
     this.load.image('inventoryWindow', 'scene/ui/inventory.png');
+    this.load.image('inventoryArrowUp', 'scene/ui/inventoryArrowUp.png');
+    this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     this.load.html('inventoryButton', 'html/inventoryButton.html');
     this.load.html('inventoryUI', 'html/inventoryUI.html');
     this.load.html('chatBar', 'html/chatbar.html');
@@ -216,43 +217,37 @@ uiScene.create = function() {
 
     function createAvatarPreview(playerInfo) {
 
-        bodyPreview = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
-        headPreview = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
-        eyesPreview = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
-        lipsPreview = inGame.add.sprite(0, 0, 'lips-0');
-        boardPreview = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5]);
-        hairUpperPreview = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        hairLowerPreview = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        bodyPreview = uiScene.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
+        headPreview = uiScene.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
+        eyesPreview = uiScene.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
+        lipsPreview = uiScene.add.sprite(0, 0, 'lips-0');
+        boardPreview = uiScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5]);
+        hairUpperPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        hairLowerPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
         
         if (playerInfo.avatar['equipped'][3] === -1) {
-            bottomItemPreview = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-            topItemPreview = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+            bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
+            topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
         }
         else {
-            bottomItemPreview = inGame.add.sprite(0, 0, 'null');
-            topItemPreview = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
+            bottomItemPreview = uiScene.add.sprite(0, 0, 'null');
+            topItemPreview = uiScene.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
         }
 
-        shoesPreview = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
-        browPreview = inGame.add.sprite(0, 0, 'brow-0');
-        usernameTagPreview = inGame.add.sprite(0, 0, 'username-tag');
-        usernameLabelPreview = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        shoesPreview = uiScene.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        browPreview = uiScene.add.sprite(0, 0, 'brow-0');
+        usernameTagPreview = uiScene.add.sprite(0, 0, 'username-tag');
+        usernameLabelPreview = uiScene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
         usernameLabelPreview.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
         var children  = [headPreview, eyesPreview, lipsPreview, boardPreview, hairLowerPreview, hairUpperPreview, browPreview, bodyPreview, bottomItemPreview, topItemPreview, shoesPreview, usernameTagPreview, usernameLabelPreview];
-            avatarPreview = inGame.add.container(0, 0);
+            avatarPreview = uiScene.add.container(0, 0);
             avatarPreview.add(children);
             avatarPreview.setDepth(1001);
     }
-
-    leftBound = inGame.physics.add.sprite(38, 260, 'bound');
-        leftBound.setBodySize(75, 520);
-        
-    rightBound = inGame.physics.add.sprite(762, 260, 'bound');
-    rightBound.setBodySize(75, 520);
 
     WebFont.load({
         custom: {
@@ -265,8 +260,8 @@ uiScene.create = function() {
     });
 
     var uiBar = this.add.image(400, 490, 'uiBar');
-    var inventory = inGame.add.image(400, 260, 'inventoryWindow');
-    var inventoryUI = inGame.add.dom(763,20).createFromCache('inventoryUI');
+    var inventory = this.add.image(400, 260, 'inventoryWindow');
+    var inventoryUI = this.add.dom(763,20).createFromCache('inventoryUI');
     var inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
     
     inventory.setDepth(1000);
@@ -278,7 +273,6 @@ uiScene.create = function() {
     globalInputChat = inputChat;
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
-    
     setTimeout(() => {
         inputChat.value = defaultChatBarMessage;
     }, 1000);
@@ -356,30 +350,35 @@ uiScene.create = function() {
                 inventoryUI.setVisible(false);
 
                 // hide loaded clothes, avatar preview
-                for (let i = 0; i < inventory.length; i++)
-                    iHair[i].visible = false;
+                inventoryItems.forEach(item => item.destroy());
+                if (prevButton != null)
+                    prevButton.destroy();
+                if (nextButton != null)
+                    nextButton.destroy();
                 avatarPreview.visible = false;
             }
         });
     });
 
-        if (iTops == null) {
-            iTops = [];
-            var top;
-            var x = 10;
-            for (var i = 0; i < x; i++) {
-                top = inGame.add.sprite(0, 0, 'f-1-5');
-                top.setDepth(1001);
-                iTops.push(top);
-            }
+    // Define variables for the grid layout
+    let inventoryItems = []
+    var gridWidth = 8;
+    var gridHeight = 3;
+    var cellWidth = 62;
+    var cellHeight = 110;
+    var gridX = 70;
+    var gridY = 220;
 
+    // Define variables for the inventory items and navigation buttons
+    let prevButton = null;
+    let nextButton = null;
 
     // Define a variable for the current page index
     let currentPage = 0;
 
     // Create the inventory items for the current page
     function createInventoryItems(typeId) {
-        // Clear any existing inventory items
+        // Clear any existing inventory items, reset current page
         inventoryItems.forEach(item => item.destroy());
         inventoryItems = [];
 
@@ -389,7 +388,8 @@ uiScene.create = function() {
 
         // Create the items for the current page
         for (let i = startIndex; i < endIndex; i++) {
-            const item = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-1', 4);
+            
+            const item = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + myInventory[typeId][i].id.toString());
             item.setDepth(1001);
             inventoryItems.push(item);
         }
@@ -405,14 +405,15 @@ uiScene.create = function() {
         });
 
         // // Update the visibility of the navigation buttons
-        // prevButton.visible = currentPage > 0;
-        // nextButton.visible = endIndex < myInventory[0].length;
+        prevButton.visible = currentPage > 0;
+        nextButton.visible = endIndex < myInventory[typeId].length;
+        console.log(startIndex, endIndex);
     }
 
     // Create the navigation buttons
     function createNavigationButtons(typeId) {
         // Create the "previous page" button
-        prevButton = inGame.add.sprite(50, 350, 'inventoryBackButton');
+        prevButton = uiScene.add.sprite(550, 160, 'inventoryArrowUp');
         prevButton.setDepth(1001);
         prevButton.setInteractive();
         prevButton.on('pointerdown', () => {
@@ -421,9 +422,8 @@ uiScene.create = function() {
         });
 
         // Create the "next page" button
-        nextButton = inGame.add.sprite(730, 350, 'inventoryNextButton');
+        nextButton = uiScene.add.sprite(550, 460, 'inventoryArrowDown');
         nextButton.setDepth(1001);
-        nextButton.setScale(-1, 1);
         nextButton.setInteractive();
         nextButton.on('pointerdown', () => {
             currentPage++;
@@ -452,9 +452,9 @@ uiScene.create = function() {
         // });
 
         // Call the functions to create the initial inventory items and navigation buttons
+        createNavigationButtons(0);
         createInventoryItems(0);
-        // createNavigationButtons();
-
+    
         
         // //  Tops
         // iTops = [];
@@ -526,14 +526,12 @@ inGame.preload = function() {
 
     // load items
 
-    // load hairs
+    // load hairs & mannequins
     for (let i = 0; i < 10; i++) {
         this.load.spritesheet('f-0-' + i.toString() + '-1', 'item/f-0-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
         this.load.spritesheet('f-0-' + i.toString() + '-2', 'item/f-0-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.image('f-0-' + i.toString(), 'item/f-0-' + i.toString() + '.png');
     }
-
-    // this.load.spritesheet('f-0-0-1', 'item/f-0-0-1.png', { frameWidth: 300, frameHeight: 250 });
-    // this.load.spritesheet('f-0-0-2', 'item/f-0-0-2.png', { frameWidth: 300, frameHeight: 250 });
 
     // load bottoms
     for (let i = 0; i < 16; i++) {
@@ -583,11 +581,29 @@ var camPosX = 0;
 var camPosY = 0;
 var isPanning = false;
 var bg;
+// init left and right bound, increase/decrease by x everytime camera moves
+var leftBound = 150;
+var rightBound = 650;
+var clickOffsetX = 0;
+var clickOffsetY = 110;
+var currentLocation = "downtown";
+var boundOffset = 150;
+
+var locationConfig = {
+    downtown: {
+        width: 2388,
+        backgroundX: 0,
+        initialScroll: -200,
+        playerSpawnX: 300,
+        playerSpawnY: 300,
+        boundsPolygon: 0    // load json polygon for space player can move around in
+    }
+}
+
 inGame.create = function() {
     // Init Camera
-    this.cameras.main.setSize(800, 520);
-    camPosX = 400;
-    camPosY = 260;
+    setCameraPosition(currentLocation);
+
     this.scene.launch(uiScene);
     
     // Load background
@@ -616,6 +632,21 @@ inGame.create = function() {
     // keySpace = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+
+    // set camera position based on location
+    function setCameraPosition(location) {
+        let lc = locationConfig[location];
+        
+        inGame.cameras.main.setBounds(-lc.width/2 + 430, 0, lc.width - 60, 0);
+        inGame.cameras.main.setScroll(lc.initialScroll, 0);
+        clickOffsetX += lc.initialScroll;
+        
+        // init left/right bounds
+        leftBound = lc.initialScroll + boundOffset;
+        rightBound = lc.initialScroll + 800 - boundOffset;
+        camPosX = 400 + lc.initialScroll;
+        camPosY = 260;
+    }
 
     function createPlayer(playerInfo) {
         myPlayerInfo = playerInfo;
@@ -1015,7 +1046,7 @@ function moveX(currentPosX, currentPosY, direction) {
         x: currentPosX + direction*70,
         y: currentPosY,
         ease: 'Linear',
-        duration: 600,
+        duration: 500,
     });
 }
 
@@ -1025,7 +1056,7 @@ function moveY(currentPosX, currentPosY, direction) {
         x: currentPosX,
         y: currentPosY + direction*70,
         ease: 'Linear',
-        duration: 600,
+        duration: 500,
     });
 }
 
@@ -1056,8 +1087,10 @@ function moveXY(newPosX, newPosY) {
 
 inGame.update = function() {
     // Camera can't pan if already panning
-    this.cameras.main.once('camerapancomplete', function () {
-        isPanning = false;
+    this.cameras.main.on('camerapancomplete', function () {
+        setTimeout(function () {
+            isPanning = false;
+        }, 0);
     });
 
     // Change rooms test
@@ -1068,8 +1101,31 @@ inGame.update = function() {
     //     bg = this.add.image(400, 260, 'beachBg');
     // }
 
+    let panDistance = 450;
+
     // Player input
     if (container) {
+        clickOffsetX = this.cameras.main.scrollX;
+
+        if (container.x < leftBound && isPanning === false) {
+            
+            isPanning = true;
+            leftBound -= panDistance;
+            rightBound -= panDistance;
+            camPosX -= panDistance;
+            // clickOffsetX -= 400;
+            this.cameras.main.pan(camPosX, camPosY, 1500);
+        }
+        else if (container.x > rightBound && isPanning === false) {
+
+            isPanning = true;
+            leftBound += panDistance;
+            rightBound += panDistance;
+            camPosX += panDistance;
+            // clickOffsetX += 400;
+            this.cameras.main.pan(camPosX, camPosY, 1500);
+        }
+
         // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
         //     console.log('hit left bound');
         container.setDepth(container.y);
@@ -1081,13 +1137,13 @@ inGame.update = function() {
                 container.body.setVelocity(0);
                 moveX(container.x, container.y, -1);
                 
-                // camera left test
+                // // camera left test
                 // if (camPosX > -400 && isPanning === false) {
                 //     // console.log(camPosX);
-                //     isPanning = true;
-                //     camPosX -= 400;
-                //     clickOffsetX -= 400;
-                //     this.cameras.main.pan(camPosX, camPosY, 1500);
+                    // isPanning = true;
+                    // camPosX -= 400;
+                    // clickOffsetX -= 400;
+                    // this.cameras.main.pan(camPosX, camPosY, 1500);
                 // }
 
             } else if (keyRight.isDown) {
@@ -1145,6 +1201,9 @@ inGame.update = function() {
 
             // Actions
         if (key1.isDown) {
+
+            console.log(container.x);
+
             if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
                 player.play('body-' + container.getData('skinTone') + '-wave');
@@ -1205,7 +1264,6 @@ inGame.update = function() {
         }
 
         // Click Movement
-        
         var distance = Phaser.Math.Distance.Between(container.x, container.y, globalPointer.x, globalPointer.y - clickOffsetY);
 
         if (container.body.speed > 0)
@@ -1231,6 +1289,40 @@ inGame.update = function() {
             y: container.y,
             flipX: player.flipX
         };
+
+        // let camDiff = 400;
+        // if (container.x < leftBound) {
+        //     // camera left test
+        //         if (camPosX > -100 && isPanning === false) {
+        //             // console.log(camPosX);
+        //             isPanning = true;
+        //             camPosX -= camDiff;
+
+        //             // if (camPosX < -100) {
+        //             //     clickOffsetX = camPosX + 100;
+        //             //     camPosX = -100;
+        //             // }
+        //             // else {
+        //             //     clickOffsetX -= camDiff;
+        //             // }
+                        
+        //             clickOffsetX -= camDiff;
+        //             this.cameras.main.pan(camPosX, camPosY, 1500);
+        //             leftBound -= camDiff;
+        //             rightBound -= camDiff;
+        //         }
+        // }
+        // else if (container.x > rightBound) {
+        //     // camera right test
+        //         if (camPosX < 1600 && isPanning == false) {
+        //             isPanning = true;
+        //             camPosX += camDiff;
+        //             clickOffsetX += camDiff;
+        //             this.cameras.main.pan(camPosX, camPosY, 1500);
+        //             leftBound += camDiff;
+        //             rightBound += camDiff;
+        //         }
+        // }
     }
 }
 
@@ -1244,7 +1336,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
     dom: {
