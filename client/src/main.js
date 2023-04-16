@@ -108,7 +108,7 @@ var container;
 var player = null;
 var rightBound;
 var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, startY: 5, endX: 205, endY: 105 } ]
-var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel;
+var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel, faceAcc, headAcc, bodyAcc, outfit;
 var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 var myPlayerInfo;
@@ -210,7 +210,6 @@ uiScene.preload = function() {
     this.load.html('chatMessageHTML', 'html/chatmessage.html');
     this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
-    this.load.image('bound', 'item/null.png');
 }
 
 uiScene.create = function() {
@@ -221,20 +220,22 @@ uiScene.create = function() {
         headPreview = uiScene.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
         eyesPreview = uiScene.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
         lipsPreview = uiScene.add.sprite(0, 0, 'lips-0');
+        faceAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
         boardPreview = uiScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5]);
-        hairUpperPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
         hairLowerPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        
-        if (playerInfo.avatar['equipped'][3] === -1) {
-            bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-            topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
-        }
-        else {
-            bottomItemPreview = uiScene.add.sprite(0, 0, 'null');
-            topItemPreview = uiScene.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
-        }
-
-        shoesPreview = uiScene.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        hairUpperPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        headAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        shoesPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+        // if (playerInfo.avatar['equipped'][3] === -1) {
+        bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
+        topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        // }
+        // else {
+        //     bottomItemPreview = uiScene.add.sprite(0, 0, 'nullItem');
+        //     topItemPreview = uiScene.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
+        // }
+        outfitPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        bodyAccPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
         browPreview = uiScene.add.sprite(0, 0, 'brow-0');
         usernameTagPreview = uiScene.add.sprite(0, 0, 'username-tag');
         usernameLabelPreview = uiScene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
@@ -243,7 +244,7 @@ uiScene.create = function() {
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
-        var children  = [headPreview, eyesPreview, lipsPreview, boardPreview, hairLowerPreview, hairUpperPreview, browPreview, bodyPreview, bottomItemPreview, topItemPreview, shoesPreview, usernameTagPreview, usernameLabelPreview];
+        var children  = [headPreview, eyesPreview, lipsPreview, faceAccPreview, boardPreview, hairLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, bodyAccPreview, usernameTagPreview, usernameLabelPreview];
         avatarPreview = uiScene.add.container(0, 0);
         avatarPreview.add(children);
         avatarPreview.setDepth(1001);
@@ -452,14 +453,14 @@ uiScene.create = function() {
 
     // Equip the container
     function equipItem(cont, typeId, itemId) {
-        // Hair at index 4 and 5
-
+        // head eyes lips faceAcc board hairLower hairUpper brow headAcc player shoes bottomItem topItem outfit bodyAcc usernameTag usernameLabel
+        // 0    1,   2,   3,      4,    5,        6,        7    8       9      10    11         12      14     15      16          17
         var equipHairLower = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
         var equipHairUpper = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
-        cont.removeAt(4, true);
-        cont.addAt(equipHairLower, 4);
         cont.removeAt(5, true);
-        cont.addAt(equipHairUpper, 5);
+        cont.addAt(equipHairLower, 5);
+        cont.removeAt(6, true);
+        cont.addAt(equipHairUpper, 6);
 
         var updateItemEquipped = cont.getData('equipped');
         updateItemEquipped[typeId] = itemId;
@@ -520,6 +521,14 @@ inGame.preload = function() {
 
     // load items
 
+    // load null items:
+    this.load.spritesheet('f-1--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-2--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-3--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-6--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-7--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-8--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+
     // load hairs & mannequins
     for (let i = 0; i < 10; i++) {
         this.load.spritesheet('f-0-' + i.toString() + '-1', 'item/f-0-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
@@ -553,7 +562,7 @@ inGame.preload = function() {
     }
 
     // load placeholder
-    this.load.spritesheet('null', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
@@ -643,29 +652,35 @@ inGame.create = function() {
     }
 
     function createPlayer(playerInfo) {
+        // ITEM MAP GUIDE
+        // head eyes lips faceAcc board hairLower hairUpper brow headAcc player shoes bottomItem topItem outfit bodyAcc usernameTag usernameLabel
+        // 0    1,   2,   3,      4,    5,        6,        7    8       9      10    11         12      13     14      15          16
         myPlayerInfo = playerInfo;
 
-        player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
         head = inGame.add.sprite(0, 0, 'face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(0, 0, 'eyes-' +  playerInfo.avatar['eyeType']);
         lips = inGame.add.sprite(0, 0, 'lips-0');
-
+        faceAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
         board = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5]);
-
-        hairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
         hairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        
-        if (playerInfo.avatar['equipped'][3] === -1) {
-            bottomItem = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-            topItem = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
-        }
-        else {
-            bottomItem = inGame.add.sprite(0, 0, 'null');
-            topItem = inGame.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
-        }
-
-        shoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        hairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        headAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
         brow = inGame.add.sprite(0, 0, 'brow-0');
+        player = inGame.add.sprite(0, 0, 'body-' +  playerInfo.avatar['skinTone']);
+        shoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+
+        // if (playerInfo.avatar['equipped'][3] === -1) {
+        bottomItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-2-' + playerInfo.avatar['equipped'][2]);
+        topItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-1-' + playerInfo.avatar['equipped'][1]);
+        // }
+        // else {
+        //     bottomItem = inGame.add.sprite(0, 0, 'nullItem');
+        //     topItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        // }
+
+        outfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        bodyAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
 
         usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
@@ -677,8 +692,7 @@ inGame.create = function() {
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(300, 250);
 
-        container.add([head, eyes, lips, board, hairLower, hairUpper, brow, player, bottomItem, topItem, shoes, usernameTag, usernameLabel]);
-
+        container.add([head, eyes, lips, faceAcc, board, hairLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, bodyAcc, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
@@ -697,28 +711,28 @@ inGame.create = function() {
         const otherHead = inGame.add.sprite(playerInfo.x, playerInfo.y, 'face-' + playerInfo.avatar['skinTone']);
         const otherEyes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'eyes-' + playerInfo.avatar['eyeType']);
         const otherLips = inGame.add.sprite(playerInfo.x, playerInfo.y, 'lips-0');
-
+        var otherFaceAcc = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
         const otherBoard = inGame.add.sprite(playerInfo.x, playerInfo.y, 'n-5-' + playerInfo.avatar['equipped'][5]);
 
         const otherHairLower = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
         const otherHairUpper = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
         const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
-
-        const otherPlayer = inGame.add.sprite(playerInfo.x, playerInfo.y, 'body-' + playerInfo.avatar['skinTone']);
-
+        var otherHeadAcc = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        const otherShoes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-4-' + playerInfo.avatar['equipped'][4]);
         var otherBottomItem, otherTopItem;
 
-        if (playerInfo.avatar['equipped'][3] === -1) {
+        // if (playerInfo.avatar['equipped'][3] === -1) {
             otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-2-' + playerInfo.avatar['equipped'][2]);
             otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-1-' + playerInfo.avatar['equipped'][1]);
-        }
-        else {
-            otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'null');
-            otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-3-' + playerInfo.avatar['equipped'][3]);
-        }
+        // }
+        // else {
+        //     otherBottomItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'nullItem');
+        //     otherTopItem = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-3-' + playerInfo.avatar['equipped'][3]);
+        // }
 
-        
-        const otherShoes = inGame.add.sprite(playerInfo.x, playerInfo.y, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        var otherOutfit = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        var otherBodyAcc = inGame.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
     
         var otherUsernameTag = inGame.add.sprite(playerInfo.x, playerInfo.y, 'username-tag');
         var otherUsernameLabel = inGame.add.text(playerInfo.x, playerInfo.y + 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
@@ -748,21 +762,21 @@ inGame.create = function() {
             otherEyes.setPosition(playerInfo.x, playerInfo.y);
         }
 
-        const otherContainer = inGame.add.container([otherHead, otherEyes, otherLips, otherBoard, otherHairLower, otherHairUpper, otherBrow, otherPlayer, otherBottomItem, otherTopItem, otherShoes, otherUsernameTag, otherUsernameLabel]);
+        const otherContainer = inGame.add.container([otherHead, otherEyes, otherLips, otherFaceAcc, otherBoard, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherBodyAcc, otherUsernameTag, otherUsernameLabel]);
         
         otherHead.setDepth(playerInfo.y);
-        otherEyes.setDepth(playerInfo.y + 1);
-        otherLips.setDepth(playerInfo.y + 2);
-        otherBoard.setDepth(playerInfo.y + 3);
-        otherHairLower.setDepth(playerInfo.y + 4);
-        otherHairUpper.setDepth(playerInfo.y+ 5);
-        otherBrow.setDepth(playerInfo.y + 6);
-        otherPlayer.setDepth(playerInfo.y + 7);
-        otherBottomItem.setDepth(playerInfo.y + 8);
-        otherTopItem.setDepth(playerInfo.y + 9);
-        otherShoes.setDepth(playerInfo.y + 10);
-        otherUsernameTag.setDepth(playerInfo.y + 11);
-        otherUsernameLabel.setDepth(playerInfo.y + 12);
+        otherEyes.setDepth(playerInfo.y);
+        otherLips.setDepth(playerInfo.y);
+        otherBoard.setDepth(playerInfo.y);
+        otherHairLower.setDepth(playerInfo.y);
+        otherHairUpper.setDepth(playerInfo.y);
+        otherBrow.setDepth(playerInfo.y);
+        otherPlayer.setDepth(playerInfo.y);
+        otherBottomItem.setDepth(playerInfo.y);
+        otherTopItem.setDepth(playerInfo.y);
+        otherShoes.setDepth(playerInfo.y);
+        otherUsernameTag.setDepth(playerInfo.y);
+        otherUsernameLabel.setDepth(playerInfo.y);
         
         otherContainer.flipX = playerInfo.flipX;
         otherContainer.setDataEnabled();
@@ -867,34 +881,23 @@ inGame.create = function() {
 
                 p.flipX = playerInfo.flipX;
 
-                for (let i = 0; i < 11; i++) {
+                for (let i = 0; i < 16; i++) {
                     p.x[i].flipX = p.flipX;
                     p.x[i].setPosition(playerInfo.x, playerInfo.y);
                     p.x[i].setDepth(playerInfo.y);
                 }
 
-                p.x[11].setPosition(playerInfo.x, playerInfo.y);
-                p.x[11].setDepth(playerInfo.y);
+                p.x[16].setPosition(playerInfo.x, playerInfo.y);
+                p.x[16].setDepth(playerInfo.y);
 
-                p.x[12].originX = 0.5;
-                p.x[12].y = playerInfo.y + 100;
-                p.x[12].x = playerInfo.x;
-                p.x[12].setDepth(playerInfo.y);
+                p.x[17].originX = 0.5;
+                p.x[17].y = playerInfo.y + 100;
+                p.x[17].x = playerInfo.x;
+                p.x[17].setDepth(playerInfo.y);
             }
             }.bind(this));
         }
     }.bind(this));
-
-    globalThis.socket.on('playerWaveResponse', function (playerInfo) {
-        otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id) { // && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying
-                p.x[7].play(JSON.parse(JSON.stringify(p.x[7])).textureKey + '-wave');
-                p.x[2].play(JSON.parse(JSON.stringify(p.x[2])).textureKey + '-wave');
-                p.x[9].play(JSON.parse(JSON.stringify(p.x[9])).textureKey + '-wave');
-                }
-            }.bind(this));
-    }.bind(this));
-
 
     globalThis.socket.on('changeClothesResponse', function (pid, changed) {
         console.log("recieved change clothes response.");
@@ -932,29 +935,30 @@ inGame.create = function() {
         if (isLocalPlayer) {
             hairLower = equipHairLower;
             hairUpper = equipHairUpper;
-            cont.replace(cont.getAt(4), equipHairLower, true);
-            cont.replace(cont.getAt(5), equipHairUpper, true);
+            cont.replace(cont.getAt(5), equipHairLower, true);
+            cont.replace(cont.getAt(6), equipHairUpper, true);
             equipHairLower.flipX = player.flipX;
             equipHairUpper.flipX = player.flipX;
         }
         else {
-            var deleteLower = cont.x[4];
-            var deleteUpper = cont.x[5];
-            cont.x[4] = equipHairLower;
-            cont.x[5] = equipHairUpper;
+            var deleteLower = cont.x[5];
+            var deleteUpper = cont.x[6];
+            cont.x[5] = equipHairLower;
+            cont.x[6] = equipHairUpper;
             deleteLower.destroy();
             deleteUpper.destroy();
             cont.replace(cont.getAt(4), equipHairLower, true);
-            cont.replace(cont.getAt(5), equipHairUpper, true);
+            cont.replace(cont.getAt(6), equipHairUpper, true);
             equipHairLower.x = cont.x[0].x;
             equipHairLower.y = cont.x[0].y;
             equipHairUpper.x = cont.x[0].x;
             equipHairUpper.y = cont.x[0].y;
             equipHairLower.flipX = cont.flipX;
             equipHairUpper.flipX = cont.flipX;
-            equipHairLower.setDepth(cont.x[0].depth + 4);
-            equipHairUpper.setDepth(cont.x[0].depth + 5);
-            console.log(cont.x[0].depth);
+            equipHairLower.setDepth(cont.x[0].depth);
+            equipHairUpper.setDepth(cont.x[0].depth);
+            container.moveBelow(equipHairLower, container.getAt(7))
+            container.moveBelow(equipHairUpper, container.getAt(7))
             // var oldItemX = cont.x[5].x;
             // var oldItemY = cont.y[5].y;
             
@@ -965,13 +969,25 @@ inGame.create = function() {
         cont.setData('equipped', updateItemEquipped);
     }
 
+    globalThis.socket.on('playerWaveResponse', function (playerInfo) {
+        otherPlayers.getChildren().forEach(function (p) {
+            if (playerInfo.id === p.id) { // && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying
+                p.x[9].play(JSON.parse(JSON.stringify(p.x[9])).textureKey + '-wave');
+                p.x[2].play(JSON.parse(JSON.stringify(p.x[2])).textureKey + '-wave');
+                p.x[12].play(JSON.parse(JSON.stringify(p.x[12])).textureKey + '-wave');
+                }
+            }.bind(this));
+    }.bind(this));
+
     globalThis.socket.on('playerCryResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) {
-                    for (let i = 0; i < 8; i++) {
+                    for (let i = 0; i < 10; i++) {
                         p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-cry');
                     }
-                    p.x[9].play(JSON.parse(JSON.stringify(p.x[9])).textureKey + '-cry');
+                    p.x[12].play(JSON.parse(JSON.stringify(p.x[12])).textureKey + '-cry');
+                    p.x[13].play(JSON.parse(JSON.stringify(p.x[13])).textureKey + '-cry');
+                    p.x[14].play(JSON.parse(JSON.stringify(p.x[14])).textureKey + '-cry');
                 }
             }.bind(this));
     }.bind(this));
@@ -979,10 +995,10 @@ inGame.create = function() {
     globalThis.socket.on('playerJumpResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) {
-                    for (let i = 0; i < 3; i++) {
+                    for (let i = 0; i < 4; i++) {
                         p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-jump');
                     }
-                    for (let i = 4; i < 11; i++) {
+                    for (let i = 5; i < 16; i++) {
                         p.x[i].play(JSON.parse(JSON.stringify(p.x[i])).textureKey + '-jump');
                     }
                 }
@@ -991,7 +1007,7 @@ inGame.create = function() {
 
     globalThis.socket.on('playerWinkResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying) {
+            if (playerInfo.id === p.id && !p.x[9].anims.isPlaying && !p.x[1].anims.isPlaying) {
                 p.x[1].play(JSON.parse(JSON.stringify(p.x[1])).textureKey + '-wink');
             }
             }.bind(this));
