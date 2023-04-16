@@ -7,9 +7,9 @@ main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
-    await addToInventory(0, 0, 0, false);
+    // await addToInventory(0, 0, 0, false);
 
-        // await changeEquipped(0, [0, 15, 13, -1, 2, 0, -1, -1, -1, -1]);
+    await changeEquipped(0, [0, 15, 13, -1, 2, 0, -1, -1, -1, -1]);
     // REGISTER USER
     //var newId = await getNumberOfUsers();
     //await registerUser(newId, 'crystal', '123', 'f');
