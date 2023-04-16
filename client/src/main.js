@@ -755,7 +755,7 @@ inGame.create = function() {
         const otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
 
         otherContainer.add([otherHead, otherEyes, otherLips, otherFaceAcc, otherBoard, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherBodyAcc, otherUsernameTag, otherUsernameLabel]);
-        
+
         otherContainer.setDepth(playerInfo.y);
 
         otherContainer.flipX = playerInfo.flipX;
@@ -854,16 +854,12 @@ inGame.create = function() {
                 }
 
                 p.setPosition(playerInfo.x, playerInfo.y);
+                p.setDepth(playerInfo.y);
                 p.flipX = playerInfo.flipX;
-            
-                for (let i = 0; i < 15; i++) {
+                
+                for (let i = 0; i < 15; i++)
                     p.getAt(i).flipX = p.flipX;
-
-                // p.getAt(15).setPosition(0, 0);
-
-                // p.getAt(16).originX = 0.5;
-                // p.getAt(16).y = 0 + 100;
-                // p.getAt(16).x = 0;
+                    
             }
             }.bind(this));
         }
