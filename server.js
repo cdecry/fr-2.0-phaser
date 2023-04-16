@@ -6,7 +6,7 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped } = require('./database/queries');
 const { Player } = require('./network/player');
 
 // store clients (id: socketid)
@@ -52,7 +52,7 @@ io.on('connection', function (socket) {
             const avatar = await getUserAvatar(result.id);
 
             // add player to our list of online players
-            var player = new Player(socket.id, username, 'downtown', avatar, false, 400, 200, result.inventory);
+            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory);
             players[socket.id] = player;
 
             // add player to room list
@@ -128,34 +128,48 @@ io.on('connection', function (socket) {
         socket.join(room);
     })
 
-    
-    // socket.on('loadInventory', async () => {
+    socket.on('changeClothes', async (equipped) => {
+        // similar to invent, but of changed clothes
+        var changed = {"0":[], "1":[], "2":[], "3":[], "4":[], "5": [], "6":[], "7":[], "8":[], "9":[]};
+        var numChanged = 0;
+        // check that the player has these clothes
+        for (let i = 0; i < equipped.length; i++) {
 
-    //     var userId = await loginRequest(username, password);
-    //     if (userId != null) {
+            var itemId = equipped[i];
 
-    //         // get avatar
-    //         const avatar = await getUserAvatar(userId);
-    //         // console.log('server aet avatar' + avatar['equipped']);
+            if (itemId == -1) continue; // nothing of this type is equipped
+            if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
 
-    //         var player = new Player(socket.id, username, 'downtown', avatar, false, 400, 200);
-    //         players[socket.id] = player;
+            var itemExistsInInventory = false;
 
-    //         if (rooms['downtown'] == null)
-    //             rooms['downtown'] = [player];
-    //         else
-    //             rooms['downtown'].push(player);
-    //         console.log('Sucessfully logged in! Players online: ' + JSON.stringify(players));
-    //         // load game
-    //         socket.join('downtown');
-    //         // load local player
-    //         io.to(socket.id).emit('login success');
-    //     }
-    //     else {
-    //         console.log('Invalid username/password. Please try again.');
-    //         io.to(socket.id).emit('login fail');
-    //     }
-    // });
+            // Check if the item exists in the inventory
+            var itemArray = players[socket.id].inventory[i];
+            
+            for (let j = 0; j < itemArray.length; j++) {
+                const item = itemArray[j];
+                if (item.id === itemId) {
+                    itemExistsInInventory = true;
+                    changed[i].push(item);
+                    players[socket.id].avatar.equipped[i] = itemId;
+                    numChanged++;
+                    break;
+                }
+            }
+
+            if (!itemExistsInInventory) {
+                console.log(`Item ${itemId} is not in the inventory.`);
+            }
+        }
+
+        if (numChanged == 0) return;
+
+        socket.to(players[socket.id].room).emit("changeClothesResponse", changed);
+        io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
+
+        // update player avatar database
+        await changeEquipped(players[socket.id].pid, equipped);
+
+    })
 
 });
 
