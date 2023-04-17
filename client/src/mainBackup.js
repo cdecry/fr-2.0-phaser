@@ -305,7 +305,7 @@ uiScene.create = function() {
 
     var uiBar = this.add.image(400, 490, 'uiBar');
     var inventory = this.add.image(400, 260, 'inventoryWindow');
-    var inventoryUI = this.add.dom(0,0).createFromCache('inventoryUI');
+    var inventoryUI = this.add.dom(763,20).createFromCache('inventoryUI');
     var inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
     
     inventory.setDepth(1000);
@@ -405,11 +405,6 @@ uiScene.create = function() {
                 
                 avatarPreview.destroy();
             }
-            else if (event.target.id === 'clothesButton') {
-                // default tops
-                createNavigationButtons(1);
-                createInventoryItems(1);
-            }
         });
     });
 
@@ -470,11 +465,6 @@ uiScene.create = function() {
 
     // Create the navigation buttons
     function createNavigationButtons(typeId) {
-        if (prevButton)
-            prevButton.destroy();
-        if (nextButton)
-            nextButton.destroy();
-
         // Create the "previous page" button
         prevButton = uiScene.add.sprite(550, 160, 'inventoryArrowUp');
         prevButton.setDepth(1001);
@@ -1213,11 +1203,27 @@ inGame.update = function() {
             if (keyLeft.isDown) {
                 container.body.setVelocity(0);
                 moveX(container.x, container.y, -1);
+                
+                // // camera left test
+                // if (camPosX > -400 && isPanning === false) {
+                //     // console.log(camPosX);
+                    // isPanning = true;
+                    // camPosX -= 400;
+                    // clickOffsetX -= 400;
+                    // this.cameras.main.pan(camPosX, camPosY, 1500);
+                // }
 
             } else if (keyRight.isDown) {
                 container.body.setVelocity(0);
                 moveX(container.x, container.y, 1);
                 console.log(camPosX);
+                // camera right test
+                // if (camPosX < 1200 && isPanning == false) {
+                //     isPanning = true;
+                //     camPosX += 400;
+                //     clickOffsetX += 400;
+                //     this.cameras.main.pan(camPosX, camPosY, 1500);
+                // }
             }
 
             // Vertical movement
@@ -1350,6 +1356,39 @@ inGame.update = function() {
             y: container.y,
             flipX: player.flipX
         };
+        // let camDiff = 400;
+        // if (container.x < leftBound) {
+        //     // camera left test
+        //         if (camPosX > -100 && isPanning === false) {
+        //             // console.log(camPosX);
+        //             isPanning = true;
+        //             camPosX -= camDiff;
+
+        //             // if (camPosX < -100) {
+        //             //     clickOffsetX = camPosX + 100;
+        //             //     camPosX = -100;
+        //             // }
+        //             // else {
+        //             //     clickOffsetX -= camDiff;
+        //             // }
+                        
+        //             clickOffsetX -= camDiff;
+        //             this.cameras.main.pan(camPosX, camPosY, 1500);
+        //             leftBound -= camDiff;
+        //             rightBound -= camDiff;
+        //         }
+        // }
+        // else if (container.x > rightBound) {
+        //     // camera right test
+        //         if (camPosX < 1600 && isPanning == false) {
+        //             isPanning = true;
+        //             camPosX += camDiff;
+        //             clickOffsetX += camDiff;
+        //             this.cameras.main.pan(camPosX, camPosY, 1500);
+        //             leftBound += camDiff;
+        //             rightBound += camDiff;
+        //         }
+        // }
     }
 }
 
