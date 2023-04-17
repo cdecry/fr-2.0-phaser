@@ -966,39 +966,41 @@ inGame.create = function() {
 
         var equppedItem;
 
-        if (typeId == 0) {
+        if (typeId == 0 && isLocalPlayer) {
             equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
             var equippedItem2 = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            cont.replace(cont.getAt(5), equippedItem, true);
+            cont.replace(cont.getAt(6), equippedItem2, true);
+            equippedItem.flipX = player.flipX;
+            equippedItem2.flipX = player.flipX;
+        }
+        else if (typeId == 0) {
+            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            cont.replace(cont.getAt(5), equippedItem, true);
+            cont.replace(cont.getAt(6), equippedItem2, true);
+            
+            equippedItem.x = cont.getAt(0).x;
+            equippedItem.y = cont.getAt(0).y;
+            equippedItem2.x = cont.getAt(0).x;
+            equippedItem2.y = cont.getAt(0).y;
+            equippedItem.flipX = cont.flipX;
+            equippedItem2.flipX = cont.flipX;
+        }
+        else if (isLocalPlayer) {
+            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
+            cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
+            equippedItem.flipX = player.flipX;
         }
         else {
             equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
+            cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
+            equippedItem.flipX = player.flipX;
+            equippedItem.x = cont.getAt(0).x;
+            equippedItem.y = cont.getAt(0).y;
+            equippedItem.flipX = cont.flipX;
         }
-
-        if (isLocalPlayer) {
-            hairLower = equipHairLower;
-            hairUpper = equipHairUpper;
-            cont.replace(cont.getAt(5), equipHairLower, true);
-            cont.replace(cont.getAt(6), equipHairUpper, true);
-            equipHairLower.flipX = player.flipX;
-            equipHairUpper.flipX = player.flipX;
-        }
-        else {
-            var deleteLower = cont.getAt(5);
-            var deleteUpper = cont.getAt(6);
-            cont.replace(cont.getAt(5), equipHairLower, true);
-            cont.replace(cont.getAt(6), equipHairUpper, true);
-            equipHairLower.x = cont.getAt(0).x;
-            equipHairLower.y = cont.getAt(0).y;
-            equipHairUpper.x = cont.getAt(0).x;
-            equipHairUpper.y = cont.getAt(0).y;
-            equipHairLower.flipX = cont.flipX;
-            equipHairUpper.flipX = cont.flipX;
-            // equipHairLower.setDepth(1);
-            // equipHairUpper.setDepth(2);
-            // var oldItemX = cont.x[5].x;
-            // var oldItemY = cont.y[5].y;
             
-        }
         var updateItemEquipped = cont.getData('equipped');
         updateItemEquipped[typeId] = itemId;
         
@@ -1386,7 +1388,7 @@ inGame.update = function() {
         // emit player movement
         var x = container.x;
         var y = container.y;
-        var flipX = player.flipX;
+        var flipX = container.getAt(cMap.player).flipX;
         
         if (container.oldPosition && (x !== container.oldPosition.x || y !== container.oldPosition.y || flipX !== container.oldPosition.flipX)) {
             globalThis.socket.emit('playerMovement', { x, y, flipX });
@@ -1396,7 +1398,7 @@ inGame.update = function() {
         container.oldPosition = {
             x: container.x,
             y: container.y,
-            flipX: player.flipX
+            flipX: container.getAt(cMap.player).flipX
         };
     }
 }
