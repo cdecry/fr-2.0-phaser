@@ -403,6 +403,7 @@ uiScene.create = function() {
                 avatarPreview.destroy();
             }
             else if (event.target.id === 'hairButton') {
+                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
                 // hair
                 gridWidth = 8;
                 gridHeight = 3;
@@ -411,7 +412,9 @@ uiScene.create = function() {
                 createNavigationButtons(0);
                 createInventoryItems(0);
             }
-            else if (event.target.id === 'clothesButton') {
+            else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
+                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
+
                 // default tops
                 gridWidth = 8;
                 gridHeight = 3;
@@ -420,7 +423,44 @@ uiScene.create = function() {
                 createNavigationButtons(1);
                 createInventoryItems(1);
             }
+            else if (event.target.id === 'bottomButton') {
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
+                createNavigationButtons(2);
+                createInventoryItems(2);
+            }
+
+            else if (event.target.id === 'outfitsButton') {
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
+                createNavigationButtons(3);
+                createInventoryItems(3);
+            }
+
+            else if (event.target.id === 'costumesButton') {
+                // FIX
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
+                createNavigationButtons(1);
+                createInventoryItems(1);
+            }
+
+            else if (event.target.id === 'shoesButton') {
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
+                createNavigationButtons(4);
+                createInventoryItems(4);
+            }
             else if (event.target.id === 'boardButton') {
+                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
                 gridWidth = 4;
                 gridHeight = 3;
                 cellWidth = 124;
@@ -429,6 +469,7 @@ uiScene.create = function() {
                 createInventoryItems(5);
             }
             else if (event.target.id === 'accessoryButton') {
+                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
                 gridWidth = 8;
                 gridHeight = 3;
                 cellWidth = 62;
