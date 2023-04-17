@@ -244,6 +244,7 @@ uiScene.preload = function() {
     this.load.html('chatMessageHTML', 'html/chatmessage.html');
     this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+    //this.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 }
 
 uiScene.create = function() {
@@ -573,6 +574,7 @@ uiScene.create = function() {
     // Equip the container
     function equipItem(cont, typeId, itemId) {
         var equippedItem;
+        var updateItemEquipped = cont.getData('equipped');
 
         var prefix = 'n';
         if (typeId != 5)
@@ -588,11 +590,39 @@ uiScene.create = function() {
         else {
             equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
+
+            // changing from top - outfit, vice verse etc
+            if (updateItemEquipped[4] != -1 && typeId == 1) {
+                var defaultBottom = uiScene.add.sprite(0, 0, prefix + '-2-' + '13');
+                var nullOutfit = uiScene.add.sprite(0, 0, 'nullItem');
+                
+                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
+                cont.replace(cont.getAt(cMap.bottom), defaultBottom, true);
+
+                updateItemEquipped[3] = -1;
+                updateItemEquipped[2] = 13;
+            }
+            else if (updateItemEquipped[4] != -1 && typeId == 2) {
+                var defaultTop = uiScene.add.sprite(0, 0, prefix + '-1-' + '5');
+                var nullOutfit = uiScene.add.sprite(0, 0, 'nullItem');
+                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
+                cont.replace(cont.getAt(cMap.top), defaultTop, true);
+
+                updateItemEquipped[3] = -1;
+                updateItemEquipped[1] = 5;
+            }
+            else if (updateItemEquipped[0] != -1 && typeId == 3) {
+                var nullTop = uiScene.add.sprite(0, 0, 'nullItem');
+                var nullBottom = uiScene.add.sprite(0, 0, 'nullItem');
+                cont.replace(cont.getAt(cMap.top), nullTop, true);
+                cont.replace(cont.getAt(cMap.bottom), nullBottom, true);
+
+                updateItemEquipped[1] = -1;
+                updateItemEquipped[2] = -1;
+            }
+
         }
-
-        var updateItemEquipped = cont.getData('equipped');
         updateItemEquipped[typeId] = itemId;
-
         cont.setData('equipped', updateItemEquipped);
     }
 
@@ -660,6 +690,7 @@ inGame.preload = function() {
     this.load.spritesheet('f-6--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-7--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-8--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 
     // load hairs & mannequins
     for (let i = 0; i < 10; i++) {
@@ -700,7 +731,7 @@ inGame.preload = function() {
     }
 
     // load placeholder
-    this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    //this.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 
     this.load.image('username-tag', 'avatar/username-tag.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
@@ -1020,7 +1051,7 @@ inGame.create = function() {
     }.bind(this));
 
     function changeClothes(cont, typeId, itemId, isLocalPlayer) {
-
+        var updateItemEquipped = cont.getData('equipped');
         var prefix = "n"
 
         if (typeId != 5)
@@ -1048,22 +1079,80 @@ inGame.create = function() {
             equippedItem2.flipX = cont.flipX;
         }
         else if (isLocalPlayer) {
-            var deleteItem = cont.getAt(iMap[typeId]);
+            // var deleteItem = cont.getAt(iMap[typeId]);
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
-            deleteItem.destroy();
+            if (updateItemEquipped[4] != -1 && typeId == 1) {
+                var defaultBottom = inGame.add.sprite(0, 0, prefix + '-2-' + '13');
+                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
+                
+                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
+                cont.replace(cont.getAt(cMap.bottom), defaultBottom, true);
+
+                updateItemEquipped[3] = -1;
+                updateItemEquipped[2] = 13;
+            }
+            else if (updateItemEquipped[4] != -1 && typeId == 2) {
+                var defaultTop = inGame.add.sprite(0, 0, prefix + '-1-' + '5');
+                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
+                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
+                cont.replace(cont.getAt(cMap.top), defaultTop, true);
+
+                updateItemEquipped[3] = -1;
+                updateItemEquipped[1] = 5;
+            }
+            else if (updateItemEquipped[0] != -1 && typeId == 3) {
+                var nullTop = inGame.add.sprite(0, 0, 'nullItem');
+                var nullBottom = inGame.add.sprite(0, 0, 'nullItem');
+                cont.replace(cont.getAt(cMap.top), nullTop, true);
+                cont.replace(cont.getAt(cMap.bottom), nullBottom, true);
+
+                updateItemEquipped[1] = -1;
+                updateItemEquipped[2] = -1;
+            }
+
+            // deleteItem.destroy();
             equippedItem.flipX = player.flipX;
         }
         else {
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
+
+            if (typeId == 1) {
+                var defaultBottom = inGame.add.sprite(0, 0, prefix + '-2-' + '13');
+                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
+                
+                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
+                cont.replace(cont.getAt(cMap.bottom), defaultBottom, true);
+
+                updateItemEquipped[3] = -1;
+                updateItemEquipped[2] = 13;
+            }
+            else if (typeId == 2) {
+                var defaultTop = inGame.add.sprite(0, 0, prefix + '-1-' + '5');
+                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
+                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
+                cont.replace(cont.getAt(cMap.top), defaultTop, true);
+
+                updateItemEquipped[3] = -1;
+                updateItemEquipped[1] = 5;
+            }
+            else if (typeId == 3) {
+                var nullTop = inGame.add.sprite(0, 0, 'nullItem');
+                var nullBottom = inGame.add.sprite(0, 0, 'nullItem');
+                cont.replace(cont.getAt(cMap.top), nullTop, true);
+                cont.replace(cont.getAt(cMap.bottom), nullBottom, true);
+
+                updateItemEquipped[1] = -1;
+                updateItemEquipped[2] = -1;
+            }
+
             equippedItem.flipX = player.flipX;
             equippedItem.x = cont.getAt(0).x;
             equippedItem.y = cont.getAt(0).y;
             equippedItem.flipX = cont.flipX;
         }
-            
-        var updateItemEquipped = cont.getData('equipped');
+
         updateItemEquipped[typeId] = itemId;
         
         cont.setData('equipped', updateItemEquipped);
@@ -1095,7 +1184,7 @@ inGame.create = function() {
     globalThis.socket.on('playerJumpResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) {
-                    for (let i = 0; i < 4; i++) {
+                    for (let i = 0; i < 5; i++) {
                         p.getAt(i).play(JSON.parse(JSON.stringify(p.getAt(i))).textureKey + '-jump');
                     }
                     for (let i = 5; i < 16; i++) {
@@ -1386,7 +1475,7 @@ inGame.update = function() {
                 if (container.getData('equipped')[3] === -1)
                     container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-wave');
                 else
-                    container.getAt(cMap.top).play('f-3-' + container.getData('equipped')[3] + '-wave');
+                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-wave');
                     
                 container.getAt(cMap.lips).play('lips-0-wave');
             }
@@ -1405,7 +1494,7 @@ inGame.update = function() {
                 if (container.getData('equipped')[3] === -1)
                     container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-cry');
                 else
-                    container.getAt(cMap.top).play('f-3-' + container.getData('equipped')[3] + '-cry');
+                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-cry');
             }
         }
 
@@ -1423,7 +1512,7 @@ inGame.update = function() {
                 if (container.getData('equipped')[3] === -1)
                     container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-jump');
                 else
-                    container.getAt(cMap.top).play('f-3-' + container.getData('equipped')[3] + '-jump');
+                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-jump');
                 
                 container.getAt(cMap.bottom).play('f-2-' + container.getData('equipped')[2] + '-jump');
                 container.getAt(cMap.shoes).play('f-4-' + container.getData('equipped')[4] + '-jump');
