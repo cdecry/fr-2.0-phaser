@@ -14,54 +14,49 @@
             }
 
             #hairButton {
-                position: absolute;
+                position: relative;
                 height: 32px;
-                width: 107px;
-                left: 92px;
-                top: 60px;
+                width: 75px;
                 border: 1px solid red;
             }
             #clothesButton {
-                position: absolute;
+                position: relative;
                 height: 32px;
                 width: 107px;
-                left: 92px;
-                top: 60px;
                 border: 1px solid red;
             }
             #boardButton {
-                position: absolute;
                 height: 32px;
-                width: 107px;
-                left: 92px;
-                top: 60px;
+                width: 90px;
                 border: 1px solid red;
             }
             #accessoryButton {
-                position: absolute;
                 height: 32px;
-                width: 107px;
-                left: 92px;
-                top: 60px;
+                width: 126px;
                 border: 1px solid red;
             }
             #favoriteButton {
-                position: absolute;
                 height: 32px;
-                width: 107px;
-                left: 92px;
-                top: 60px;
+                width: 105px;
                 border: 1px solid red;
             }
             #creatureButton {
-                position: absolute;
                 height: 32px;
-                width: 107px;
-                left: 92px;
-                top: 60px;
+                width: 109px;
                 border: 1px solid red;
             }
             
+            #tabs {
+                left: 17px;
+                top: 60px;
+                position: absolute;
+                border: 1px solid red; 
+                display: inline-flex;
+                justify-content: flex-start;
+                width: 613px;
+                height: 31px;
+            }
+
             button {
                 background-color: transparent;
                 border: none;
@@ -74,7 +69,14 @@
     <body>
 
         <button id="closeInventoryButton"></button>
-        <button id="clothesButton"></button>
+        <div id="tabs">
+            <button id="hairButton"></button>
+            <button id="clothesButton"></button>
+            <button id="boardButton"></button>
+            <button id="accessoryButton"></button>
+            <button id="favoriteButton"></button>
+            <button id="creatureButton"></button>
+        </div>
 
         <!-- <div id="chat">
             <button class="chatButton"></button>
