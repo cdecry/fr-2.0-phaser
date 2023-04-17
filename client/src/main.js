@@ -262,11 +262,6 @@ uiScene.create = function() {
         // if (playerInfo.avatar['equipped'][3] === -1) {
         bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
         topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
-        // }
-        // else {
-        //     bottomItemPreview = uiScene.add.sprite(0, 0, 'nullItem');
-        //     topItemPreview = uiScene.add.sprite(0, 0, 'f-3-' + playerInfo.avatar['equipped'][3]);
-        // }
         outfitPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         bodyAccPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
         browPreview = uiScene.add.sprite(0, 0, 'brow-0');
@@ -410,6 +405,14 @@ uiScene.create = function() {
                 createNavigationButtons(1);
                 createInventoryItems(1);
             }
+            else if (event.target.id === 'boardButton') {
+                createNavigationButtons(5);
+                createInventoryItems(5);
+            }
+            else if (event.target.id === 'accessoryButton') {
+                createNavigationButtons(7);
+                createInventoryItems(7)
+            }
         });
     });
 
@@ -439,9 +442,18 @@ uiScene.create = function() {
         const startIndex = currentPage * gridWidth * gridHeight;
         const endIndex = Math.min(startIndex + gridWidth * gridHeight, myInventory[typeId].length);
 
+        var prefix = "n"
+
+        if (typeId != 5)
+            prefix = myPlayerInfo.avatar['gender'];
+
         // Create the items for the current page
         for (let i = startIndex; i < endIndex; i++) {
-            const item = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + myInventory[typeId][i].id.toString());
+            var item;
+            
+            item = uiScene.add.sprite(0, 0, prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
+            console.log(prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
+
             item.setInteractive();
             item.setDepth(1001);
 
@@ -506,7 +518,7 @@ uiScene.create = function() {
         }
         else {
             equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
-            cont.replace(cont.getAt(iMap[i]), equippedItem);
+            cont.replace(cont.getAt(iMap[typeId]), equippedItem);
         }
 
         var updateItemEquipped = cont.getData('equipped');
@@ -580,7 +592,7 @@ inGame.preload = function() {
     for (let i = 0; i < 10; i++) {
         this.load.spritesheet('f-0-' + i.toString() + '-1', 'item/f-0-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
         this.load.spritesheet('f-0-' + i.toString() + '-2', 'item/f-0-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('f-0-' + i.toString(), 'item/f-0-' + i.toString() + '.png');
+        this.load.image('f-0-' + i.toString() + '-i', 'item/f-0-' + i.toString() + '-i.png');
     }
 
     // load bottoms
@@ -591,6 +603,7 @@ inGame.preload = function() {
     // load tops
     for (let i = 0; i < 16; i++) {
         this.load.spritesheet('f-1-' + i.toString(), 'item/f-1-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.image('f-1-' + i.toString() + '-i', 'item/f-1-' + i.toString() + '-i.png');
     }
 
     // load outfits
@@ -606,6 +619,7 @@ inGame.preload = function() {
     // load boards
     for (let i = 0; i < 1; i++) {
         this.load.spritesheet('n-5-' + i.toString(), 'item/n-5-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.image('n-5-' + i.toString() + '-i', 'item/n-5-' + i.toString() + '-i.png');
     }
 
     // load placeholder
@@ -928,12 +942,38 @@ inGame.create = function() {
         }.bind(this));
     }.bind(this));
 
+    function equipItem(cont, typeId, itemId) {
+        var equippedItem;
+
+        if (typeId == 0) {
+            equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            cont.replace(cont.getAt(5), equippedItem, true);
+            cont.replace(cont.getAt(6), equippedItem2, true);
+        }
+        else {
+            equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
+            cont.replace(cont.getAt(iMap[typeId]), equippedItem);
+        }
+
+        var updateItemEquipped = cont.getData('equipped');
+        updateItemEquipped[typeId] = itemId;
+
+        cont.setData('equipped', updateItemEquipped);
+    }
+
     function changeClothes(cont, typeId, itemId, isLocalPlayer) {
-        var equipHairLower = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
-        var equipHairUpper = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
-        // ITEM MAP GUIDE
-        // head eyes lips faceAcc board hairLower hairUpper brow headAcc player shoes bottomItem topItem outfit bodyAcc usernameTag usernameLabel
-        // 0    1,   2,   3,      4,    5,        6,        7    8       9      10    11         12      13     14      15          16
+
+        var equppedItem;
+
+        if (typeId == 0) {
+            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+        }
+        else {
+            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
+        }
+
         if (isLocalPlayer) {
             hairLower = equipHairLower;
             hairUpper = equipHairUpper;
@@ -1233,30 +1273,38 @@ inGame.update = function() {
             // Flip
             if (keyLeft.isDown || container.body.velocity.x < 0) {
 
-                player.flipX = false;
-                head.flipX = false;
-                brow.flipX = false;
-                eyes.flipX = false;
-                lips.flipX = false;
-                board.flipX = false;
-                hairLower.flipX = false;
-                hairUpper.flipX = false;
-                topItem.flipX = false;
-                bottomItem.flipX = false;
-                shoes.flipX = false;
+                container.getAt(cMap.player).flipX = false;
+                container.getAt(cMap.head).flipX = false;
+                container.getAt(cMap.brow).flipX = false;
+                container.getAt(cMap.eyes).flipX = false;
+                container.getAt(cMap.lips).flipX = false;
+                container.getAt(cMap.faceAcc).flipX = false;
+                container.getAt(cMap.board).flipX = false;
+                container.getAt(cMap.hairLower).flipX = false;
+                container.getAt(cMap.hairUpper).flipX = false;
+                container.getAt(cMap.headAcc).flipX = false;
+                container.getAt(cMap.top).flipX = false;
+                container.getAt(cMap.bottom).flipX = false;
+                container.getAt(cMap.outfit).flipX = false;
+                container.getAt(cMap.shoes).flipX= false;
+                container.getAt(cMap.bodyAcc).flipX = false;
 
             } else if (keyRight.isDown || container.body.velocity.x > 0) {
-                player.flipX = true;
-                head.flipX = true;
-                brow.flipX = true;
-                eyes.flipX = true;
-                lips.flipX = true;
-                board.flipX = true;
-                hairLower.flipX = true;
-                hairUpper.flipX = true;
-                topItem.flipX = true;
-                bottomItem.flipX = true;
-                shoes.flipX = true;
+                container.getAt(cMap.player).flipX = true;
+                container.getAt(cMap.head).flipX = true;
+                container.getAt(cMap.brow).flipX = true;
+                container.getAt(cMap.eyes).flipX = true;
+                container.getAt(cMap.lips).flipX = true;
+                container.getAt(cMap.faceAcc).flipX = true;
+                container.getAt(cMap.board).flipX = true;
+                container.getAt(cMap.hairLower).flipX = true;
+                container.getAt(cMap.hairUpper).flipX = true;
+                container.getAt(cMap.headAcc).flipX = true;
+                container.getAt(cMap.top).flipX = true;
+                container.getAt(cMap.bottom).flipX = true;
+                container.getAt(cMap.outfit).flipX = true;
+                container.getAt(cMap.shoes).flipX= true;
+                container.getAt(cMap.bodyAcc).flipX = true;
             }
             //#endregion
 
@@ -1265,61 +1313,61 @@ inGame.update = function() {
 
             console.log(container.x);
 
-            if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
+            if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
-                player.play('body-' + container.getData('skinTone') + '-wave');
+                container.getAt(cMap.player).play('body-' + container.getData('skinTone') + '-wave');
 
                 if (container.getData('equipped')[3] === -1)
-                    topItem.play('f-1-' + container.getData('equipped')[1] + '-wave');
+                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-wave');
                 else
-                    topItem.play('f-3-' + container.getData('equipped')[3] + '-wave');
+                    container.getAt(cMap.top).play('f-3-' + container.getData('equipped')[3] + '-wave');
                     
-                lips.play('lips-0-wave');
+                container.getAt(cMap.lips).play('lips-0-wave');
             }
         }
 
         if (key2.isDown) {
-            if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
+            if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerCry');
-                player.play('body-' + container.getData('skinTone') + '-cry');
-                head.play('face-' + container.getData('skinTone') + '-cry');
-                eyes.play('eyes-' + container.getData('eyeType') + '-cry');
-                hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-cry');
-                hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-cry');
-                brow.play('brow-0-cry');
+                container.getAt(cMap.player).play('body-' + container.getData('skinTone') + '-cry');
+                container.getAt(cMap.head).play('face-' + container.getData('skinTone') + '-cry');
+                container.getAt(cMap.eyes).play('eyes-' + container.getData('eyeType') + '-cry');
+                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-1-cry');
+                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-2-cry');
+                container.getAt(cMap.brow).play('brow-0-cry');
 
                 if (container.getData('equipped')[3] === -1)
-                    topItem.play('f-1-' + container.getData('equipped')[1] + '-cry');
+                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-cry');
                 else
-                    topItem.play('f-3-' + container.getData('equipped')[3] + '-cry');
+                    container.getAt(cMap.top).play('f-3-' + container.getData('equipped')[3] + '-cry');
             }
         }
 
         if (key3.isDown) {
-            if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
+            if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerJump');
-                player.play('body-' + container.getData('skinTone') + '-jump');
-                head.play('face-' + container.getData('skinTone') + '-jump');
-                eyes.play('eyes-' + container.getData('eyeType') + '-jump');
-                lips.play('lips-0-jump');
-                hairUpper.play('f-0-' + container.getData('equipped')[0] + '-1-jump');
-                hairLower.play('f-0-' + container.getData('equipped')[0] + '-2-jump');
-                brow.play('brow-0-jump');
+                container.getAt(cMap.player).play('body-' + container.getData('skinTone') + '-jump');
+                container.getAt(cMap.head).play('face-' + container.getData('skinTone') + '-jump');
+                container.getAt(cMap.eyes).play('eyes-' + container.getData('eyeType') + '-jump');
+                container.getAt(cMap.lips).play('lips-0-jump');
+                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-1-jump');
+                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-2-jump');
+                container.getAt(cMap.brow).play('brow-0-jump');
 
                 if (container.getData('equipped')[3] === -1)
-                    topItem.play('f-1-' + container.getData('equipped')[1] + '-jump');
+                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-jump');
                 else
-                    topItem.play('f-3-' + container.getData('equipped')[3] + '-jump');
+                    container.getAt(cMap.top).play('f-3-' + container.getData('equipped')[3] + '-jump');
                 
-                bottomItem.play('f-2-' + container.getData('equipped')[2] + '-jump');
-                shoes.play('f-4-' + container.getData('equipped')[4] + '-jump');
+                container.getAt(cMap.bottom).play('f-2-' + container.getData('equipped')[2] + '-jump');
+                container.getAt(cMap.shoes).play('f-4-' + container.getData('equipped')[4] + '-jump');
             }
         }
 
         if (key4.isDown) {
-            if (!player.anims.isPlaying && !eyes.anims.isPlaying) {
+            if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerWink');
-                eyes.play('eyes-' + container.getData('eyeType') + '-wink');
+                container.getAt(cMap.eyes).play('eyes-' + container.getData('eyeType') + '-wink');
             }
         }
         }
