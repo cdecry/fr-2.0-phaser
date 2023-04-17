@@ -400,16 +400,37 @@ uiScene.create = function() {
                 
                 avatarPreview.destroy();
             }
+            else if (event.target.id === 'hairButton') {
+                // hair
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
+                createNavigationButtons(0);
+                createInventoryItems(0);
+            }
             else if (event.target.id === 'clothesButton') {
                 // default tops
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
                 createNavigationButtons(1);
                 createInventoryItems(1);
             }
             else if (event.target.id === 'boardButton') {
+                gridWidth = 4;
+                gridHeight = 3;
+                cellWidth = 124;
+                cellHeight = 110;
                 createNavigationButtons(5);
                 createInventoryItems(5);
             }
             else if (event.target.id === 'accessoryButton') {
+                gridWidth = 8;
+                gridHeight = 3;
+                cellWidth = 62;
+                cellHeight = 110;
                 createNavigationButtons(7);
                 createInventoryItems(7)
             }
@@ -510,15 +531,19 @@ uiScene.create = function() {
     function equipItem(cont, typeId, itemId) {
         var equippedItem;
 
+        var prefix = 'n';
+        if (typeId != 5)
+            prefix = myPlayerInfo.avatar.gender;
+
         if (typeId == 0) {
-            equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
-            var equippedItem2 = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
             cont.replace(cont.getAt(5), equippedItem, true);
             cont.replace(cont.getAt(6), equippedItem2, true);
         }
         else {
-            equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
-            cont.replace(cont.getAt(iMap[typeId]), equippedItem);
+            equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
+            cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
         }
 
         var updateItemEquipped = cont.getData('equipped');
@@ -529,6 +554,10 @@ uiScene.create = function() {
 
     function loadInventory() {
         // Call the functions to create the initial inventory items and navigation buttons
+        gridWidth = 8;
+        gridHeight = 3;
+        cellWidth = 62;
+        cellHeight = 110;
         createNavigationButtons(0);
         createInventoryItems(0);
         createAvatarPreview(myPlayerInfo);
@@ -598,6 +627,7 @@ inGame.preload = function() {
     // load bottoms
     for (let i = 0; i < 16; i++) {
         this.load.spritesheet('f-2-' + i.toString(), 'item/f-2-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.image('f-2-' + i.toString() + '-i', 'item/f-2-' + i.toString() + '-i.png');
     }
 
     // load tops
@@ -609,15 +639,17 @@ inGame.preload = function() {
     // load outfits
     for (let i = 0; i < 13; i++) {
         this.load.spritesheet('f-3-' + i.toString(), 'item/f-3-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.image('f-3-' + i.toString() + '-i', 'item/f-3-' + i.toString() + '-i.png');
     }
 
     // load shoes
     for (let i = 0; i < 5; i++) {
         this.load.spritesheet('f-4-' + i.toString(), 'item/f-4-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.image('f-4-' + i.toString() + '-i', 'item/f-4-' + i.toString() + '-i.png');
     }
 
     // load boards
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 5; i++) {
         this.load.spritesheet('n-5-' + i.toString(), 'item/n-5-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
         this.load.image('n-5-' + i.toString() + '-i', 'item/n-5-' + i.toString() + '-i.png');
     }
@@ -882,7 +914,7 @@ inGame.create = function() {
                 }
 
                 for (let j = 0; j < numContainerItems; j++) {
-                    p.getAt(j).destory();
+                    p.getAt(j).destroy();
                 }
                 p.destroy();
                 otherPlayers.remove(p);
@@ -942,41 +974,24 @@ inGame.create = function() {
         }.bind(this));
     }.bind(this));
 
-    function equipItem(cont, typeId, itemId) {
-        var equippedItem;
-
-        if (typeId == 0) {
-            equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
-            var equippedItem2 = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
-            cont.replace(cont.getAt(5), equippedItem, true);
-            cont.replace(cont.getAt(6), equippedItem2, true);
-        }
-        else {
-            equippedItem = uiScene.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
-            cont.replace(cont.getAt(iMap[typeId]), equippedItem);
-        }
-
-        var updateItemEquipped = cont.getData('equipped');
-        updateItemEquipped[typeId] = itemId;
-
-        cont.setData('equipped', updateItemEquipped);
-    }
-
     function changeClothes(cont, typeId, itemId, isLocalPlayer) {
 
-        var equppedItem;
+        var prefix = "n"
+
+        if (typeId != 5)
+            prefix = myPlayerInfo.avatar['gender'];
 
         if (typeId == 0 && isLocalPlayer) {
-            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
-            var equippedItem2 = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
             cont.replace(cont.getAt(5), equippedItem, true);
             cont.replace(cont.getAt(6), equippedItem2, true);
             equippedItem.flipX = player.flipX;
             equippedItem2.flipX = player.flipX;
         }
         else if (typeId == 0) {
-            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
-            var equippedItem2 = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
             cont.replace(cont.getAt(5), equippedItem, true);
             cont.replace(cont.getAt(6), equippedItem2, true);
             
@@ -988,12 +1003,14 @@ inGame.create = function() {
             equippedItem2.flipX = cont.flipX;
         }
         else if (isLocalPlayer) {
-            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
+            var deleteItem = cont.getAt(iMap[typeId]);
+            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
+            deleteItem.destroy();
             equippedItem.flipX = player.flipX;
         }
         else {
-            equippedItem = inGame.add.sprite(0, 0, 'f-'+ typeId.toString()+ '-' + itemId.toString());
+            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
             equippedItem.flipX = player.flipX;
             equippedItem.x = cont.getAt(0).x;
