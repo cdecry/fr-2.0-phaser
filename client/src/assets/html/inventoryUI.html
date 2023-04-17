@@ -8,7 +8,7 @@
                 border-radius: 100px;
                 height: 20px;
                 width: 20px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
                 left: 763px;
                 top: 20px;
             }
@@ -17,44 +17,86 @@
                 position: relative;
                 height: 32px;
                 width: 75px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
             }
             #clothesButton {
                 position: relative;
                 height: 32px;
                 width: 107px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
             }
+            
             #boardButton {
                 height: 32px;
                 width: 90px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
             }
             #accessoryButton {
                 height: 32px;
                 width: 126px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
             }
             #favoriteButton {
                 height: 32px;
                 width: 105px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
             }
             #creatureButton {
                 height: 32px;
                 width: 109px;
-                border: 1px solid red;
+                /* border: 1px solid red; */
             }
             
             #tabs {
                 left: 17px;
                 top: 60px;
                 position: absolute;
-                border: 1px solid red; 
+                /* border: 1px solid red;  */
                 display: inline-flex;
                 justify-content: flex-start;
                 width: 613px;
                 height: 31px;
+            }
+
+            .subtabs {
+                left: 110px;
+                top: 95px;
+                position: absolute;
+                border: 1px solid red; 
+                display: grid;
+                grid-auto-flow: column;
+                column-gap: 20px;
+                justify-content: flex-start;
+            }
+
+            #clothesSubtabs {
+                width: 360px;
+                height: 15px;
+            }
+
+            .subtabButtons {
+                position: relative;
+                height: 15px;
+                border: 1px solid red;
+            }
+            #topButton {
+                width: 30px;
+            }
+
+            #bottomButton {
+                width: 60px;
+            }
+
+            #outfitsButton {
+                width: 60px;
+            }
+
+            #costumesButton {
+                width: 72px;
+            }
+
+            #shoesButton {
+                width: 60px;
             }
 
             button {
@@ -78,13 +120,13 @@
             <button id="creatureButton"></button>
         </div>
 
-        <!-- <div id="chat">
-            <button class="chatButton"></button>
-            <button class="chatButton"></button>
-            <button class="chatButton"></button>
-            <input id="chatInput" type="text" name="chatInput" spellcheck="false" autocomplete="off" maxlength="80"/>
-            <button id="sendButton" name="sendChatButton"></button>
-        </div> -->
+        <div id="clothesSubtabs" class="subtabs">
+            <button id="topButton" class="subtabButtons"></button>
+            <button id="bottomButton" class="subtabButtons"></button>
+            <button id="outfitsButton" class="subtabButtons"></button>
+            <button id="costumesButton" class="subtabButtons"></button>
+            <button id="shoesButton" class="subtabButtons"></button>
+        </div>
 
     </body>
 </html>
