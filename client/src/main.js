@@ -659,7 +659,6 @@ inGame.preload = function() {
 
     this.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
     this.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
-    this.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
     this.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
     this.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
     this.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
@@ -667,9 +666,12 @@ inGame.preload = function() {
     this.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
     this.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
     
+    this.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
     this.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
     this.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
     this.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
+    this.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
+    this.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
 
     this.load.image('beachBg', 'scene/location/beach/beach.png');
     // this.load.image('avatarCollider', 'avatar/avatarCollider.png');
@@ -868,11 +870,12 @@ inGame.create = function() {
             var reporter1 = inGame.add.sprite(435, 343, 'topModelsReporter1').play('reporter1');
             var reporter2 = inGame.add.sprite(350, 383, 'topModelsReporter2').play('reporter2');
             var reporter3 = inGame.add.sprite(587, 335, 'topModelsReporter3').play('reporter3');
-            // var plant = inGame.add.sprite(380, 260, 'topModelsPlant');
+            var plant = inGame.add.sprite(430, 260, 'topModelsPlant');
+            var rope1 = inGame.add.sprite(430, 260, 'topModelsRope1');
+            var rope2 = inGame.add.sprite(430, 260, 'topModelsRope2');
+            var desk = inGame.add.sprite(430, 260, 'topModelsDesk');
+            var chair = inGame.add.sprite(430, 260, 'topModelsChair');
             // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
-            // var rope1 = inGame.add.sprite(380, 260, 'topModelsRope1');
-            // var rope2 = inGame.add.sprite(380, 260, 'topModelsRope2');
-
             sean.setDepth(220);
             boa1.setDepth(330);
             boa2.setDepth(325);
@@ -880,6 +883,11 @@ inGame.create = function() {
             reporter1.setDepth(303);
             reporter2.setDepth(343);
             reporter3.setDepth(295);
+            plant.setDepth(220);
+            rope1.setDepth(230);
+            rope2.setDepth(300);
+            desk.setDepth(380);
+            chair.setDepth(20);
 
             // topModelsObject.inputEnabled = true;
 
@@ -901,7 +909,7 @@ inGame.create = function() {
             //     disableInput = false;
             // });
 
-            locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, door, rope1, rope2);
+            locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
         }
     }
 
