@@ -580,8 +580,7 @@ uiScene.create = function() {
         if (typeId != 5)
             prefix = myPlayerInfo.avatar.gender;
 
-        if (typeId == 0 || typeId == 5) {
-            console.log(iMap[typeId][1]);
+        if (typeId == 0 || typeId == 5 && itemId != -1) {
             equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
             var equippedItem2 = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
             cont.replace(cont.getAt(iMap[typeId][0]), equippedItem, true);
@@ -590,38 +589,22 @@ uiScene.create = function() {
         else {
             equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
-
-            // changing from top - outfit, vice verse etc
-            if (updateItemEquipped[4] != -1 && typeId == 1) {
-                var defaultBottom = uiScene.add.sprite(0, 0, prefix + '-2-' + '13');
-                var nullOutfit = uiScene.add.sprite(0, 0, 'nullItem');
-                
-                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
-                cont.replace(cont.getAt(cMap.bottom), defaultBottom, true);
-
-                updateItemEquipped[3] = -1;
-                updateItemEquipped[2] = 13;
-            }
-            else if (updateItemEquipped[4] != -1 && typeId == 2) {
-                var defaultTop = uiScene.add.sprite(0, 0, prefix + '-1-' + '5');
-                var nullOutfit = uiScene.add.sprite(0, 0, 'nullItem');
-                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
-                cont.replace(cont.getAt(cMap.top), defaultTop, true);
-
-                updateItemEquipped[3] = -1;
-                updateItemEquipped[1] = 5;
-            }
-            else if (updateItemEquipped[0] != -1 && typeId == 3) {
-                var nullTop = uiScene.add.sprite(0, 0, 'nullItem');
-                var nullBottom = uiScene.add.sprite(0, 0, 'nullItem');
-                cont.replace(cont.getAt(cMap.top), nullTop, true);
-                cont.replace(cont.getAt(cMap.bottom), nullBottom, true);
-
-                updateItemEquipped[1] = -1;
-                updateItemEquipped[2] = -1;
-            }
-
         }
+
+        if (typeId == 1 && updateItemEquipped[3] != -1) {
+            equipItem(cont, 3, -1);
+            equipItem(cont, 2, 13);     // default for now
+        }
+        else if (typeId == 2 && updateItemEquipped[3] != -1) {
+            equipItem(cont, 3, -1);
+            equipItem(cont, 1, 5);
+        }
+        else if (typeId == 3 && updateItemEquipped[1] != -1) {
+            equipItem(cont, 1, -1);
+            equipItem(cont, 2, -1);
+        }
+
+
         updateItemEquipped[typeId] = itemId;
         cont.setData('equipped', updateItemEquipped);
     }
@@ -1023,11 +1006,14 @@ inGame.create = function() {
 
     globalThis.socket.on('changeClothesResponse', function (pid, changed) {
         console.log("recieved change clothes response.");
-
+        console.log(JSON.stringify(changed));
         if (pid == myPlayerInfo.id) {
             for (let i = 0; i < Object.keys(changed).length; i++) {
                 if (changed[i].length > 0) {
-                    changeClothes(container, i, changed[i][0].id, true);
+                    if (changed[i][0] == -1)
+                        changeClothes(container, i, changed[i][0], true);
+                    else
+                        changeClothes(container, i, changed[i][0].id, true);
                 }
             }
             return;
@@ -1042,8 +1028,10 @@ inGame.create = function() {
                     console.log(JSON.stringify(changed[i]));
                     console.log(changed[i].length);
                     if (changed[i].length > 0) {
-                        console.log("equipping!");
-                        changeClothes(p, i, changed[i][0].id, false);
+                        if (changed[i][0] == -1)
+                            changeClothes(p, i, changed[i][0], false);
+                        else
+                            changeClothes(p, i, changed[i][0].id, false);
                     }
                 }
             }
@@ -1056,6 +1044,9 @@ inGame.create = function() {
 
         if (typeId != 5)
             prefix = myPlayerInfo.avatar['gender'];
+
+        console.log("equipping " + typeId);
+
 
         if (typeId == 0 && isLocalPlayer) {
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
@@ -1080,72 +1071,15 @@ inGame.create = function() {
         }
         else if (isLocalPlayer) {
             // var deleteItem = cont.getAt(iMap[typeId]);
-            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
+            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId+ '-' + itemId);
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
-            if (updateItemEquipped[4] != -1 && typeId == 1) {
-                var defaultBottom = inGame.add.sprite(0, 0, prefix + '-2-' + '13');
-                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
-                
-                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
-                cont.replace(cont.getAt(cMap.bottom), defaultBottom, true);
-
-                updateItemEquipped[3] = -1;
-                updateItemEquipped[2] = 13;
-            }
-            else if (updateItemEquipped[4] != -1 && typeId == 2) {
-                var defaultTop = inGame.add.sprite(0, 0, prefix + '-1-' + '5');
-                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
-                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
-                cont.replace(cont.getAt(cMap.top), defaultTop, true);
-
-                updateItemEquipped[3] = -1;
-                updateItemEquipped[1] = 5;
-            }
-            else if (updateItemEquipped[0] != -1 && typeId == 3) {
-                var nullTop = inGame.add.sprite(0, 0, 'nullItem');
-                var nullBottom = inGame.add.sprite(0, 0, 'nullItem');
-                cont.replace(cont.getAt(cMap.top), nullTop, true);
-                cont.replace(cont.getAt(cMap.bottom), nullBottom, true);
-
-                updateItemEquipped[1] = -1;
-                updateItemEquipped[2] = -1;
-            }
-
-            // deleteItem.destroy();
+            
             equippedItem.flipX = player.flipX;
         }
         else {
-            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
+            console.log("HERERERERER: " + prefix + '-'+ typeId+ '-' + itemId);
+            equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId+ '-' + itemId);
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
-
-            if (typeId == 1) {
-                var defaultBottom = inGame.add.sprite(0, 0, prefix + '-2-' + '13');
-                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
-                
-                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
-                cont.replace(cont.getAt(cMap.bottom), defaultBottom, true);
-
-                updateItemEquipped[3] = -1;
-                updateItemEquipped[2] = 13;
-            }
-            else if (typeId == 2) {
-                var defaultTop = inGame.add.sprite(0, 0, prefix + '-1-' + '5');
-                var nullOutfit = inGame.add.sprite(0, 0, 'nullItem');
-                cont.replace(cont.getAt(cMap.outfit), nullOutfit, true);
-                cont.replace(cont.getAt(cMap.top), defaultTop, true);
-
-                updateItemEquipped[3] = -1;
-                updateItemEquipped[1] = 5;
-            }
-            else if (typeId == 3) {
-                var nullTop = inGame.add.sprite(0, 0, 'nullItem');
-                var nullBottom = inGame.add.sprite(0, 0, 'nullItem');
-                cont.replace(cont.getAt(cMap.top), nullTop, true);
-                cont.replace(cont.getAt(cMap.bottom), nullBottom, true);
-
-                updateItemEquipped[1] = -1;
-                updateItemEquipped[2] = -1;
-            }
 
             equippedItem.flipX = player.flipX;
             equippedItem.x = cont.getAt(0).x;
