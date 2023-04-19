@@ -660,6 +660,13 @@ inGame.preload = function() {
     this.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
     this.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
     this.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
+    this.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
+    this.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
+    this.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
+    this.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
+    this.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
+    this.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
+    
     this.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
     this.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
     this.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
@@ -855,12 +862,25 @@ inGame.create = function() {
         else if (location == 'topModels') {
             var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
             var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
+            var boa2 = inGame.add.sprite(220, 370, 'topModelsBoa2').play('boa1');
+            var boa1 = inGame.add.sprite(265, 365, 'topModelsBoa1').play('boa2');
+            var model = inGame.add.sprite(525, 355, 'topModelsModel').play('model');
+            var reporter1 = inGame.add.sprite(435, 343, 'topModelsReporter1').play('reporter1');
+            var reporter2 = inGame.add.sprite(350, 383, 'topModelsReporter2').play('reporter2');
+            var reporter3 = inGame.add.sprite(587, 335, 'topModelsReporter3').play('reporter3');
             // var plant = inGame.add.sprite(380, 260, 'topModelsPlant');
             // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
             // var rope1 = inGame.add.sprite(380, 260, 'topModelsRope1');
             // var rope2 = inGame.add.sprite(380, 260, 'topModelsRope2');
 
             sean.setDepth(220);
+            boa1.setDepth(330);
+            boa2.setDepth(325);
+            model.setDepth(315);
+            reporter1.setDepth(303);
+            reporter2.setDepth(343);
+            reporter3.setDepth(295);
+
             // topModelsObject.inputEnabled = true;
 
             // topModelsObject.setInteractive({
@@ -881,7 +901,7 @@ inGame.create = function() {
             //     disableInput = false;
             // });
 
-            locationObjects.push(sean, fan, plant, door, rope1, rope2);
+            locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, door, rope1, rope2);
         }
     }
 
@@ -1319,12 +1339,86 @@ inGame.create = function() {
         frameRate: 4,
         repeat: -1
     });
+
+
     this.anims.create({
         key: 'fan',
         frames: this.anims.generateFrameNumbers('topModelsFan'),
         frameRate: 4,
         repeat: -1
     });
+
+    this.anims.create({
+        key: 'boa1',
+        frames: [
+          { key: 'topModelsBoa1', frame: 0, duration: 2500 }, // first frame with duration of 1000ms (1 second)
+          { key: 'topModelsBoa1', frame: 1, duration: 50 } // second frame with duration of 50ms
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'boa2',
+        frames: [
+          { key: 'topModelsBoa2', frame: 0, duration: 4000 }, // first frame with duration of 1000ms (1 second)
+          { key: 'topModelsBoa2', frame: 1, duration: 50 } // second frame with duration of 50ms
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'model',
+        frames: [
+          { key: 'topModelsModel', frame: 0, duration: 4500 }, // first frame with duration of 1000ms (1 second)
+          { key: 'topModelsModel', frame: 1, duration: 50 } // second frame with duration of 50ms
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'reporter1',
+        frames: [
+          { key: 'topModelsReporter1', frame: 0, duration: 1200 },
+          { key: 'topModelsReporter1', frame: 1, duration: 50 },
+          { key: 'topModelsReporter1', frame: 0, duration: 50 },
+          { key: 'topModelsReporter1', frame: 2, duration: 300 },
+          { key: 'topModelsReporter1', frame: 3, duration: 50 },
+          { key: 'topModelsReporter1', frame: 2, duration: 300 },
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'reporter2',
+        frames: [
+          { key: 'topModelsReporter2', frame: 0, duration: 1300 },
+          { key: 'topModelsReporter2', frame: 1, duration: 50 },
+          { key: 'topModelsReporter2', frame: 0, duration: 50 },
+          { key: 'topModelsReporter2', frame: 2, duration: 300 },
+          { key: 'topModelsReporter2', frame: 3, duration: 50 },
+          { key: 'topModelsReporter2', frame: 2, duration: 300 },
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'reporter3',
+        frames: [
+          { key: 'topModelsReporter3', frame: 0, duration: 1400 },
+          { key: 'topModelsReporter3', frame: 1, duration: 50 },
+          { key: 'topModelsReporter3', frame: 0, duration: 50 },
+          { key: 'topModelsReporter3', frame: 2, duration: 300 },
+          { key: 'topModelsReporter3', frame: 3, duration: 50 },
+          { key: 'topModelsReporter3', frame: 2, duration: 300 },
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
     //#endregion
 
     
