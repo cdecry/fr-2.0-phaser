@@ -652,14 +652,20 @@ inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+    
+    // Load locations and objects
     this.load.image('downtownBg', 'scene/location/downtown/downtown.png');
     this.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
-    
+
     this.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
+    this.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
+    this.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
+    this.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
+    this.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
+    this.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
+
     this.load.image('beachBg', 'scene/location/beach/beach.png');
-
-
-    this.load.image('avatarCollider', 'avatar/avatarCollider.png');
+    // this.load.image('avatarCollider', 'avatar/avatarCollider.png');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -814,8 +820,8 @@ inGame.create = function() {
     function loadLocation(location) {
         // need to create data object with location num objects, position, etc.
         // for now asume dt and spawn shops
-        for (object in locationObjects) {
-            object.destroy();
+        for (let i = 0; i < locationObjects.length; i++) {
+            locationObjects[i].destroy();
         }
         locationObjects = [];
 
@@ -832,20 +838,50 @@ inGame.create = function() {
             // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
 
             topModelsObject.on('pointerdown', () => {
-                container.body.setVelocity(0);
-                stopMoving = true;
-                console.log(JSON.stringify(this.scene));
+                console.log('poladot');
 
                 currentLocation = "topModels";
                 socket.emit('changeRoom', "topModels");
                 bg.destroy();
                 bg = inGame.add.image(430, 260, 'topModelsBg');
                 setCameraPosition(currentLocation);
+                loadLocation('topModels');
             });
             topModelsObject.on('pointerup', () => {
                 disableInput = false;
             });
             locationObjects.push(topModelsObject);
+        }
+        else if (location == 'topModels') {
+            var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
+            var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
+            // var plant = inGame.add.sprite(380, 260, 'topModelsPlant');
+            // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
+            // var rope1 = inGame.add.sprite(380, 260, 'topModelsRope1');
+            // var rope2 = inGame.add.sprite(380, 260, 'topModelsRope2');
+
+            sean.setDepth(220);
+            // topModelsObject.inputEnabled = true;
+
+            // topModelsObject.setInteractive({
+            //     pixelPerfect: true,
+            //     useHandCursor: true,
+            // });
+
+            // topModelsObject.on('pointerdown', () => {
+            //     console.log('poladot');
+
+            //     currentLocation = "topModels";
+            //     socket.emit('changeRoom', "topModels");
+            //     bg.destroy();
+            //     bg = inGame.add.image(430, 260, 'topModelsBg');
+            //     setCameraPosition(currentLocation);
+            // });
+            // topModelsObject.on('pointerup', () => {
+            //     disableInput = false;
+            // });
+
+            locationObjects.push(sean, fan, plant, door, rope1, rope2);
         }
     }
 
@@ -1040,9 +1076,7 @@ inGame.create = function() {
                     msgData['otherChatMessage'].destroy();
                 }
 
-                for (let j = 0; j < numContainerItems; j++) {
-                    p.getAt(j).destroy();
-                }
+                p.removeAll(true);
                 p.destroy();
                 otherPlayers.remove(p);
         }
@@ -1221,7 +1255,7 @@ inGame.create = function() {
 
     }.bind(this));
 
-    //#region Animations
+    //#region Action Animations
     data.skins.forEach(skin => {
         data.keys.forEach(key => {
             this.anims.create({
@@ -1277,6 +1311,22 @@ inGame.create = function() {
         })
     });
     //#endregion
+    
+    //#region Top Models Animations
+    this.anims.create({
+        key: 'sean',
+        frames: this.anims.generateFrameNumbers('topModelsSean'),
+        frameRate: 4,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'fan',
+        frames: this.anims.generateFrameNumbers('topModelsFan'),
+        frameRate: 4,
+        repeat: -1
+    });
+    //#endregion
+
     
     this.input.on('pointerdown', function (pointer) {
         if (disableInput) return;
@@ -1468,7 +1518,7 @@ inGame.update = function() {
             // Actions
         if (key1.isDown) {
 
-            console.log(container.x);
+            console.log(container.x, container.y);
 
             if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
