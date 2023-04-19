@@ -137,8 +137,13 @@ io.on('connection', function (socket) {
 
             var itemId = equipped[i];
 
-            if (itemId == -1) continue; // nothing of this type is equipped
             if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
+
+            if (itemId == -1) { // nothing of this type is equipped
+                players[socket.id].avatar.equipped[i] = itemId;
+                changed[i].push(-1)
+                numChanged++;
+            }
 
             var itemExistsInInventory = false;
 
@@ -167,7 +172,7 @@ io.on('connection', function (socket) {
         io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
 
         // update player avatar database
-        await changeEquipped(players[socket.id].pid, equipped);
+        await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
 
     })
 
