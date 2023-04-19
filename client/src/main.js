@@ -14,10 +14,11 @@ const cMap = {
     bottom: 11,
     top: 12,
     outfit: 13,
-    bodyAcc: 14,
-    boardUpper: 15,
-    usernameTag: 16,
-    usernameLabel: 17
+    costume: 14,
+    bodyAcc: 15,
+    boardUpper: 16,
+    usernameTag: 17,
+    usernameLabel: 18
 }
 // Map item type id to container index
 const iMap = {
@@ -30,6 +31,7 @@ const iMap = {
     6: cMap.headAcc,
     7: cMap.faceAcc,
     8: cMap.bodyAcc,
+    9: cMap.costume,
 }
 
 //#region LoginScene
@@ -132,7 +134,7 @@ var usernameLabelCenter = 0;
 // var clickOffsetX = 0;
 // var clickOffsetY = 110;
 var usernameOffsetY = 30;
-var numContainerItems = 18;
+var numContainerItems = 19;
 var chatBubbleOffsetY = -125;
 var globalInputChat;
 
@@ -234,7 +236,9 @@ var uiScene = new Phaser.Scene('UIScene');
 uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
-    this.load.image('inventoryWindow', 'scene/ui/inventory.png');
+    this.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
+    this.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
+    this.load.image('inventoryBoardTab', 'scene/ui/inventoryBoardTab.png');
     this.load.image('inventoryArrowUp', 'scene/ui/inventoryArrowUp.png');
     this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     this.load.html('inventoryButton', 'html/inventoryButton.html');
@@ -265,6 +269,7 @@ uiScene.create = function() {
         bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
         topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
         outfitPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        costumePreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         bodyAccPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
         browPreview = uiScene.add.sprite(0, 0, 'brow-0');
         boardUpperPreview = uiScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
@@ -275,7 +280,7 @@ uiScene.create = function() {
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
-        var children  = [headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
+        var children  = [headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
         avatarPreview = uiScene.add.container(0, 0);
         avatarPreview.add(children);
         avatarPreview.setDepth(1001);
@@ -302,7 +307,7 @@ uiScene.create = function() {
     });
 
     var uiBar = this.add.image(400, 490, 'uiBar');
-    var inventory = this.add.image(400, 260, 'inventoryWindow');
+    var inventory = this.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = this.add.dom(0,0).createFromCache('inventoryUI');
     var inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
     
@@ -371,6 +376,7 @@ uiScene.create = function() {
     inventoryButton.addListener('click');
     inventoryButton.on('click', function (event) {
         disableInput = true;
+        inventory.setTexture('inventoryHairTab');
         inventory.setVisible(true);
         inventoryUI.setVisible(true);
         uiBar.setVisible(false);
@@ -405,6 +411,7 @@ uiScene.create = function() {
             }
             else if (event.target.id === 'hairButton') {
                 inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                inventory.setTexture('inventoryHairTab');
                 // hair
                 gridWidth = 8;
                 gridHeight = 3;
@@ -415,7 +422,7 @@ uiScene.create = function() {
             }
             else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
                 inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
-
+                inventory.setTexture('inventoryClothesTab');
                 // default tops
                 gridWidth = 8;
                 gridHeight = 3;
@@ -462,6 +469,7 @@ uiScene.create = function() {
             }
             else if (event.target.id === 'boardButton') {
                 inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                inventory.setTexture('inventoryBoardTab');
                 gridWidth = 4;
                 gridHeight = 3;
                 cellWidth = 124;
@@ -667,12 +675,14 @@ inGame.preload = function() {
     // load items
 
     // load null items:
+    this.load.spritesheet('f-0--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-1--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-2--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-3--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-6--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-7--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('f-8--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-9--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 
     // load hairs & mannequins
@@ -821,6 +831,7 @@ inGame.create = function() {
         topItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-1-' + playerInfo.avatar['equipped'][1]);
 
         outfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        costume = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         bodyAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
         boardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
@@ -834,7 +845,7 @@ inGame.create = function() {
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(300, 250);
 
-        container.add([head, eyes, lips, faceAcc, boardLower, hairLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, bodyAcc, boardUpper, usernameTag, usernameLabel]);
+        container.add([head, eyes, lips, faceAcc, boardLower, hairLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
@@ -864,6 +875,7 @@ inGame.create = function() {
         otherTopItem = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
 
         var otherOutfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        var otherCostume = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         var otherBodyAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
         const otherBoardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         var otherUsernameTag = inGame.add.sprite(0, 0, 'username-tag');
@@ -893,7 +905,7 @@ inGame.create = function() {
 
         const otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
 
-        otherContainer.add([otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel]);
+        otherContainer.add([otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherCostume, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel]);
 
         otherContainer.setDepth(playerInfo.y);
 
