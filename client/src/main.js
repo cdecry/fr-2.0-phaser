@@ -149,6 +149,7 @@ var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 var myPlayerInfo;
 var avatarPreview = null;
+var locationObjects = [];
 
 // Inventory Load:
 var myInventory;
@@ -651,8 +652,11 @@ inGame.preload = function() {
     this.load.setBaseURL('/src/assets')
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-    this.load.image('downtownBg', 'scene/location/downtown.png');
-    this.load.image('beachBg', 'scene/location/beach.png');
+    this.load.image('downtownBg', 'scene/location/downtown/downtown.png');
+    this.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
+    
+    this.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
+    this.load.image('beachBg', 'scene/location/beach/beach.png');
 
 
     this.load.image('avatarCollider', 'avatar/avatarCollider.png');
@@ -762,12 +766,21 @@ var locationConfig = {
         playerSpawnX: 300,
         playerSpawnY: 300,
         boundsPolygon: 0    // load json polygon for space player can move around in
+    },
+    topModels: {
+        width: 800,
+        backgroundX: 0,
+        initialScroll: 0,
+        playerSpawnX: 300,
+        playerSpawnY: 300,
+        boundsPolygon: 0    // load json polygon for space player can move around in
     }
 }
 
 inGame.create = function() {
     // Init Camera
     setCameraPosition(currentLocation);
+    loadLocation('downtown');
 
     this.scene.launch(uiScene);
     
@@ -798,13 +811,56 @@ inGame.create = function() {
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
+    function loadLocation(location) {
+        // need to create data object with location num objects, position, etc.
+        // for now asume dt and spawn shops
+        for (object in locationObjects) {
+            object.destroy();
+        }
+        locationObjects = [];
+
+        if (location == 'downtown') {
+            var topModelsObject = inGame.add.image(1317, 179, 'topModelsObject');
+            topModelsObject.setDepth(179);
+            topModelsObject.inputEnabled = true;
+
+            topModelsObject.setInteractive({
+                pixelPerfect: true,
+                useHandCursor: true,
+            });
+
+            // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
+
+            topModelsObject.on('pointerdown', () => {
+                container.body.setVelocity(0);
+                stopMoving = true;
+                console.log(JSON.stringify(this.scene));
+
+                currentLocation = "topModels";
+                socket.emit('changeRoom', "topModels");
+                bg.destroy();
+                bg = inGame.add.image(430, 260, 'topModelsBg');
+                setCameraPosition(currentLocation);
+            });
+            topModelsObject.on('pointerup', () => {
+                disableInput = false;
+            });
+            locationObjects.push(topModelsObject);
+        }
+    }
+
     // set camera position based on location
     function setCameraPosition(location) {
         let lc = locationConfig[location];
         
         inGame.cameras.main.setBounds(-lc.width/2 + 430, 0, lc.width - 60, 0);
         inGame.cameras.main.setScroll(lc.initialScroll, 0);
-        clickOffsetX += lc.initialScroll;
+        clickOffsetX = lc.initialScroll;
+        
+        if (container) {
+            container.body.speed = 0;
+            container.setPosition(lc.playerSpawnX, lc.playerSpawnY);
+        }
         
         // init left/right bounds
         leftBound = lc.initialScroll + boundOffset;
@@ -1299,8 +1355,8 @@ function moveXY(newPosX, newPosY) {
 }
 
 inGame.update = function() {
-    if (container)
-        console.log("Position debug: " + container.y);
+    // if (container)
+    //     console.log("Position x: " + container.x + ", y: " + container.y);
 
     // Camera can't pan if already panning
     this.cameras.main.on('camerapancomplete', function () {
@@ -1489,7 +1545,7 @@ inGame.update = function() {
         var y = container.y;
         var flipX = container.getAt(cMap.player).flipX;
         
-        if (container.oldPosition && (x !== container.oldPosition.x || y !== container.oldPosition.y || flipX !== container.oldPosition.flipX)) {
+        if (container.oldPosition && (x !== container.oldPosition.x || y !== container.oldPosition.y || flipX !== container.oldPosition.flipX && !stopMoving)) {
             globalThis.socket.emit('playerMovement', { x, y, flipX });
         }
 
