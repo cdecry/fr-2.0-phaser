@@ -240,6 +240,7 @@ uiScene.preload = function() {
     this.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
     this.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
     this.load.image('inventoryBoardTab', 'scene/ui/inventoryBoardTab.png');
+    this.load.image('inventoryAccessoryTab', 'scene/ui/inventoryAccessoryTab.png');
     this.load.image('inventoryArrowUp', 'scene/ui/inventoryArrowUp.png');
     this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     this.load.html('inventoryButton', 'html/inventoryButton.html');
@@ -429,6 +430,7 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(1);
                 createInventoryItems(1);
             }
@@ -437,6 +439,7 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(2);
                 createInventoryItems(2);
             }
@@ -446,6 +449,7 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(3);
                 createInventoryItems(3);
             }
@@ -456,6 +460,7 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(1);
                 createInventoryItems(1);
             }
@@ -465,6 +470,7 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(4);
                 createInventoryItems(4);
             }
@@ -475,15 +481,18 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 124;
                 cellHeight = 110;
+                gridX = 100;
                 createNavigationButtons(5);
                 createInventoryItems(5);
             }
             else if (event.target.id === 'accessoryButton') {
                 inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                inventory.setTexture('inventoryAccessoryTab');
                 gridWidth = 8;
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(7);
                 createInventoryItems(7)
             }
