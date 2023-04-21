@@ -150,6 +150,7 @@ var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 var myPlayerInfo;
 var avatarPreview = null;
 var locationObjects = [];
+var bgm;
 
 // Inventory Load:
 var myInventory;
@@ -685,6 +686,10 @@ inGame.preload = function() {
     this.load.image('beachBg', 'scene/location/beach/beach.png');
     // this.load.image('avatarCollider', 'avatar/avatarCollider.png');
 
+    // Load bgm
+    this.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
+    this.load.audio('downtownBGM', 'bgm/downtown.mp3');
+
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
         this.load.spritesheet('body-' + i.toString(), 'avatar/body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
@@ -812,6 +817,8 @@ inGame.create = function() {
     bg = this.add.image(400, 260, 'downtownBg');
     bg.setDepth(-500);
 
+    inGame.sound.pauseOnBlur = false;
+
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
     var otherPlayers = this.add.group();
 
@@ -836,6 +843,9 @@ inGame.create = function() {
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
     function loadLocation(location) {
+        if (bgm)
+                bgm.destroy();
+
         // need to create data object with location num objects, position, etc.
         // for now asume dt and spawn shops
         for (let i = 0; i < locationObjects.length; i++) {
@@ -844,6 +854,10 @@ inGame.create = function() {
         locationObjects = [];
 
         if (location == 'downtown') {
+            bgm = inGame.sound.add('downtownBGM');
+            bgm.play();
+            bgm.setLoop(true);
+
             var topModelsObject = inGame.add.image(1317, 179, 'topModelsObject');
             topModelsObject.setDepth(179);
             topModelsObject.inputEnabled = true;
@@ -871,6 +885,10 @@ inGame.create = function() {
             locationObjects.push(topModelsObject);
         }
         else if (location == 'topModels') {
+            bgm = inGame.sound.add('topModelsLobbyBGM');
+            bgm.play();
+            bgm.setLoop(true);
+
             var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
             var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
             var boa2 = inGame.add.sprite(220, 370, 'topModelsBoa2').play('boa1');
