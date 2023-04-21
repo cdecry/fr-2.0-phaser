@@ -420,6 +420,7 @@ uiScene.create = function() {
                 gridHeight = 3;
                 cellWidth = 62;
                 cellHeight = 110;
+                gridX = 70;
                 createNavigationButtons(0);
                 createInventoryItems(0);
             }
@@ -983,7 +984,7 @@ inGame.create = function() {
         boardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
 
-        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '14px', fill: "#000000" });
         usernameLabel.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabel.x = usernameLabelCenter;
@@ -1552,7 +1553,7 @@ inGame.update = function() {
     //     bg = this.add.image(400, 260, 'beachBg');
     // }
 
-    let panDistance = 450;
+    let panDistance = 300;
 
     // Player input
     if (container) {
