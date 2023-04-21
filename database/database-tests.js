@@ -7,10 +7,11 @@ main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
-    await addToInventory(0, 5, 1, false);
-    await addToInventory(0, 5, 2, false);
-    await addToInventory(0, 5, 3, false);
-    await addToInventory(0, 5, 4, true);
+    await addToInventory(0, 0, 6, false);
+    await addToInventory(0, 0, 7, false);
+    await addToInventory(0, 0, 3, false);
+    await addToInventory(0, 0, 4, false);
+    await addToInventory(0, 0, 2, false);
     // await addToInventory(0, 2, 13, false);
     // await addToInventory(0, 3, 10, false);
     // await addToInventory(0, 1, 15, false);

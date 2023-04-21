@@ -1,11 +1,11 @@
 // Map container child name to index
 const cMap = {
-    head: 0,
-    eyes: 1,
-    lips: 2,
-    faceAcc: 3,
-    boardLower: 4,
-    hairLower: 5,
+    hairLower: 0,
+    head: 1,
+    eyes: 2,
+    lips: 3,
+    faceAcc: 4,
+    boardLower: 5,
     hairUpper: 6,
     brow: 7,
     headAcc: 8,
@@ -22,7 +22,7 @@ const cMap = {
 }
 // Map item type id to container index
 const iMap = {
-    0: [cMap.hairLower, cMap.hairUpper],
+    0: [cMap.hairUpper, cMap.hairLower],
     1: cMap.top,
     2: cMap.bottom,
     3: cMap.outfit,
@@ -263,8 +263,8 @@ uiScene.create = function() {
         lipsPreview = uiScene.add.sprite(0, 0, 'lips-0');
         faceAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
         boardLowerPreview = uiScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        hairLowerPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        hairUpperPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        hairLowerPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        hairUpperPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
         headAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
         shoesPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
@@ -282,7 +282,7 @@ uiScene.create = function() {
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
-        var children  = [headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
+        var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
         avatarPreview = uiScene.add.container(0, 0);
         avatarPreview.add(children);
         avatarPreview.setDepth(1001);
@@ -974,7 +974,7 @@ inGame.create = function() {
         container = inGame.add.container(playerInfo.x, playerInfo.y);
         container.setSize(300, 250);
 
-        container.add([head, eyes, lips, faceAcc, boardLower, hairLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
+        container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
@@ -1034,7 +1034,7 @@ inGame.create = function() {
 
         const otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
 
-        otherContainer.add([otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherCostume, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel]);
+        otherContainer.add([otherHairLower, otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherCostume, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel]);
 
         otherContainer.setDepth(playerInfo.y);
 
@@ -1234,9 +1234,9 @@ inGame.create = function() {
     globalThis.socket.on('playerWaveResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) { // && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying
-                p.getAt(9).play(JSON.parse(JSON.stringify(p.getAt(9))).textureKey + '-wave');
-                p.getAt(2).play(JSON.parse(JSON.stringify(p.getAt(2))).textureKey + '-wave');
-                p.getAt(12).play(JSON.parse(JSON.stringify(p.getAt(12))).textureKey + '-wave');
+                p.getAt(cMap.player).play(JSON.parse(JSON.stringify(p.getAt(cMap.player))).textureKey + '-wave');
+                p.getAt(cMap.lips).play(JSON.parse(JSON.stringify(p.getAt(cMap.lips))).textureKey + '-wave');
+                p.getAt(cMap.top).play(JSON.parse(JSON.stringify(p.getAt(cMap.top))).textureKey + '-wave');
                 }
             }.bind(this));
     }.bind(this));
@@ -1247,9 +1247,9 @@ inGame.create = function() {
                     for (let i = 0; i < 10; i++) {
                         p.getAt(i).play(JSON.parse(JSON.stringify(p.getAt(i))).textureKey + '-cry');
                     }
-                    p.getAt(12).play(JSON.parse(JSON.stringify(p.getAt(12))).textureKey + '-cry');
-                    p.getAt(13).play(JSON.parse(JSON.stringify(p.getAt(13))).textureKey + '-cry');
-                    p.getAt(14).play(JSON.parse(JSON.stringify(p.getAt(14))).textureKey + '-cry');
+                    p.getAt(cMap.top).play(JSON.parse(JSON.stringify(p.getAt(cMap.top))).textureKey + '-cry');
+                    p.getAt(cMap.bottom).play(JSON.parse(JSON.stringify(p.getAt(cMap.bottom))).textureKey + '-cry');
+                    p.getAt(cMap.outfit).play(JSON.parse(JSON.stringify(p.getAt(cMap.outfit))).textureKey + '-cry');
                 }
             }.bind(this));
     }.bind(this));
@@ -1257,7 +1257,7 @@ inGame.create = function() {
     globalThis.socket.on('playerJumpResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) {
-                    for (let i = 0; i < 5; i++) {
+                    for (let i = 0; i < cMap.boardUpper; i++) {
                         p.getAt(i).play(JSON.parse(JSON.stringify(p.getAt(i))).textureKey + '-jump');
                     }
                     for (let i = 5; i < 16; i++) {
@@ -1269,15 +1269,15 @@ inGame.create = function() {
 
     globalThis.socket.on('playerWinkResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.getAt(9).anims.isPlaying && !p.getAt(1).anims.isPlaying) {
-                p.getAt(1).play(JSON.parse(JSON.stringify(p.getAt(1))).textureKey + '-wink');
+            if (playerInfo.id === p.id) {
+                p.getAt(cMap.eyes).play(JSON.parse(JSON.stringify(p.getAt(cMap.eyes))).textureKey + '-wink');
             }
             }.bind(this));
     }.bind(this));
 
     globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.getAt(7).anims.isPlaying && !p.getAt(1).anims.isPlaying) {
+            if (playerInfo.id === p.id && !p.getAt(cMap.player).anims.isPlaying && !p.getAt(cMap.eyes).anims.isPlaying) {
 
                 var msgData = p.getData('messageData');
                 if (msgData['hasMessage']) {
@@ -1650,8 +1650,8 @@ inGame.update = function() {
                 container.getAt(cMap.player).play('body-' + container.getData('skinTone') + '-cry');
                 container.getAt(cMap.head).play('face-' + container.getData('skinTone') + '-cry');
                 container.getAt(cMap.eyes).play('eyes-' + container.getData('eyeType') + '-cry');
-                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-1-cry');
-                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-2-cry');
+                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-2-cry');
+                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-1-cry');
                 container.getAt(cMap.brow).play('brow-0-cry');
 
                 if (container.getData('equipped')[3] === -1)
@@ -1668,8 +1668,8 @@ inGame.update = function() {
                 container.getAt(cMap.head).play('face-' + container.getData('skinTone') + '-jump');
                 container.getAt(cMap.eyes).play('eyes-' + container.getData('eyeType') + '-jump');
                 container.getAt(cMap.lips).play('lips-0-jump');
-                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-1-jump');
-                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-2-jump');
+                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-2-jump');
+                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-1-jump');
                 container.getAt(cMap.brow).play('brow-0-jump');
 
                 if (container.getData('equipped')[3] === -1)
