@@ -7,8 +7,8 @@ main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect('');
-    for (let i = 6; i < 15; i++) {
-        await addToInventory(0, 1, i, false);
+    for (let i = 0; i < 9; i++) {
+        await addToInventory(0, 2, i, false);
     }
     // await addToInventory(0, 2, 13, false);
     // await addToInventory(0, 3, 10, false);
