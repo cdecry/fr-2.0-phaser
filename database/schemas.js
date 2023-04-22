@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema({
     stars: Number,
     ecoins: Number,
     level: Number,
-    inventory: [Number],    // list of numeriocal ids corres. to itemIds
+    isMember: Boolean,
+    inventory: Object,    // list of inventoryItems
 });
 
 const avatarSchema = new mongoose.Schema({
@@ -27,7 +28,8 @@ const avatarSchema = new mongoose.Schema({
 });
 
 const itemSchema = new mongoose.Schema({
-    id: Number,             // itemId
+    itemId: Number,             // itemid
+    id: Number,             // itemtype id
     type: Number,           /*  0 - Hair
                                 1 - Top
                                 2 - Bottom
@@ -37,6 +39,7 @@ const itemSchema = new mongoose.Schema({
                                 6 - Head Acc.
                                 7 - Face Acc.
                                 8 - Body Acc.
+                                9 - Costumes
                             */
     gender: String,
     name: String,
@@ -49,6 +52,7 @@ const itemSchema = new mongoose.Schema({
                                 ...
                             */
     rarePoints: Number,
+    membership: Boolean,
 });
 
 exports.User = mongoose.model('User', userSchema);

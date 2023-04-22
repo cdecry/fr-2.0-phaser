@@ -11,7 +11,20 @@ exports.registerUser =  async function (id, username, password, gender) {
         stars: 0,
         ecoins: 0,
         level: 0,
-        inventory: []
+        isMember: false,
+        inventory: {
+            0: [],
+            1: [],
+            2: [],
+            3: [],
+            4: [],
+            5: [],
+            6: [],
+            7: [],
+            8: [],
+            9: [],
+            favorite: [],
+        }
     });
     await newPlayer.save();
     console.log('new user registered');
@@ -19,9 +32,9 @@ exports.registerUser =  async function (id, username, password, gender) {
 
 exports.loginRequest = async function (username, password) {
     return new Promise((resolve, reject) => {
-        User.findOne({ 'username': username }, 'id username password', function (err, user) {
+        User.findOne({ 'username': username }, 'id username password inventory', function (err, user) {
             if (user != null && password === user.password)
-                resolve(user.id);
+                resolve(user);
             else
                 resolve(null);
         });
@@ -55,11 +68,47 @@ exports.getUser = async function (id) {
 exports.updateInventory = async function (id, inventory) {
     return new Promise((resolve, reject) => {
         User.updateOne({ 'id': id }, { $set: { 'inventory': inventory } }, function (err, count) {
+            console.log('updateInventory: User inventory updated');
             resolve();                
         });
     });
-    console.log('updateInventory: User inventory updated');
 }
+
+
+// exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
+//     return new Promise((resolve, reject) => {
+//         User.findOne({ 'id': userId }, 'inventory', function (err, user) {
+//             if (user != null) {
+//                 var inventoryObj = user.inventory;
+                
+//                 inventoryObj[itemType.toString()].push({id: itemTypeId, coined: coined});
+
+//                 User.updateOne({ 'id': userId }, { $set: { 'inventory': inventoryObj } }, function (err, count) {resolve();});
+//             }
+//             console.log('Added to inventory');
+//             resolve();
+//         });
+//     });
+// }
+
+exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
+    const query = { 'id': userId };
+    const update = {
+      $push: {
+        [`inventory.${itemType.toString()}`]: { id: itemTypeId, coined: coined }
+      }
+    };
+    const options = { upsert: true };
+  
+    try {
+        await User.findOneAndUpdate(query, update, options).exec();
+        console.log('Added to inventory');
+    } catch (error) {
+        console.error('Error adding item to inventory:', error);
+    }
+  };
+  
+
 //#endregion
 
 //#region avatarResolver
@@ -124,8 +173,9 @@ exports.changeEquipped = async function (userId, equipped) {
 //#region itemResolver
 
 // for development
-exports.addItem =  async function (id, type, gender, name, description, price, ecoinPrice, requiredLevel, rarity, rarePoints) {
+exports.addItem =  async function (itemId, id, type, gender, name, description, price, ecoinPrice, requiredLevel, rarity, rarePoints, membership) {
     const newItem = new Item({
+        itemId: itemId,
         id: id,
         type: type,
         gender: gender,
@@ -136,9 +186,18 @@ exports.addItem =  async function (id, type, gender, name, description, price, e
         requiredLevel: requiredLevel,
         rarity: rarity,
         rarePoints, rarePoints,
+        membership: membership,
     });
     await newItem.save();
     console.log('addItem: new item added');
+}
+
+exports.getItem = async function (type, id) {
+    return new Promise((resolve, reject) => {
+        Item.findOne({ 'type': type, 'id': id }, function (err, item) {
+            resolve(item);
+        });
+    });
 }
 
 //#endregion
