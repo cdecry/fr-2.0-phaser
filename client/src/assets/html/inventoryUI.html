@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+
+            #closeInventoryButton {
+                position: absolute;
+                border-radius: 100px;
+                height: 20px;
+                width: 20px;
+                /* border: 1px solid red; */
+                left: 763px;
+                top: 20px;
+            }
+
+            #hairButton {
+                position: relative;
+                height: 32px;
+                width: 75px;
+                /* border: 1px solid red; */
+            }
+            #clothesButton {
+                position: relative;
+                height: 32px;
+                width: 107px;
+                /* border: 1px solid red; */
+            }
+            
+            #boardButton {
+                height: 32px;
+                width: 90px;
+                /* border: 1px solid red; */
+            }
+            #accessoryButton {
+                height: 32px;
+                width: 126px;
+                /* border: 1px solid red; */
+            }
+            #favoriteButton {
+                height: 32px;
+                width: 105px;
+                /* border: 1px solid red; */
+            }
+            #creatureButton {
+                height: 32px;
+                width: 109px;
+                /* border: 1px solid red; */
+            }
+            
+            #tabs {
+                left: 17px;
+                top: 60px;
+                position: absolute;
+                /* border: 1px solid red;  */
+                display: inline-flex;
+                justify-content: flex-start;
+                width: 613px;
+                height: 31px;
+            }
+
+            .subtabs {
+                top: 95px;
+                position: absolute;
+                /* border: 1px solid red;  */
+                display: grid;
+                grid-auto-flow: column;
+                column-gap: 20px;
+                justify-content: flex-start;
+            }
+
+            #clothesSubtabs {
+                visibility: hidden;
+                left: 110px;
+                width: 360px;
+                height: 15px;
+            }
+
+            .subtabButtons {
+                position: relative;
+                height: 15px;
+                /* border: 1px solid red; */
+            }
+            #topButton {
+                width: 30px;
+            }
+
+            #bottomButton {
+                width: 60px;
+            }
+
+            #outfitsButton {
+                width: 60px;
+            }
+
+            #costumesButton {
+                width: 72px;
+            }
+
+            #shoesButton {
+                width: 60px;
+            }
+
+            button {
+                background-color: transparent;
+                border: none;
+            }
+            button:hover {
+                cursor:pointer;
+            }
+            button:active{
+                background-color: rgba(255, 255, 255, 0.25)
+            }
+        </style>
+    </head>
+    <body>
+
+        <button id="closeInventoryButton"></button>
+        <div id="tabs">
+            <button id="hairButton"></button>
+            <button id="clothesButton"></button>
+            <button id="boardButton"></button>
+            <button id="accessoryButton"></button>
+            <button id="favoriteButton"></button>
+            <button id="creatureButton"></button>
+        </div>
+
+        <div id="clothesSubtabs" class="subtabs">
+            <button id="topButton" class="subtabButtons"></button>
+            <button id="bottomButton" class="subtabButtons"></button>
+            <button id="outfitsButton" class="subtabButtons"></button>
+            <button id="costumesButton" class="subtabButtons"></button>
+            <button id="shoesButton" class="subtabButtons"></button>
+        </div>
+
+    </body>
+</html>
