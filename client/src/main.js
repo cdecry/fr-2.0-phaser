@@ -269,8 +269,8 @@ uiScene.create = function() {
         headAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
         shoesPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
-        bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-        topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        bottomItemPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        topItemPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
         outfitPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         costumePreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         bodyAccPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
@@ -693,8 +693,9 @@ inGame.preload = function() {
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
-        this.load.spritesheet('f-body-' + i.toString(), 'avatar/f-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
         this.load.spritesheet('m-body-' + i.toString(), 'avatar/m-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('m-face-' + i.toString(), 'avatar/m-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('f-body-' + i.toString(), 'avatar/f-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
         this.load.spritesheet('f-face-' + i.toString(), 'avatar/f-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
     }
     
@@ -711,14 +712,14 @@ inGame.preload = function() {
     // load items
 
     // load null items:
-    this.load.spritesheet('f-0--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-1--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-2--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-3--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-6--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-7--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-8--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-9--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    for (let i = 0; i < 10; i++) {
+        this.load.spritesheet('f-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('m-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    }
+    this.load.spritesheet('f-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('m-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('m-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 
     // load hairs & mannequins
@@ -879,6 +880,7 @@ inGame.create = function() {
                 socket.emit('changeRoom', "topModels");
                 bg.destroy();
                 bg = inGame.add.image(430, 260, 'topModelsBg');
+                bg.setDepth(-500);
                 setCameraPosition(currentLocation);
                 loadLocation('topModels');
             });
@@ -996,6 +998,12 @@ inGame.create = function() {
         container.setSize(300, 250);
 
         container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
+        
+        for (let i =0; i < 17; i++) {
+            console.log(i + ", " + JSON.stringify(container.getAt(i)));
+        }
+
+        //container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
@@ -1010,7 +1018,7 @@ inGame.create = function() {
 
     function addOtherPlayers(playerInfo) {
         
-        const otherEyes = inGame.add.sprite(0, 0, myPlayerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
+        const otherEyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
         const otherLips = inGame.add.sprite(0, 0, 'lips-0');
         var otherFaceAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
         const otherBoardLower = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
@@ -1019,10 +1027,10 @@ inGame.create = function() {
         const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
         var otherHeadAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
         const otherPlayer = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-body-' + playerInfo.avatar['skinTone']);
-        const otherShoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        const otherShoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-4-' + playerInfo.avatar['equipped'][4]);
         var otherBottomItem, otherTopItem;
-        otherBottomItem = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-        otherTopItem = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        otherBottomItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        otherTopItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
 
         var otherOutfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         var otherCostume = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
@@ -1657,9 +1665,9 @@ inGame.update = function() {
                 container.getAt(cMap.player).play(myPlayerInfo.avatar.gender + '-body-' + container.getData('skinTone') + '-wave');
 
                 if (container.getData('equipped')[3] === -1)
-                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-wave');
+                    container.getAt(cMap.top).play(myPlayerInfo.avatar['gender']  + '-1-' + container.getData('equipped')[1] + '-wave');
                 else
-                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-wave');
+                    container.getAt(cMap.outfit).play(myPlayerInfo.avatar['gender']  + '-3-' + container.getData('equipped')[3] + '-wave');
                     
                 container.getAt(cMap.lips).play('lips-0-wave');
             }
@@ -1671,14 +1679,14 @@ inGame.update = function() {
                 container.getAt(cMap.player).play(myPlayerInfo.avatar['gender'] + '-body-' + container.getData('skinTone') + '-cry');
                 container.getAt(cMap.head).play(myPlayerInfo.avatar['gender']  + '-face-' + container.getData('skinTone') + '-cry');
                 container.getAt(cMap.eyes).play(myPlayerInfo.avatar['gender'] + '-eyes-' + container.getData('eyeType') + '-cry');
-                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-2-cry');
-                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-1-cry');
+                container.getAt(cMap.hairLower).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-2-cry');
+                container.getAt(cMap.hairUpper).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-1-cry');
                 container.getAt(cMap.brow).play('brow-0-cry');
 
                 if (container.getData('equipped')[3] === -1)
-                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-cry');
+                    container.getAt(cMap.top).play(myPlayerInfo.avatar['gender']  + '-1-' + container.getData('equipped')[1] + '-cry');
                 else
-                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-cry');
+                    container.getAt(cMap.outfit).play(myPlayerInfo.avatar['gender']  + '-3-' + container.getData('equipped')[3] + '-cry');
             }
         }
 
@@ -1689,17 +1697,17 @@ inGame.update = function() {
                 container.getAt(cMap.head).play(myPlayerInfo.avatar['gender']  + '-face-' + container.getData('skinTone') + '-jump');
                 container.getAt(cMap.eyes).play(myPlayerInfo.avatar['gender'] + '-eyes-' + container.getData('eyeType') + '-jump');
                 container.getAt(cMap.lips).play('lips-0-jump');
-                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-2-jump');
-                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-1-jump');
+                container.getAt(cMap.hairLower).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-2-jump');
+                container.getAt(cMap.hairUpper).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-1-jump');
                 container.getAt(cMap.brow).play('brow-0-jump');
 
                 if (container.getData('equipped')[3] === -1)
-                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-jump');
+                    container.getAt(cMap.top).play(myPlayerInfo.avatar['gender']  + '-1-' + container.getData('equipped')[1] + '-jump');
                 else
-                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-jump');
+                    container.getAt(cMap.outfit).play(myPlayerInfo.avatar['gender']  + '-3-' + container.getData('equipped')[3] + '-jump');
                 
-                container.getAt(cMap.bottom).play('f-2-' + container.getData('equipped')[2] + '-jump');
-                container.getAt(cMap.shoes).play('f-4-' + container.getData('equipped')[4] + '-jump');
+                container.getAt(cMap.bottom).play(myPlayerInfo.avatar['gender']  + '-2-' + container.getData('equipped')[2] + '-jump');
+                container.getAt(cMap.shoes).play(myPlayerInfo.avatar['gender']  + '-4-' + container.getData('equipped')[4] + '-jump');
             }
         }
 
