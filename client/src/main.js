@@ -356,8 +356,11 @@ uiScene.create = function() {
         isTyping = true;
       });
 
-    chatBar.addListener('click');
-    chatBar.on('click', function (event) {
+    this.input.setTopOnly(true);
+    chatBar.addListener('pointerdown');
+    chatBar.on('pointerdown', function (event) {
+        uiScene.input.stopPropagation();
+        inGame.input.stopPropagation();
         if (event.target.name === 'sendChatButton')
         {   
             if (globalInputChat.value !== '')
@@ -819,6 +822,7 @@ inGame.create = function() {
     
     // Load background
     bg = this.add.image(400, 260, 'downtownBg');
+    bg.setInteractive();
     bg.setDepth(-500);
 
     inGame.sound.pauseOnBlur = false;
@@ -1014,6 +1018,19 @@ inGame.create = function() {
         container.setData('eyeType', playerInfo.avatar['eyeType']);
         container.setData('gender', playerInfo.avatar['gender']);
         container.setData('equipped', playerInfo.avatar['equipped']);
+
+        var children = container.getAll();
+        for (let i = 0; i < children.length - 2; i ++) {
+            children[i].setInteractive({
+                pixelPerfect: true,
+                useHandCursor: true,
+            });
+
+            children[i].on('pointerdown', () => {
+                inGame.input.stopPropagation();
+                console.log('OPEN LOCAL PLAYER IDFONE');
+            });
+        }
     }
 
     function addOtherPlayers(playerInfo) {
@@ -1079,6 +1096,18 @@ inGame.create = function() {
         otherContainer.id = playerInfo.id;
 
         otherPlayers.add(otherContainer);
+
+        var children = otherContainer.getAll();
+        for (let i = 0; i < children.length - 2; i ++) {
+            children[i].setInteractive({
+                pixelPerfect: true,
+                useHandCursor: true,
+            });
+
+            children[i].on('pointerdown', () => {
+                console.log('OPEN OTHER PLAYER IDFONE');
+            });
+        }
       }
 
     globalThis.socket.emit('game loaded');
@@ -1467,10 +1496,14 @@ inGame.create = function() {
       });
     //#endregion
 
-    
-    this.input.on('pointerdown', function (pointer) {
+    this.input.setTopOnly(true);
+    bg.on('pointerdown', function (pointer) {
+        inGame.input.stopPropagation();
+        uiScene.input.stopPropagation();
+        console.log("Clicked on bg");
+        
         if (disableInput) return;
-        console.log("POINTER IS DOWN");
+        
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
         globalInputChat.blur();
