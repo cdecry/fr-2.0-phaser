@@ -259,6 +259,7 @@ uiScene.preload = function() {
     this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
 
     this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
+    this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
     this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
     this.load.image('greyScreen', 'scene/ui/greyScreen.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
@@ -674,10 +675,16 @@ uiScene.create = function() {
         gridHeight = 3;
         cellWidth = 62;
         cellHeight = 110;
+        gridX = 70;
         createNavigationButtons(0);
         createInventoryItems(0);
         createAvatarPreview(myPlayerInfo);
         avatarPreview.setPosition(675, 250);
+    }
+
+    uiScene.load = function(screen, loading, screenType) {
+        screen = uiScene.add.image(400, 260, screenType);
+        loading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
     }
 
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
@@ -914,14 +921,14 @@ var locationConfig = {
 inGame.create = function() {
     // Init Camera
     setCameraPosition(currentLocation);
-    loadLocation('downtown');
-
     this.scene.launch(uiScene);
-    
+    initLocation('downtown');
     // Load background
     bg = this.add.image(400, 260, 'downtownBg');
     bg.setInteractive();
     bg.setDepth(-500);
+    this.input.setTopOnly(true);
+    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
 
     inGame.sound.pauseOnBlur = false;
 
@@ -948,16 +955,7 @@ inGame.create = function() {
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
-    function loadLocation(location) {
-        if (bgm)
-                bgm.destroy();
-
-        // need to create data object with location num objects, position, etc.
-        // for now asume dt and spawn shops
-        for (let i = 0; i < locationObjects.length; i++) {
-            locationObjects[i].destroy();
-        }
-        locationObjects = [];
+    function initLocation(location) {
 
         if (location == 'downtown') {
             bgm = inGame.sound.add('downtownBGM');
@@ -980,9 +978,13 @@ inGame.create = function() {
 
                 currentLocation = "topModels";
                 socket.emit('changeRoom', "topModels");
+
                 bg.destroy();
                 bg = inGame.add.image(430, 260, 'topModelsBg');
                 bg.setDepth(-500);
+                bg.setInteractive();
+                bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+
                 setCameraPosition(currentLocation);
                 loadLocation('topModels');
             });
@@ -991,60 +993,97 @@ inGame.create = function() {
             });
             locationObjects.push(topModelsObject);
         }
-        else if (location == 'topModels') {
-            bgm = inGame.sound.add('topModelsLobbyBGM');
-            bgm.play();
-            bgm.setLoop(true);
+    }
 
-            var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
-            var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
-            var boa2 = inGame.add.sprite(220, 370, 'topModelsBoa2').play('boa1');
-            var boa1 = inGame.add.sprite(265, 365, 'topModelsBoa1').play('boa2');
-            var model = inGame.add.sprite(525, 355, 'topModelsModel').play('model');
-            var reporter1 = inGame.add.sprite(435, 343, 'topModelsReporter1').play('reporter1');
-            var reporter2 = inGame.add.sprite(350, 383, 'topModelsReporter2').play('reporter2');
-            var reporter3 = inGame.add.sprite(587, 335, 'topModelsReporter3').play('reporter3');
-            var plant = inGame.add.sprite(430, 260, 'topModelsPlant');
-            var rope1 = inGame.add.sprite(430, 260, 'topModelsRope1');
-            var rope2 = inGame.add.sprite(430, 260, 'topModelsRope2');
-            var desk = inGame.add.sprite(430, 260, 'topModelsDesk');
-            var chair = inGame.add.sprite(430, 260, 'topModelsChair');
-            // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
-            sean.setDepth(220);
-            boa1.setDepth(330);
-            boa2.setDepth(325);
-            model.setDepth(315);
-            reporter1.setDepth(303);
-            reporter2.setDepth(343);
-            reporter3.setDepth(295);
-            plant.setDepth(220);
-            rope1.setDepth(230);
-            rope2.setDepth(300);
-            desk.setDepth(380);
-            chair.setDepth(20);
+    function loadLocation(location) {
+        if (bgm)
+                bgm.destroy();
 
-            // topModelsObject.inputEnabled = true;
 
-            // topModelsObject.setInteractive({
-            //     pixelPerfect: true,
-            //     useHandCursor: true,
-            // });
+        var loadingScreen = uiScene.add.image(400, 260, 'loadingScreen');
+        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
-            // topModelsObject.on('pointerdown', () => {
-            //     console.log('poladot');
-
-            //     currentLocation = "topModels";
-            //     socket.emit('changeRoom', "topModels");
-            //     bg.destroy();
-            //     bg = inGame.add.image(430, 260, 'topModelsBg');
-            //     setCameraPosition(currentLocation);
-            // });
-            // topModelsObject.on('pointerup', () => {
-            //     disableInput = false;
-            // });
-
-            locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
+        for (let i = 0; i < locationObjects.length; i++) {
+            locationObjects[i].destroy();
         }
+        locationObjects = [];
+
+        setTimeout(function () {
+            if (location == 'downtown') {
+                bgm = inGame.sound.add('downtownBGM');
+                bgm.play();
+                bgm.setLoop(true);
+    
+                var topModelsObject = inGame.add.image(1317, 179, 'topModelsObject');
+                topModelsObject.setDepth(179);
+                topModelsObject.inputEnabled = true;
+    
+                topModelsObject.setInteractive({
+                    pixelPerfect: true,
+                    useHandCursor: true,
+                });
+    
+                // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
+    
+                topModelsObject.on('pointerdown', () => {
+                    console.log('poladot');
+    
+                    currentLocation = "topModels";
+                    socket.emit('changeRoom', "topModels");
+    
+                    bg.destroy();
+                    bg = inGame.add.image(430, 260, 'topModelsBg');
+                    bg.setDepth(-500);
+                    bg.setInteractive();
+                    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+    
+                    setCameraPosition(currentLocation);
+                    loadLocation('topModels');
+                });
+                topModelsObject.on('pointerup', () => {
+                    disableInput = false;
+                });
+                locationObjects.push(topModelsObject);
+            }
+            else if (location == 'topModels') {
+                bgm = inGame.sound.add('topModelsLobbyBGM');
+                bgm.play();
+                bgm.setLoop(true);
+    
+                var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
+                var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
+                var boa2 = inGame.add.sprite(220, 370, 'topModelsBoa2').play('boa1');
+                var boa1 = inGame.add.sprite(265, 365, 'topModelsBoa1').play('boa2');
+                var model = inGame.add.sprite(525, 355, 'topModelsModel').play('model');
+                var reporter1 = inGame.add.sprite(435, 343, 'topModelsReporter1').play('reporter1');
+                var reporter2 = inGame.add.sprite(350, 383, 'topModelsReporter2').play('reporter2');
+                var reporter3 = inGame.add.sprite(587, 335, 'topModelsReporter3').play('reporter3');
+                var plant = inGame.add.sprite(430, 260, 'topModelsPlant');
+                var rope1 = inGame.add.sprite(430, 260, 'topModelsRope1');
+                var rope2 = inGame.add.sprite(430, 260, 'topModelsRope2');
+                var desk = inGame.add.sprite(430, 260, 'topModelsDesk');
+                var chair = inGame.add.sprite(430, 260, 'topModelsChair');
+                // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
+                sean.setDepth(220);
+                boa1.setDepth(330);
+                boa2.setDepth(325);
+                model.setDepth(315);
+                reporter1.setDepth(303);
+                reporter2.setDepth(343);
+                reporter3.setDepth(295);
+                plant.setDepth(220);
+                rope1.setDepth(230);
+                rope2.setDepth(300);
+                desk.setDepth(380);
+                chair.setDepth(20);
+    
+                locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
+            }
+            loadingScreen.destroy();
+            inLoading.destroy();
+        }, 1000);
+
+        
     }
 
     // set camera position based on location
@@ -1594,10 +1633,7 @@ inGame.create = function() {
       });
     //#endregion
 
-    this.input.setTopOnly(true);
-    bg.on('pointerdown', function (pointer) {
-        inGame.input.stopPropagation();
-        uiScene.input.stopPropagation();
+    function clickMovement(pointer) {
         console.log("Clicked on bg");
         
         if (disableInput) return;
@@ -1609,20 +1645,7 @@ inGame.create = function() {
         globalPointer.x = pointer.x + clickOffsetX;
         globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
-        // moveXY(pointer.x, pointer.y - clickOffsetY);
-    });
-    // EXAMPLE
-    // var tempNamespace = {};
-    // var myString = "crystal";
-
-    // tempNamespace[myString] = this.add.sprite(400, 260, 'body-0');;
-
-    // tempNamespace[myString].play('body-0-jump');
-
-    // this.physics.world.on('worldbounds', function() {
-    //     stopMoving = true;
-    //     container.body.setVelocity(0);
-    // });
+    }
 }
 
 var tween;
