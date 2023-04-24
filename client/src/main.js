@@ -237,7 +237,13 @@ var uiScene = new Phaser.Scene('UIScene');
 
 uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
+    // Load chat ui
+    this.load.html('chatBar', 'html/chatbar.html');
+    this.load.html('messageWidth', 'html/messagewidth.html');
+    this.load.html('chatMessageHTML', 'html/chatmessage.html');
+    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
+    // Load inventory ui
     this.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
     this.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
     this.load.image('inventoryBoardTab', 'scene/ui/inventoryBoardTab.png');
@@ -246,16 +252,21 @@ uiScene.preload = function() {
     this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     this.load.html('inventoryButton', 'html/inventoryButton.html');
     this.load.html('inventoryUI', 'html/inventoryUI.html');
-    this.load.html('chatBar', 'html/chatbar.html');
-    this.load.html('messageWidth', 'html/messagewidth.html');
-    this.load.html('chatMessageHTML', 'html/chatmessage.html');
-    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    // Load IDFone ui
+    this.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
+    this.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
+    this.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
+    this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
+
+    this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
+    this.load.image('greyScreen', 'scene/ui/greyScreen.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
     //this.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 }
 
 uiScene.create = function() {
 
+    this.input.setTopOnly(true);
     function createAvatarPreview(playerInfo) {
 
         bodyPreview = uiScene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
@@ -643,9 +654,35 @@ uiScene.create = function() {
         createAvatarPreview(myPlayerInfo);
         avatarPreview.setPosition(675, 250);
     }
+
+    uiScene.openIDFone = function(isLocalPlayer) {
+        var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
+        var idfoneLower = uiScene.add.image(400, 230, 'idfoneLower');
+        var idfoneWallpaper = uiScene.add.image(400, 260, 'idfoneDefault');
+        var idfoneUpper = uiScene.add.image(400, 260, 'idfoneUpper');
+        var idfoneShadow = uiScene.add.image(400, 260, 'idfoneShadow');
+
+        uiScene.input.manager.setCursor({ cursor: 'default' });
+        greyScreen.setInteractive({ useHandCursor: false });
+
+        // greyScreen.disableInteractive();
+        // idfoneLower.setInteractive();
+
+        uiBar.setDepth(0);
+        chatBar.setDepth(0);
+
+        tween = uiScene.tweens.add({
+            targets: idfoneLower,
+            x: 400,
+            y: 260,
+            ease: 'Linear',
+            duration: 300,
+        });
+
+        createAvatarPreview(myPlayerInfo);
+        avatarPreview.setPosition(460, 200);
+    }
 }
-
-
 
 var inGame = new Phaser.Scene('GameScene');
 
@@ -1028,7 +1065,7 @@ inGame.create = function() {
 
             children[i].on('pointerdown', () => {
                 inGame.input.stopPropagation();
-                console.log('OPEN LOCAL PLAYER IDFONE');
+                uiScene.openIDFone(true);
             });
         }
     }
@@ -1105,7 +1142,7 @@ inGame.create = function() {
             });
 
             children[i].on('pointerdown', () => {
-                console.log('OPEN OTHER PLAYER IDFONE');
+                uiScene.openIDFone(false);
             });
         }
       }
