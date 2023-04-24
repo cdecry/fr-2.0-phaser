@@ -655,7 +655,7 @@ uiScene.create = function() {
         avatarPreview.setPosition(675, 250);
     }
 
-    uiScene.openIDFone = function(isLocalPlayer) {
+    uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
         var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
         var idfoneLower = uiScene.add.image(400, 230, 'idfoneLower');
         var idfoneWallpaper = uiScene.add.image(400, 260, 'idfoneDefault');
@@ -679,8 +679,19 @@ uiScene.create = function() {
             duration: 300,
         });
 
-        createAvatarPreview(myPlayerInfo);
+        createAvatarPreview(playerInfo);
         avatarPreview.setPosition(460, 200);
+
+        var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
+        closeIDFoneButton.setInteractive({ useHandCursor: true });
+
+        var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton];
+
+        closeIDFoneButton.on('pointerdown', () => {
+            for (let i = 0; i < idfoneGroup.length; i++) {
+                idfoneGroup[i].destroy();
+            }
+        })
     }
 }
 
@@ -1065,7 +1076,7 @@ inGame.create = function() {
 
             children[i].on('pointerdown', () => {
                 inGame.input.stopPropagation();
-                uiScene.openIDFone(true);
+                uiScene.openIDFone(true, playerInfo);
             });
         }
     }
@@ -1129,7 +1140,7 @@ inGame.create = function() {
         otherContainer.setData('gender', playerInfo.avatar['gender']);
         otherContainer.setData('equipped', playerInfo.avatar['equipped']);
         otherContainer.setData('messageData', { hasMessage: false, otherChatBubble: null, otherChatMessage: null, otherBubbleLifeTime: null, otherMessageLifeTime: null });
-
+        
         otherContainer.id = playerInfo.id;
 
         otherPlayers.add(otherContainer);
@@ -1142,7 +1153,7 @@ inGame.create = function() {
             });
 
             children[i].on('pointerdown', () => {
-                uiScene.openIDFone(false);
+                uiScene.openIDFone(false, playerInfo);
             });
         }
       }
