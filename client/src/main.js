@@ -329,6 +329,7 @@ uiScene.create = function() {
     inventory.setDepth(1000);
     inventory.setVisible(false);
     inventoryUI.setVisible(false);
+    uiBar.setInteractive({ pixelPerfect: true});
 
     var chatBar = this.add.dom(185, 470).createFromCache('chatBar');
     var inputChat = chatBar.getChildByName('chatInput');
@@ -337,7 +338,7 @@ uiScene.create = function() {
 
     setTimeout(() => {
         inputChat.value = defaultChatBarMessage;
-    }, 1000);
+    }, 800);
 
     uiBar.setDepth(1000);
 
@@ -393,127 +394,150 @@ uiScene.create = function() {
 
     inventoryButton.addListener('click');
     inventoryButton.on('click', function (event) {
+
+        var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
+        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+
+        uiScene.input.manager.setCursor({ cursor: 'default' });
+        greyScreen.setInteractive({ useHandCursor: false });
+
+        greyScreen.setDepth(1010);
+        inLoading.setDepth(1010);
+
+        uiBar.setDepth(0);
+        chatBar.setDepth(0);
         disableInput = true;
-        inventory.setTexture('inventoryHairTab');
-        inventory.setVisible(true);
-        inventoryUI.setVisible(true);
-        uiBar.setVisible(false);
-        inventoryButton.setVisible(false);
-        chatBar.setVisible(false);
 
-        loadInventory();
+        setTimeout(function () {
+            openInventory();
+        }, 400);
 
-        inventoryUI.addListener('click');
-        inventoryUI.on('click', function (event) {
-            if (event.target.id === 'closeInventoryButton') {
-                disableInput = false;
-                inventoryButton.setVisible(true);
-                chatBar.setVisible(true);
-                uiBar.setVisible(true);
+        setTimeout(function () {
+            inLoading.destroy();
+            greyScreen.destroy();
+        }, 700);
+        function openInventory() {
+            inventory.setTexture('inventoryHairTab');
+            inventory.setVisible(true);
+            inventoryUI.setVisible(true);
+            uiBar.setVisible(false);
+            inventoryButton.setVisible(false);
+            chatBar.setVisible(false);
 
-                inventory.setVisible(false);
-                inventoryUI.setVisible(false);
+            loadInventory();
 
-                // hide loaded clothes, avatar preview
-                inventoryItems.forEach(item => item.destroy());
-                if (prevButton != null)
-                    prevButton.destroy();
-                if (nextButton != null)
-                    nextButton.destroy();
+            inventoryUI.addListener('click');
+            inventoryUI.on('click', function (event) {
+                if (event.target.id === 'closeInventoryButton') {
+                    disableInput = false;
+                    inventoryButton.setVisible(true);
+                    chatBar.setVisible(true);
+                    uiBar.setVisible(true);
 
-                // Send request to equip all items on avatar preview:
-                if (avatarPreview.getData('equipped') != null)
-                    globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
-                
-                avatarPreview.destroy();
-            }
-            else if (event.target.id === 'hairButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                inventory.setTexture('inventoryHairTab');
-                // hair
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(0);
-                createInventoryItems(0);
-            }
-            else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
-                inventory.setTexture('inventoryClothesTab');
-                // default tops
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(1);
-                createInventoryItems(1);
-            }
-            else if (event.target.id === 'bottomButton') {
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(2);
-                createInventoryItems(2);
-            }
+                    inventory.setVisible(false);
+                    inventoryUI.setVisible(false);
 
-            else if (event.target.id === 'outfitsButton') {
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(3);
-                createInventoryItems(3);
-            }
+                    // hide loaded clothes, avatar preview
+                    inventoryItems.forEach(item => item.destroy());
+                    if (prevButton != null)
+                        prevButton.destroy();
+                    if (nextButton != null)
+                        nextButton.destroy();
 
-            else if (event.target.id === 'costumesButton') {
-                // FIX
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(1);
-                createInventoryItems(1);
-            }
+                    // Send request to equip all items on avatar preview:
+                    if (avatarPreview.getData('equipped') != null)
+                        globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
+                    
+                    avatarPreview.destroy();
+                }
+                else if (event.target.id === 'hairButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                    inventory.setTexture('inventoryHairTab');
+                    // hair
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(0);
+                    createInventoryItems(0);
+                }
+                else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
+                    inventory.setTexture('inventoryClothesTab');
+                    // default tops
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(1);
+                    createInventoryItems(1);
+                }
+                else if (event.target.id === 'bottomButton') {
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(2);
+                    createInventoryItems(2);
+                }
 
-            else if (event.target.id === 'shoesButton') {
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(4);
-                createInventoryItems(4);
-            }
-            else if (event.target.id === 'boardButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                inventory.setTexture('inventoryBoardTab');
-                gridWidth = 4;
-                gridHeight = 3;
-                cellWidth = 124;
-                cellHeight = 110;
-                gridX = 100;
-                createNavigationButtons(5);
-                createInventoryItems(5);
-            }
-            else if (event.target.id === 'accessoryButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                inventory.setTexture('inventoryAccessoryTab');
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(7);
-                createInventoryItems(7)
-            }
-        });
+                else if (event.target.id === 'outfitsButton') {
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(3);
+                    createInventoryItems(3);
+                }
+
+                else if (event.target.id === 'costumesButton') {
+                    // FIX
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(1);
+                    createInventoryItems(1);
+                }
+
+                else if (event.target.id === 'shoesButton') {
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(4);
+                    createInventoryItems(4);
+                }
+                else if (event.target.id === 'boardButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                    inventory.setTexture('inventoryBoardTab');
+                    gridWidth = 4;
+                    gridHeight = 3;
+                    cellWidth = 124;
+                    cellHeight = 110;
+                    gridX = 100;
+                    createNavigationButtons(5);
+                    createInventoryItems(5);
+                }
+                else if (event.target.id === 'accessoryButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                    inventory.setTexture('inventoryAccessoryTab');
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(7);
+                    createInventoryItems(7)
+                }
+            });
+        }
     });
 
     // Define variables for the grid layout
