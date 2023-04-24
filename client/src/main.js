@@ -85,20 +85,20 @@ var loading = new Phaser.Scene('LoadingScene');
 
 loading.preload = function() {
     this.load.setBaseURL('/src/assets')
-    this.load.atlas('loading', 'scene/loading.png', 'scene/loading.json');
+    this.load.atlas('outLoading', 'scene/outLoading.png', 'scene/loading.json');
 }
 
 loading.create = function() {
-    const sprite = this.add.sprite(400, 260, 'loading', 'loading-0');
+    const sprite = this.add.sprite(400, 260, 'outLoading', 'loading-0');
     const animConfig = {
-        key: 'load',
-        frames: 'loading',
+        key: 'outLoad',
+        frames: 'outLoading',
         frameRate: 12,
         repeat: -1,
     };
     
     this.anims.create(animConfig);
-    sprite.play('load');
+    sprite.play('outLoad');
 
     globalThis.socket.on('login success', (inventory) => {
         myInventory = inventory;
@@ -258,6 +258,7 @@ uiScene.preload = function() {
     this.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
     this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
 
+    this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
     this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
     this.load.image('greyScreen', 'scene/ui/greyScreen.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
@@ -657,11 +658,39 @@ uiScene.create = function() {
 
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
         var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
-        var idfoneLower = uiScene.add.image(400, 230, 'idfoneLower');
-        var idfoneWallpaper = uiScene.add.image(400, 260, 'idfoneDefault');
-        var idfoneUpper = uiScene.add.image(400, 260, 'idfoneUpper');
-        var idfoneShadow = uiScene.add.image(400, 260, 'idfoneShadow');
+        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
+        var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
+
+        setTimeout(function () {
+            idfoneLower = uiScene.add.image(400, 230, 'idfoneLower');
+            idfoneWallpaper = uiScene.add.image(400, 260, 'idfoneDefault');
+            idfoneUpper = uiScene.add.image(400, 260, 'idfoneUpper');
+            idfoneShadow = uiScene.add.image(400, 260, 'idfoneShadow');
+
+            tween = uiScene.tweens.add({
+                targets: idfoneLower,
+                x: 400,
+                y: 260,
+                ease: 'Linear',
+                duration: 300,
+            });
+
+            createAvatarPreview(playerInfo);
+            avatarPreview.setPosition(460, 200);
+
+            var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
+            closeIDFoneButton.setInteractive({ useHandCursor: true });
+
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading];
+
+            closeIDFoneButton.on('pointerdown', () => {
+                for (let i = 0; i < idfoneGroup.length; i++) {
+                    idfoneGroup[i].destroy();
+                }
+            })
+        }, 400);
+        
         uiScene.input.manager.setCursor({ cursor: 'default' });
         greyScreen.setInteractive({ useHandCursor: false });
 
@@ -671,28 +700,25 @@ uiScene.create = function() {
         uiBar.setDepth(0);
         chatBar.setDepth(0);
 
-        tween = uiScene.tweens.add({
-            targets: idfoneLower,
-            x: 400,
-            y: 260,
-            ease: 'Linear',
-            duration: 300,
-        });
+        // var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
+        // closeIDFoneButton.setInteractive({ useHandCursor: true });
 
-        createAvatarPreview(playerInfo);
-        avatarPreview.setPosition(460, 200);
+        // var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton];
 
-        var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
-        closeIDFoneButton.setInteractive({ useHandCursor: true });
-
-        var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton];
-
-        closeIDFoneButton.on('pointerdown', () => {
-            for (let i = 0; i < idfoneGroup.length; i++) {
-                idfoneGroup[i].destroy();
-            }
-        })
+        // closeIDFoneButton.on('pointerdown', () => {
+        //     for (let i = 0; i < idfoneGroup.length; i++) {
+        //         idfoneGroup[i].destroy();
+        //     }
+        // })
     }
+
+    this.anims.create({
+        key: 'inLoad',
+        frames: this.anims.generateFrameNumbers('inLoading'),
+        frameRate: 40,
+        repeat: -1
+    });
+
 }
 
 var inGame = new Phaser.Scene('GameScene');
