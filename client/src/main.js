@@ -235,6 +235,19 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
 
 var uiScene = new Phaser.Scene('UIScene');
 
+uiScene.init = function()
+{
+    //  inject css
+    var element = document.createElement('style');
+    document.head.appendChild(element);
+
+    var sheet = element.sheet;
+    var styles = '@font-face { font-family: "titleFontOutline"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_bld.otf") format("opentype"); }\n';
+    sheet.insertRule(styles, 0);
+    var styles = '@font-face { font-family: "titleFont"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_ital.otf") format("opentype"); }\n';
+    sheet.insertRule(styles, 0);
+}
+
 uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
     // Load chat ui
@@ -314,7 +327,7 @@ uiScene.create = function() {
 
     WebFont.load({
         custom: {
-            families: [ 'usernameFont' ]
+            families: [ 'usernameFont', 'titleFont', 'titleFontOutline' ]
         },
         active: function ()
         {
@@ -709,6 +722,11 @@ uiScene.create = function() {
 
             createAvatarPreview(playerInfo);
             avatarPreview.setPosition(460, 200);
+
+            //titleLabelOutline = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFontOutline', fontSize: '14px', fill: "#743503" });
+            titleLabel = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFont', fontSize: '18px', fill: "#f5e51d" });
+            // usernameLabel.originX = 0.5;
+            levelLabel = uiScene.add.text(220, 320, "5", { fontFamily: 'titleFont', fontSize: '20px', fill: "#f5e51d" });
 
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
