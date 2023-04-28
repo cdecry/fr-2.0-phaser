@@ -167,7 +167,7 @@ var iBodyAcc = [];
 function createSpeechBubble (x, y, quote)
 {
     chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
-    chatMessage.setInteractive;
+    // chatMessage.setInteractive;
     var chatMessageContent = chatMessage.getChildByID('message');
     chatMessageContent.innerHTML = quote;
 
@@ -1082,6 +1082,15 @@ inGame.create = function() {
                 var desk = inGame.add.sprite(430, 260, 'topModelsDesk');
                 var chair = inGame.add.sprite(430, 260, 'topModelsChair');
                 // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
+
+                // var tmObjects = [sean, fan, boa2, boa1, model, reporter1, reporter2, reporter3, plant, rope1, rope2, desk, chair];
+                // for (let i = 0; i < tmObjects.length; i++) {
+                //     console.log(tmObjects);
+                // }
+                // sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
+                // plant.setInteractive();
+
+
                 sean.setDepth(220);
                 boa1.setDepth(330);
                 boa2.setDepth(325);
