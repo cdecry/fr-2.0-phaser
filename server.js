@@ -1,3 +1,4 @@
+require('dotenv').config();
 var express = require('express');
 var app = express();
 var server = require('http').Server(app);
@@ -5,7 +6,7 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped } = require('./database/queries');
 const { Player } = require('./network/player');
 
 // store clients (id: socketid)
@@ -17,7 +18,7 @@ const rooms = {};
 // connect to database
 main().catch(err => console.log(err));
 async function main() {
-    await mongoose.connect('mongodb+srv://root:jcohnKil2BDsyVMr@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
+    await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
 }
 
 // get files for client
@@ -32,37 +33,39 @@ io.on('connection', function (socket) {
     console.log('client connected'); 
     
     socket.on('disconnect', function () {
+        console.log(socket.id);
         // if this user was logged in, delee from plyer list
         if (players!= null && players[socket.id] != null) {
             console.log('player disconnected: ' + players[socket.id].username);
+            socket.to(players[socket.id].room).emit('removePlayer', socket.id);
             delete players[socket.id];
-            socket.broadcast.emit('removePlayer', socket.id);
-        // socket.to('downtown').emit('playerMoved', players[socket.id]);
         }
         else
             console.log('client disconnected');
     });
 
     socket.on('login request', async (username, password) => {
-        var userId = await loginRequest(username, password);
-        if (userId != null) {
+        var result = await loginRequest(username, password);
+        if (result != null) {
 
             // get avatar
-            const avatar = await getUserAvatar(userId);
-            // console.log('server aet avatar' + avatar['equipped']);
+            const avatar = await getUserAvatar(result.id);
 
-            var player = new Player(socket.id, username, 'downtown', avatar, false, 400, 200);
+            // add player to our list of online players
+            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory);
             players[socket.id] = player;
 
+            // add player to room list
             if (rooms['downtown'] == null)
                 rooms['downtown'] = [player];
             else
                 rooms['downtown'].push(player);
+
             console.log('Sucessfully logged in! Players online: ' + JSON.stringify(players));
             // load game
             socket.join('downtown');
             // load local player
-            io.to(socket.id).emit('login success');
+            io.to(socket.id).emit('login success', result.inventory);
         }
         else {
             console.log('Invalid username/password. Please try again.');
@@ -71,7 +74,9 @@ io.on('connection', function (socket) {
     });
 
     socket.on('game loaded', function() {
-        io.to(socket.id).emit('spawnCurrentPlayers', players);
+        // assume everyone spawns in downtown
+        let playersInThisRoom =  Object.values(players).filter(player => player.room === "downtown");
+        io.to(socket.id).emit('spawnCurrentPlayers', playersInThisRoom);
         socket.to("downtown").emit("spawnNewPlayer", players[socket.id]);
     });
 
@@ -80,28 +85,97 @@ io.on('connection', function (socket) {
         players[socket.id].y = movementData.y;
         players[socket.id].flipX = movementData.flipX;
 
-        socket.to('downtown').emit('playerMoved', players[socket.id]);
+        socket.to(players[socket.id].room).emit('playerMoved', players[socket.id]);
     });
 
     socket.on('playerWave', function() {
-        socket.broadcast.to('downtown').emit('playerWaveResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerWaveResponse', players[socket.id]);
     })
 
     socket.on('playerCry', function() {
-        socket.broadcast.to('downtown').emit('playerCryResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerCryResponse', players[socket.id]);
     })
 
     socket.on('playerJump', function() {
-        socket.broadcast.to('downtown').emit('playerJumpResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerJumpResponse', players[socket.id]);
     })
 
     socket.on('playerWink', function() {
-        socket.broadcast.to('downtown').emit('playerWinkResponse', players[socket.id]);
+        socket.broadcast.to(players[socket.id].room).emit('playerWinkResponse', players[socket.id]);
     })
 
     socket.on('chatMessage', function(msg) {
-        socket.broadcast.to('downtown').emit('chatMessageResponse', players[socket.id], msg);
+        socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
     })
+
+    socket.on('changeRoom', function(room) {
+        let currentRoom = players[socket.id].room;
+
+        // for all the players in this player's room, remove this player
+        // for this player, remove all the players in the current room.
+        socket.to(currentRoom).emit('removePlayer', socket.id);
+        io.to(socket.id).emit('removePlayers');
+
+        // for all the players in the new room, spawn this player
+        // for this player, spawn all other players in the room
+        socket.to(room).emit('spawnNewPlayer', players[socket.id]);//    THIS SI GIVING ME PROBLEMS
+        
+        let playersInThisRoom =  Object.values(players).filter(player => player.room === room);
+        io.to(socket.id).emit('spawnCurrentPlayers', playersInThisRoom);
+        
+        players[socket.id].room = room;
+        socket.leave(currentRoom);
+        socket.join(room);
+    })
+
+    socket.on('changeClothes', async (equipped) => {
+        // similar to invent, but of changed clothes
+        var changed = {"0":[], "1":[], "2":[], "3":[], "4":[], "5": [], "6":[], "7":[], "8":[], "9":[]};
+        var numChanged = 0;
+        // check that the player has these clothes
+        for (let i = 0; i < equipped.length; i++) {
+
+            var itemId = equipped[i];
+
+            if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
+
+            if (itemId == -1) { // nothing of this type is equipped
+                players[socket.id].avatar.equipped[i] = itemId;
+                changed[i].push(-1)
+                numChanged++;
+            }
+
+            var itemExistsInInventory = false;
+
+            // Check if the item exists in the inventory
+            var itemArray = players[socket.id].inventory[i];
+            
+            for (let j = 0; j < itemArray.length; j++) {
+                const item = itemArray[j];
+                if (item.id === itemId) {
+                    itemExistsInInventory = true;
+                    changed[i].push(item);
+                    players[socket.id].avatar.equipped[i] = itemId;
+                    numChanged++;
+                    break;
+                }
+            }
+
+            if (!itemExistsInInventory) {
+                console.log(`Item ${itemId} is not in the inventory.`);
+            }
+        }
+
+        if (numChanged == 0) return;
+
+        socket.to(players[socket.id].room).emit("changeClothesResponse", changed);
+        io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
+
+        // update player avatar database
+        await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
+
+    })
+
 });
 
 server.listen(8081, function () {
