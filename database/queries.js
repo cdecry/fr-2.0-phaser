@@ -24,6 +24,14 @@ exports.registerUser =  async function (id, username, password, gender) {
             8: [],
             9: [],
             favorite: [],
+        },
+        buddies: [],
+        idFone: {
+            title: "fantage novice",
+            skin: 0,
+            stickerPages: [],
+            medals: [],
+
         }
     });
     await newPlayer.save();

@@ -16,7 +16,32 @@ const userSchema = new mongoose.Schema({
     level: Number,
     isMember: Boolean,
     inventory: Object,    // list of inventoryItems
+    // new
+    buddies: Object,      // list of buddy names
+    idfone: Object,
 });
+
+// idfone Object:
+/*
+{
+    skin: 0,
+    stickerPages: [ {
+        stickerId: 12,
+        x: 100,
+        y: 60,
+        flipX: false,
+        givenBy: "bobbyBob123",
+        date: "04/28/2023"
+    }
+    medals: [ {
+        medalId: 3, // name and title retrieved by medalId (client side)
+        level: 15,
+        points: 236,
+        nextLevel: 240,
+    }]
+}
+*/
+
 
 const avatarSchema = new mongoose.Schema({
     id: Number,         // avatarId

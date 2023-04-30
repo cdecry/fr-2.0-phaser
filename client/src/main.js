@@ -85,20 +85,20 @@ var loading = new Phaser.Scene('LoadingScene');
 
 loading.preload = function() {
     this.load.setBaseURL('/src/assets')
-    this.load.atlas('loading', 'scene/loading.png', 'scene/loading.json');
+    this.load.atlas('outLoading', 'scene/outLoading.png', 'scene/loading.json');
 }
 
 loading.create = function() {
-    const sprite = this.add.sprite(400, 260, 'loading', 'loading-0');
+    const sprite = this.add.sprite(400, 260, 'outLoading', 'loading-0');
     const animConfig = {
-        key: 'load',
-        frames: 'loading',
+        key: 'outLoad',
+        frames: 'outLoading',
         frameRate: 12,
         repeat: -1,
     };
     
     this.anims.create(animConfig);
-    sprite.play('load');
+    sprite.play('outLoad');
 
     globalThis.socket.on('login success', (inventory) => {
         myInventory = inventory;
@@ -167,7 +167,7 @@ var iBodyAcc = [];
 function createSpeechBubble (x, y, quote)
 {
     chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
-    chatMessage.setInteractive;
+    // chatMessage.setInteractive;
     var chatMessageContent = chatMessage.getChildByID('message');
     chatMessageContent.innerHTML = quote;
 
@@ -235,9 +235,28 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
 
 var uiScene = new Phaser.Scene('UIScene');
 
+uiScene.init = function()
+{
+    //  inject css
+    var element = document.createElement('style');
+    document.head.appendChild(element);
+
+    var sheet = element.sheet;
+    var styles = '@font-face { font-family: "titleFontOutline"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_bld.otf") format("opentype"); }\n';
+    sheet.insertRule(styles, 0);
+    var styles = '@font-face { font-family: "titleFont"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_ital.otf") format("opentype"); }\n';
+    sheet.insertRule(styles, 0);
+}
+
 uiScene.preload = function() {
     this.load.setBaseURL('/src/assets');
+    // Load chat ui
+    this.load.html('chatBar', 'html/chatbar.html');
+    this.load.html('messageWidth', 'html/messagewidth.html');
+    this.load.html('chatMessageHTML', 'html/chatmessage.html');
+    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
+    // Load inventory ui
     this.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
     this.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
     this.load.image('inventoryBoardTab', 'scene/ui/inventoryBoardTab.png');
@@ -246,16 +265,23 @@ uiScene.preload = function() {
     this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     this.load.html('inventoryButton', 'html/inventoryButton.html');
     this.load.html('inventoryUI', 'html/inventoryUI.html');
-    this.load.html('chatBar', 'html/chatbar.html');
-    this.load.html('messageWidth', 'html/messagewidth.html');
-    this.load.html('chatMessageHTML', 'html/chatmessage.html');
-    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    // Load IDFone ui
+    this.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
+    this.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
+    this.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
+    this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
+
+    this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
+    this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
+    this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
+    this.load.image('greyScreen', 'scene/ui/greyScreen.png');
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
     //this.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 }
 
 uiScene.create = function() {
 
+    this.input.setTopOnly(true);
     function createAvatarPreview(playerInfo) {
 
         bodyPreview = uiScene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
@@ -269,8 +295,8 @@ uiScene.create = function() {
         headAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
         shoesPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
-        bottomItemPreview = uiScene.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-        topItemPreview = uiScene.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        bottomItemPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        topItemPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
         outfitPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         costumePreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         bodyAccPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
@@ -301,7 +327,7 @@ uiScene.create = function() {
 
     WebFont.load({
         custom: {
-            families: [ 'usernameFont' ]
+            families: [ 'usernameFont', 'titleFont', 'titleFontOutline' ]
         },
         active: function ()
         {
@@ -317,6 +343,7 @@ uiScene.create = function() {
     inventory.setDepth(1000);
     inventory.setVisible(false);
     inventoryUI.setVisible(false);
+    uiBar.setInteractive({ pixelPerfect: true});
 
     var chatBar = this.add.dom(185, 470).createFromCache('chatBar');
     var inputChat = chatBar.getChildByName('chatInput');
@@ -325,7 +352,7 @@ uiScene.create = function() {
 
     setTimeout(() => {
         inputChat.value = defaultChatBarMessage;
-    }, 1000);
+    }, 800);
 
     uiBar.setDepth(1000);
 
@@ -356,8 +383,11 @@ uiScene.create = function() {
         isTyping = true;
       });
 
-    chatBar.addListener('click');
-    chatBar.on('click', function (event) {
+    this.input.setTopOnly(true);
+    chatBar.addListener('pointerdown');
+    chatBar.on('pointerdown', function (event) {
+        uiScene.input.stopPropagation();
+        inGame.input.stopPropagation();
         if (event.target.name === 'sendChatButton')
         {   
             if (globalInputChat.value !== '')
@@ -378,127 +408,150 @@ uiScene.create = function() {
 
     inventoryButton.addListener('click');
     inventoryButton.on('click', function (event) {
+
+        var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
+        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+
+        uiScene.input.manager.setCursor({ cursor: 'default' });
+        greyScreen.setInteractive({ useHandCursor: false });
+
+        greyScreen.setDepth(1010);
+        inLoading.setDepth(1010);
+
+        uiBar.setDepth(0);
+        chatBar.setDepth(0);
         disableInput = true;
-        inventory.setTexture('inventoryHairTab');
-        inventory.setVisible(true);
-        inventoryUI.setVisible(true);
-        uiBar.setVisible(false);
-        inventoryButton.setVisible(false);
-        chatBar.setVisible(false);
 
-        loadInventory();
+        setTimeout(function () {
+            openInventory();
+        }, 400);
 
-        inventoryUI.addListener('click');
-        inventoryUI.on('click', function (event) {
-            if (event.target.id === 'closeInventoryButton') {
-                disableInput = false;
-                inventoryButton.setVisible(true);
-                chatBar.setVisible(true);
-                uiBar.setVisible(true);
+        setTimeout(function () {
+            inLoading.destroy();
+            greyScreen.destroy();
+        }, 700);
+        function openInventory() {
+            inventory.setTexture('inventoryHairTab');
+            inventory.setVisible(true);
+            inventoryUI.setVisible(true);
+            uiBar.setVisible(false);
+            inventoryButton.setVisible(false);
+            chatBar.setVisible(false);
 
-                inventory.setVisible(false);
-                inventoryUI.setVisible(false);
+            loadInventory();
 
-                // hide loaded clothes, avatar preview
-                inventoryItems.forEach(item => item.destroy());
-                if (prevButton != null)
-                    prevButton.destroy();
-                if (nextButton != null)
-                    nextButton.destroy();
+            inventoryUI.addListener('click');
+            inventoryUI.on('click', function (event) {
+                if (event.target.id === 'closeInventoryButton') {
+                    disableInput = false;
+                    inventoryButton.setVisible(true);
+                    chatBar.setVisible(true);
+                    uiBar.setVisible(true);
 
-                // Send request to equip all items on avatar preview:
-                if (avatarPreview.getData('equipped') != null)
-                    globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
-                
-                avatarPreview.destroy();
-            }
-            else if (event.target.id === 'hairButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                inventory.setTexture('inventoryHairTab');
-                // hair
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(0);
-                createInventoryItems(0);
-            }
-            else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
-                inventory.setTexture('inventoryClothesTab');
-                // default tops
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(1);
-                createInventoryItems(1);
-            }
-            else if (event.target.id === 'bottomButton') {
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(2);
-                createInventoryItems(2);
-            }
+                    inventory.setVisible(false);
+                    inventoryUI.setVisible(false);
 
-            else if (event.target.id === 'outfitsButton') {
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(3);
-                createInventoryItems(3);
-            }
+                    // hide loaded clothes, avatar preview
+                    inventoryItems.forEach(item => item.destroy());
+                    if (prevButton != null)
+                        prevButton.destroy();
+                    if (nextButton != null)
+                        nextButton.destroy();
 
-            else if (event.target.id === 'costumesButton') {
-                // FIX
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(1);
-                createInventoryItems(1);
-            }
+                    // Send request to equip all items on avatar preview:
+                    if (avatarPreview.getData('equipped') != null)
+                        globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
+                    
+                    avatarPreview.destroy();
+                }
+                else if (event.target.id === 'hairButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                    inventory.setTexture('inventoryHairTab');
+                    // hair
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(0);
+                    createInventoryItems(0);
+                }
+                else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
+                    inventory.setTexture('inventoryClothesTab');
+                    // default tops
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(1);
+                    createInventoryItems(1);
+                }
+                else if (event.target.id === 'bottomButton') {
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(2);
+                    createInventoryItems(2);
+                }
 
-            else if (event.target.id === 'shoesButton') {
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(4);
-                createInventoryItems(4);
-            }
-            else if (event.target.id === 'boardButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                inventory.setTexture('inventoryBoardTab');
-                gridWidth = 4;
-                gridHeight = 3;
-                cellWidth = 124;
-                cellHeight = 110;
-                gridX = 100;
-                createNavigationButtons(5);
-                createInventoryItems(5);
-            }
-            else if (event.target.id === 'accessoryButton') {
-                inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                inventory.setTexture('inventoryAccessoryTab');
-                gridWidth = 8;
-                gridHeight = 3;
-                cellWidth = 62;
-                cellHeight = 110;
-                gridX = 70;
-                createNavigationButtons(7);
-                createInventoryItems(7)
-            }
-        });
+                else if (event.target.id === 'outfitsButton') {
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(3);
+                    createInventoryItems(3);
+                }
+
+                else if (event.target.id === 'costumesButton') {
+                    // FIX
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(1);
+                    createInventoryItems(1);
+                }
+
+                else if (event.target.id === 'shoesButton') {
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(4);
+                    createInventoryItems(4);
+                }
+                else if (event.target.id === 'boardButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                    inventory.setTexture('inventoryBoardTab');
+                    gridWidth = 4;
+                    gridHeight = 3;
+                    cellWidth = 124;
+                    cellHeight = 110;
+                    gridX = 100;
+                    createNavigationButtons(5);
+                    createInventoryItems(5);
+                }
+                else if (event.target.id === 'accessoryButton') {
+                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                    inventory.setTexture('inventoryAccessoryTab');
+                    gridWidth = 8;
+                    gridHeight = 3;
+                    cellWidth = 62;
+                    cellHeight = 110;
+                    gridX = 70;
+                    createNavigationButtons(7);
+                    createInventoryItems(7)
+                }
+            });
+        }
     });
 
     // Define variables for the grid layout
@@ -635,14 +688,87 @@ uiScene.create = function() {
         gridHeight = 3;
         cellWidth = 62;
         cellHeight = 110;
+        gridX = 70;
         createNavigationButtons(0);
         createInventoryItems(0);
         createAvatarPreview(myPlayerInfo);
         avatarPreview.setPosition(675, 250);
     }
+
+    uiScene.load = function(screen, loading, screenType) {
+        screen = uiScene.add.image(400, 260, screenType);
+        loading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+    }
+
+    uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
+        var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
+        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+
+        var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
+
+        setTimeout(function () {
+            idfoneLower = uiScene.add.image(400, 230, 'idfoneLower');
+            idfoneWallpaper = uiScene.add.image(400, 260, 'idfoneDefault');
+            idfoneUpper = uiScene.add.image(400, 260, 'idfoneUpper');
+            idfoneShadow = uiScene.add.image(400, 260, 'idfoneShadow');
+
+            tween = uiScene.tweens.add({
+                targets: idfoneLower,
+                x: 400,
+                y: 260,
+                ease: 'Linear',
+                duration: 300,
+            });
+
+            createAvatarPreview(playerInfo);
+            avatarPreview.setPosition(460, 200);
+
+            //titleLabelOutline = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFontOutline', fontSize: '14px', fill: "#743503" });
+            titleLabel = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFont', fontSize: '18px', fill: "#f5e51d" });
+            // usernameLabel.originX = 0.5;
+            levelLabel = uiScene.add.text(220, 320, "5", { fontFamily: 'titleFont', fontSize: '20px', fill: "#f5e51d" });
+
+            var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
+            closeIDFoneButton.setInteractive({ useHandCursor: true });
+
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading];
+
+            closeIDFoneButton.on('pointerdown', () => {
+                for (let i = 0; i < idfoneGroup.length; i++) {
+                    idfoneGroup[i].destroy();
+                }
+            })
+        }, 400);
+        
+        uiScene.input.manager.setCursor({ cursor: 'default' });
+        greyScreen.setInteractive({ useHandCursor: false });
+
+        // greyScreen.disableInteractive();
+        // idfoneLower.setInteractive();
+
+        uiBar.setDepth(0);
+        chatBar.setDepth(0);
+
+        // var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
+        // closeIDFoneButton.setInteractive({ useHandCursor: true });
+
+        // var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton];
+
+        // closeIDFoneButton.on('pointerdown', () => {
+        //     for (let i = 0; i < idfoneGroup.length; i++) {
+        //         idfoneGroup[i].destroy();
+        //     }
+        // })
+    }
+
+    this.anims.create({
+        key: 'inLoad',
+        frames: this.anims.generateFrameNumbers('inLoading'),
+        frameRate: 40,
+        repeat: -1
+    });
+
 }
-
-
 
 var inGame = new Phaser.Scene('GameScene');
 
@@ -693,8 +819,9 @@ inGame.preload = function() {
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
-        this.load.spritesheet('f-body-' + i.toString(), 'avatar/f-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
         this.load.spritesheet('m-body-' + i.toString(), 'avatar/m-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('m-face-' + i.toString(), 'avatar/m-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('f-body-' + i.toString(), 'avatar/f-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
         this.load.spritesheet('f-face-' + i.toString(), 'avatar/f-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
     }
     
@@ -711,14 +838,14 @@ inGame.preload = function() {
     // load items
 
     // load null items:
-    this.load.spritesheet('f-0--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-1--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-2--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-3--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-6--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-7--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-8--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-9--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    for (let i = 0; i < 10; i++) {
+        this.load.spritesheet('f-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+        this.load.spritesheet('m-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    }
+    this.load.spritesheet('f-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('f-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('m-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    this.load.spritesheet('m-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
     this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
 
     // load hairs & mannequins
@@ -812,13 +939,14 @@ var locationConfig = {
 inGame.create = function() {
     // Init Camera
     setCameraPosition(currentLocation);
-    loadLocation('downtown');
-
     this.scene.launch(uiScene);
-    
+    initLocation('downtown');
     // Load background
     bg = this.add.image(400, 260, 'downtownBg');
+    bg.setInteractive();
     bg.setDepth(-500);
+    this.input.setTopOnly(true);
+    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
 
     inGame.sound.pauseOnBlur = false;
 
@@ -845,16 +973,7 @@ inGame.create = function() {
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
-    function loadLocation(location) {
-        if (bgm)
-                bgm.destroy();
-
-        // need to create data object with location num objects, position, etc.
-        // for now asume dt and spawn shops
-        for (let i = 0; i < locationObjects.length; i++) {
-            locationObjects[i].destroy();
-        }
-        locationObjects = [];
+    function initLocation(location) {
 
         if (location == 'downtown') {
             bgm = inGame.sound.add('downtownBGM');
@@ -877,8 +996,13 @@ inGame.create = function() {
 
                 currentLocation = "topModels";
                 socket.emit('changeRoom', "topModels");
+
                 bg.destroy();
                 bg = inGame.add.image(430, 260, 'topModelsBg');
+                bg.setDepth(-500);
+                bg.setInteractive();
+                bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+
                 setCameraPosition(currentLocation);
                 loadLocation('topModels');
             });
@@ -887,60 +1011,106 @@ inGame.create = function() {
             });
             locationObjects.push(topModelsObject);
         }
-        else if (location == 'topModels') {
-            bgm = inGame.sound.add('topModelsLobbyBGM');
-            bgm.play();
-            bgm.setLoop(true);
+    }
 
-            var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
-            var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
-            var boa2 = inGame.add.sprite(220, 370, 'topModelsBoa2').play('boa1');
-            var boa1 = inGame.add.sprite(265, 365, 'topModelsBoa1').play('boa2');
-            var model = inGame.add.sprite(525, 355, 'topModelsModel').play('model');
-            var reporter1 = inGame.add.sprite(435, 343, 'topModelsReporter1').play('reporter1');
-            var reporter2 = inGame.add.sprite(350, 383, 'topModelsReporter2').play('reporter2');
-            var reporter3 = inGame.add.sprite(587, 335, 'topModelsReporter3').play('reporter3');
-            var plant = inGame.add.sprite(430, 260, 'topModelsPlant');
-            var rope1 = inGame.add.sprite(430, 260, 'topModelsRope1');
-            var rope2 = inGame.add.sprite(430, 260, 'topModelsRope2');
-            var desk = inGame.add.sprite(430, 260, 'topModelsDesk');
-            var chair = inGame.add.sprite(430, 260, 'topModelsChair');
-            // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
-            sean.setDepth(220);
-            boa1.setDepth(330);
-            boa2.setDepth(325);
-            model.setDepth(315);
-            reporter1.setDepth(303);
-            reporter2.setDepth(343);
-            reporter3.setDepth(295);
-            plant.setDepth(220);
-            rope1.setDepth(230);
-            rope2.setDepth(300);
-            desk.setDepth(380);
-            chair.setDepth(20);
+    function loadLocation(location) {
+        if (bgm)
+                bgm.destroy();
 
-            // topModelsObject.inputEnabled = true;
 
-            // topModelsObject.setInteractive({
-            //     pixelPerfect: true,
-            //     useHandCursor: true,
-            // });
+        var loadingScreen = uiScene.add.image(400, 260, 'loadingScreen');
+        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
-            // topModelsObject.on('pointerdown', () => {
-            //     console.log('poladot');
-
-            //     currentLocation = "topModels";
-            //     socket.emit('changeRoom', "topModels");
-            //     bg.destroy();
-            //     bg = inGame.add.image(430, 260, 'topModelsBg');
-            //     setCameraPosition(currentLocation);
-            // });
-            // topModelsObject.on('pointerup', () => {
-            //     disableInput = false;
-            // });
-
-            locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
+        for (let i = 0; i < locationObjects.length; i++) {
+            locationObjects[i].destroy();
         }
+        locationObjects = [];
+
+        setTimeout(function () {
+            if (location == 'downtown') {
+                bgm = inGame.sound.add('downtownBGM');
+                bgm.play();
+                bgm.setLoop(true);
+    
+                var topModelsObject = inGame.add.image(1317, 179, 'topModelsObject');
+                topModelsObject.setDepth(179);
+                topModelsObject.inputEnabled = true;
+    
+                topModelsObject.setInteractive({
+                    pixelPerfect: true,
+                    useHandCursor: true,
+                });
+    
+                // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
+    
+                topModelsObject.on('pointerdown', () => {
+                    console.log('poladot');
+    
+                    currentLocation = "topModels";
+                    socket.emit('changeRoom', "topModels");
+    
+                    bg.destroy();
+                    bg = inGame.add.image(430, 260, 'topModelsBg');
+                    bg.setDepth(-500);
+                    bg.setInteractive();
+                    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+    
+                    setCameraPosition(currentLocation);
+                    loadLocation('topModels');
+                });
+                topModelsObject.on('pointerup', () => {
+                    disableInput = false;
+                });
+                locationObjects.push(topModelsObject);
+            }
+            else if (location == 'topModels') {
+                bgm = inGame.sound.add('topModelsLobbyBGM');
+                bgm.play();
+                bgm.setLoop(true);
+    
+                var sean = inGame.add.sprite(380, 260, 'topModelsSean').play('sean');
+                var fan = inGame.add.sprite(230, 265, 'topModelsFan').play('fan');
+                var boa2 = inGame.add.sprite(220, 370, 'topModelsBoa2').play('boa1');
+                var boa1 = inGame.add.sprite(265, 365, 'topModelsBoa1').play('boa2');
+                var model = inGame.add.sprite(525, 355, 'topModelsModel').play('model');
+                var reporter1 = inGame.add.sprite(435, 343, 'topModelsReporter1').play('reporter1');
+                var reporter2 = inGame.add.sprite(350, 383, 'topModelsReporter2').play('reporter2');
+                var reporter3 = inGame.add.sprite(587, 335, 'topModelsReporter3').play('reporter3');
+                var plant = inGame.add.sprite(430, 260, 'topModelsPlant');
+                var rope1 = inGame.add.sprite(430, 260, 'topModelsRope1');
+                var rope2 = inGame.add.sprite(430, 260, 'topModelsRope2');
+                var desk = inGame.add.sprite(430, 260, 'topModelsDesk');
+                var chair = inGame.add.sprite(430, 260, 'topModelsChair');
+                // var door = inGame.add.sprite(380, 260, 'topModelsDoor');
+
+                // var tmObjects = [sean, fan, boa2, boa1, model, reporter1, reporter2, reporter3, plant, rope1, rope2, desk, chair];
+                // for (let i = 0; i < tmObjects.length; i++) {
+                //     console.log(tmObjects);
+                // }
+                // sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
+                // plant.setInteractive();
+
+
+                sean.setDepth(220);
+                boa1.setDepth(330);
+                boa2.setDepth(325);
+                model.setDepth(315);
+                reporter1.setDepth(303);
+                reporter2.setDepth(343);
+                reporter3.setDepth(295);
+                plant.setDepth(220);
+                rope1.setDepth(230);
+                rope2.setDepth(300);
+                desk.setDepth(380);
+                chair.setDepth(20);
+    
+                locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
+            }
+            loadingScreen.destroy();
+            inLoading.destroy();
+        }, 1000);
+
+        
     }
 
     // set camera position based on location
@@ -996,6 +1166,12 @@ inGame.create = function() {
         container.setSize(300, 250);
 
         container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
+        
+        for (let i =0; i < 17; i++) {
+            console.log(i + ", " + JSON.stringify(container.getAt(i)));
+        }
+
+        //container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
 
         container.setDepth(container.y);
@@ -1006,11 +1182,24 @@ inGame.create = function() {
         container.setData('eyeType', playerInfo.avatar['eyeType']);
         container.setData('gender', playerInfo.avatar['gender']);
         container.setData('equipped', playerInfo.avatar['equipped']);
+
+        var children = container.getAll();
+        for (let i = 0; i < children.length - 2; i ++) {
+            children[i].setInteractive({
+                pixelPerfect: true,
+                useHandCursor: true,
+            });
+
+            children[i].on('pointerdown', () => {
+                inGame.input.stopPropagation();
+                uiScene.openIDFone(true, playerInfo);
+            });
+        }
     }
 
     function addOtherPlayers(playerInfo) {
         
-        const otherEyes = inGame.add.sprite(0, 0, myPlayerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
+        const otherEyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
         const otherLips = inGame.add.sprite(0, 0, 'lips-0');
         var otherFaceAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
         const otherBoardLower = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
@@ -1019,10 +1208,10 @@ inGame.create = function() {
         const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
         var otherHeadAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
         const otherPlayer = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-body-' + playerInfo.avatar['skinTone']);
-        const otherShoes = inGame.add.sprite(0, 0, 'f-4-' + playerInfo.avatar['equipped'][4]);
+        const otherShoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-4-' + playerInfo.avatar['equipped'][4]);
         var otherBottomItem, otherTopItem;
-        otherBottomItem = inGame.add.sprite(0, 0, 'f-2-' + playerInfo.avatar['equipped'][2]);
-        otherTopItem = inGame.add.sprite(0, 0, 'f-1-' + playerInfo.avatar['equipped'][1]);
+        otherBottomItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        otherTopItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
 
         var otherOutfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         var otherCostume = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
@@ -1067,10 +1256,22 @@ inGame.create = function() {
         otherContainer.setData('gender', playerInfo.avatar['gender']);
         otherContainer.setData('equipped', playerInfo.avatar['equipped']);
         otherContainer.setData('messageData', { hasMessage: false, otherChatBubble: null, otherChatMessage: null, otherBubbleLifeTime: null, otherMessageLifeTime: null });
-
+        
         otherContainer.id = playerInfo.id;
 
         otherPlayers.add(otherContainer);
+
+        var children = otherContainer.getAll();
+        for (let i = 0; i < children.length - 2; i ++) {
+            children[i].setInteractive({
+                pixelPerfect: true,
+                useHandCursor: true,
+            });
+
+            children[i].on('pointerdown', () => {
+                uiScene.openIDFone(false, playerInfo);
+            });
+        }
       }
 
     globalThis.socket.emit('game loaded');
@@ -1459,10 +1660,11 @@ inGame.create = function() {
       });
     //#endregion
 
-    
-    this.input.on('pointerdown', function (pointer) {
+    function clickMovement(pointer) {
+        console.log("Clicked on bg");
+        
         if (disableInput) return;
-        console.log("POINTER IS DOWN");
+        
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
         globalInputChat.blur();
@@ -1470,20 +1672,7 @@ inGame.create = function() {
         globalPointer.x = pointer.x + clickOffsetX;
         globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
-        // moveXY(pointer.x, pointer.y - clickOffsetY);
-    });
-    // EXAMPLE
-    // var tempNamespace = {};
-    // var myString = "crystal";
-
-    // tempNamespace[myString] = this.add.sprite(400, 260, 'body-0');;
-
-    // tempNamespace[myString].play('body-0-jump');
-
-    // this.physics.world.on('worldbounds', function() {
-    //     stopMoving = true;
-    //     container.body.setVelocity(0);
-    // });
+    }
 }
 
 var tween;
@@ -1657,9 +1846,9 @@ inGame.update = function() {
                 container.getAt(cMap.player).play(myPlayerInfo.avatar.gender + '-body-' + container.getData('skinTone') + '-wave');
 
                 if (container.getData('equipped')[3] === -1)
-                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-wave');
+                    container.getAt(cMap.top).play(myPlayerInfo.avatar['gender']  + '-1-' + container.getData('equipped')[1] + '-wave');
                 else
-                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-wave');
+                    container.getAt(cMap.outfit).play(myPlayerInfo.avatar['gender']  + '-3-' + container.getData('equipped')[3] + '-wave');
                     
                 container.getAt(cMap.lips).play('lips-0-wave');
             }
@@ -1671,14 +1860,14 @@ inGame.update = function() {
                 container.getAt(cMap.player).play(myPlayerInfo.avatar['gender'] + '-body-' + container.getData('skinTone') + '-cry');
                 container.getAt(cMap.head).play(myPlayerInfo.avatar['gender']  + '-face-' + container.getData('skinTone') + '-cry');
                 container.getAt(cMap.eyes).play(myPlayerInfo.avatar['gender'] + '-eyes-' + container.getData('eyeType') + '-cry');
-                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-2-cry');
-                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-1-cry');
+                container.getAt(cMap.hairLower).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-2-cry');
+                container.getAt(cMap.hairUpper).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-1-cry');
                 container.getAt(cMap.brow).play('brow-0-cry');
 
                 if (container.getData('equipped')[3] === -1)
-                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-cry');
+                    container.getAt(cMap.top).play(myPlayerInfo.avatar['gender']  + '-1-' + container.getData('equipped')[1] + '-cry');
                 else
-                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-cry');
+                    container.getAt(cMap.outfit).play(myPlayerInfo.avatar['gender']  + '-3-' + container.getData('equipped')[3] + '-cry');
             }
         }
 
@@ -1689,17 +1878,17 @@ inGame.update = function() {
                 container.getAt(cMap.head).play(myPlayerInfo.avatar['gender']  + '-face-' + container.getData('skinTone') + '-jump');
                 container.getAt(cMap.eyes).play(myPlayerInfo.avatar['gender'] + '-eyes-' + container.getData('eyeType') + '-jump');
                 container.getAt(cMap.lips).play('lips-0-jump');
-                container.getAt(cMap.hairLower).play('f-0-' + container.getData('equipped')[0] + '-2-jump');
-                container.getAt(cMap.hairUpper).play('f-0-' + container.getData('equipped')[0] + '-1-jump');
+                container.getAt(cMap.hairLower).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-2-jump');
+                container.getAt(cMap.hairUpper).play(myPlayerInfo.avatar['gender']  + '-0-' + container.getData('equipped')[0] + '-1-jump');
                 container.getAt(cMap.brow).play('brow-0-jump');
 
                 if (container.getData('equipped')[3] === -1)
-                    container.getAt(cMap.top).play('f-1-' + container.getData('equipped')[1] + '-jump');
+                    container.getAt(cMap.top).play(myPlayerInfo.avatar['gender']  + '-1-' + container.getData('equipped')[1] + '-jump');
                 else
-                    container.getAt(cMap.outfit).play('f-3-' + container.getData('equipped')[3] + '-jump');
+                    container.getAt(cMap.outfit).play(myPlayerInfo.avatar['gender']  + '-3-' + container.getData('equipped')[3] + '-jump');
                 
-                container.getAt(cMap.bottom).play('f-2-' + container.getData('equipped')[2] + '-jump');
-                container.getAt(cMap.shoes).play('f-4-' + container.getData('equipped')[4] + '-jump');
+                container.getAt(cMap.bottom).play(myPlayerInfo.avatar['gender']  + '-2-' + container.getData('equipped')[2] + '-jump');
+                container.getAt(cMap.shoes).play(myPlayerInfo.avatar['gender']  + '-4-' + container.getData('equipped')[4] + '-jump');
             }
         }
 
