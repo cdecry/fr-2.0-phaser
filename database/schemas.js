@@ -14,8 +14,34 @@ const userSchema = new mongoose.Schema({
     stars: Number,
     ecoins: Number,
     level: Number,
-    inventory: [Number],    // list of numeriocal ids corres. to itemIds
+    isMember: Boolean,
+    inventory: Object,    // list of inventoryItems
+    // new
+    buddies: Object,      // list of buddy names
+    idfone: Object,
 });
+
+// idfone Object:
+/*
+{
+    skin: 0,
+    stickerPages: [ {
+        stickerId: 12,
+        x: 100,
+        y: 60,
+        flipX: false,
+        givenBy: "bobbyBob123",
+        date: "04/28/2023"
+    }
+    medals: [ {
+        medalId: 3, // name and title retrieved by medalId (client side)
+        level: 15,
+        points: 236,
+        nextLevel: 240,
+    }]
+}
+*/
+
 
 const avatarSchema = new mongoose.Schema({
     id: Number,         // avatarId
@@ -27,7 +53,8 @@ const avatarSchema = new mongoose.Schema({
 });
 
 const itemSchema = new mongoose.Schema({
-    id: Number,             // itemId
+    itemId: Number,             // itemid
+    id: Number,             // itemtype id
     type: Number,           /*  0 - Hair
                                 1 - Top
                                 2 - Bottom
@@ -37,6 +64,7 @@ const itemSchema = new mongoose.Schema({
                                 6 - Head Acc.
                                 7 - Face Acc.
                                 8 - Body Acc.
+                                9 - Costumes
                             */
     gender: String,
     name: String,
@@ -49,6 +77,7 @@ const itemSchema = new mongoose.Schema({
                                 ...
                             */
     rarePoints: Number,
+    membership: Boolean,
 });
 
 exports.User = mongoose.model('User', userSchema);

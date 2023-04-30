@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: cf13a3de802ef48b6aed9b4e2bffd3b5
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Stereofidelic
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 9d2bf8d435cfc4e2eb3c90b1701dd436, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

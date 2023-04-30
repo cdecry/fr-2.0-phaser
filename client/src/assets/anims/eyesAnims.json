@@ -1,11 +1,17 @@
 {
 	"skins"	:	[
-		"eyes-0",
-        "eyes-1",
-        "eyes-2",
-        "eyes-3",
-        "eyes-4",
-        "eyes-5"
+		"f-eyes-0",
+        "f-eyes-1",
+        "f-eyes-2",
+        "f-eyes-3",
+        "f-eyes-4",
+        "f-eyes-5",
+        "m-eyes-0",
+        "m-eyes-1",
+        "m-eyes-2",
+        "m-eyes-3",
+        "m-eyes-4",
+        "m-eyes-5"
 	],
 	
 	"keys"	: [
