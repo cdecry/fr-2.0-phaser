@@ -2,14 +2,16 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem, updateInventory, changeEquipped, getUserAvatar, changeEyeType, addToInventory, getItem } = require("./queries");
+const { userMigration} = require("./migrations");
 
 main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
-    for (let i = 0; i < 9; i++) {
-        await addToInventory(0, 2, i, false);
-    }
+    // await userMigration();
+    // for (let i = 0; i < 9; i++) {
+    //     await addToInventory(0, 2, i, false);
+    // }
     // await addToInventory(0, 2, 13, false);
     // await addToInventory(0, 3, 10, false);
     // await addToInventory(0, 1, 15, false);
@@ -20,7 +22,7 @@ async function main() {
     // var newId = await getNumberOfUsers();
     // await registerUser(newId, 'jake', '123', 'm');
     // await addAvatar(newId, newId, 'm', 1, 0, [0, 0, 0, -1, 0, 0, -1, -1, -1, -1]);
-    await changeEquipped(2, [-1, -1, -1, -1, -1, 3, -1, -1, -1]);
+    //await changeEquipped(2, [-1, -1, -1, -1, -1, 3, -1, -1, -1]);
 
     
 
