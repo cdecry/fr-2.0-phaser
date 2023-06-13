@@ -270,6 +270,11 @@ uiScene.preload = function() {
     this.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
     this.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
     this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
+    this.load.image('idfoneBevel', 'scene/ui/idfone/idfoneBevel.png');
+    this.load.image('idfoneBevelBalance', 'scene/ui/idfone/idfoneBevelBalance.png');
+
+    this.load.image('idfoneBlueStar', 'scene/ui/idfone/idfoneBlueStar.png');
+    this.load.image('idfoneMemberBadge', 'scene/ui/idfone/idfoneMemberBadge.png');
 
     this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
     this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
@@ -703,7 +708,6 @@ uiScene.create = function() {
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
         var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
         var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
-
         var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
 
         setTimeout(function () {
@@ -721,30 +725,60 @@ uiScene.create = function() {
             });
 
             createAvatarPreview(playerInfo);
-            avatarPreview.setPosition(460, 200);
+            avatarPreview.setPosition(460, 190);
 
-            titleLabel = uiScene.add.dom(200, 120).createFromCache('gameText');
+            idfoneBlueStar = uiScene.add.image(180, 141, 'idfoneBlueStar');
+
+            titleLabel = uiScene.add.dom(220, 123).createFromCache('gameText');
             titleLabelText = titleLabel.getChildByID('text');
-            titleLabelText.innerHTML = "fantage rookie";
+            titleLabelText.innerHTML = playerInfo.idfone.title;
             titleLabelText.className = "titleLabelStyle"
 
-            levelLabel = uiScene.add.dom(200, 300).createFromCache('gameText');
-            levelLabelText = levelLabel.getChildByID('text');
-            levelLabelText.innerHTML = "7";
-            levelLabelText.className = "levelLabelStyle"
+            idfoneUserLabel = uiScene.add.dom(220, 148).createFromCache('gameText');
+            idfoneUserLabelText = idfoneUserLabel.getChildByID('text');
+            idfoneUserLabelText.innerHTML = playerInfo.username;
+            idfoneUserLabelText.className = "idFoneUsernameLabelStyle"
 
-            idFoneUserLabel = uiScene.add.dom(200, 145).createFromCache('gameText');
-            idFoneUserLabelText = idFoneUserLabel.getChildByID('text');
-            idFoneUserLabelText.innerHTML = playerInfo.username;
-            idFoneUserLabelText.className = "idFoneUsernameLabelStyle"
+            var idfoneBevel, starBalanceLabel, ecoinBalanceLabel;
+            if (isLocalPlayer) {
+                idfoneBevel = uiScene.add.image(400, 260, 'idfoneBevelBalance');
+
+                starBalanceLabel = uiScene.add.dom(390, 332).createFromCache('gameText');
+                starBalanceLabelText = starBalanceLabel.getChildByID('text');
+                starBalanceLabelText.innerHTML = "Balance: " + playerInfo.stars.toString();
+                starBalanceLabelText.className = "balanceLabelStyle"
+
+                ecoinBalanceLabel = uiScene.add.dom(390, 347).createFromCache('gameText');
+                ecoinBalanceLabelText = ecoinBalanceLabel.getChildByID('text');
+                ecoinBalanceLabelText.innerHTML = "Balance: " + playerInfo.ecoins.toString();
+                ecoinBalanceLabelText.className = "balanceLabelStyle"
+            }
+            else
+                idfoneBevel = uiScene.add.image(400, 260, 'idfoneBevel');
+
+            levelLabelLabel = uiScene.add.dom(185, 328).createFromCache('gameText');
+            levelLabelLabelText = levelLabelLabel.getChildByID('text');
+            levelLabelLabelText.innerHTML = "Level :";
+            levelLabelLabelText.className = "levelLabelLabelStyle"
+
+            levelLabel = uiScene.add.dom(250, 322).createFromCache('gameText');
+            levelLabelText = levelLabel.getChildByID('text');
+            levelLabelText.innerHTML = playerInfo.level;
+            levelLabelText.className = "levelLabelStyle"
+            
+            if (playerInfo.isMember) {
+                console.log("member");
+            }
 
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
 
-            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading];
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel];
 
             closeIDFoneButton.on('pointerdown', () => {
                 for (let i = 0; i < idfoneGroup.length; i++) {
+                    if (!idfoneGroup[i])
+                        continue
                     idfoneGroup[i].destroy();
                 }
             })
