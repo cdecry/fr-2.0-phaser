@@ -242,9 +242,9 @@ uiScene.init = function()
     document.head.appendChild(element);
 
     var sheet = element.sheet;
-    var styles = '@font-face { font-family: "titleFontOutline"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_bld.otf") format("opentype"); }\n';
+    var styles = '@font-face { font-family: "titleFont"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_bld.otf") format("opentype"); }\n';
     sheet.insertRule(styles, 0);
-    var styles = '@font-face { font-family: "titleFont"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_ital.otf") format("opentype"); }\n';
+    var styles = '@font-face { font-family: "idFoneUserFont"; src: url("src/assets/fonts/VAG Rounded Bold.ttf") format("truetype"); }\n';
     sheet.insertRule(styles, 0);
 }
 
@@ -270,6 +270,11 @@ uiScene.preload = function() {
     this.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
     this.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
     this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
+    this.load.image('idfoneBevel', 'scene/ui/idfone/idfoneBevel.png');
+    this.load.image('idfoneBevelBalance', 'scene/ui/idfone/idfoneBevelBalance.png');
+
+    this.load.image('idfoneBlueStar', 'scene/ui/idfone/idfoneBlueStar.png');
+    this.load.image('idfoneMemberBadge', 'scene/ui/idfone/idfoneMemberBadge.png');
 
     this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
     this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
@@ -703,7 +708,6 @@ uiScene.create = function() {
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
         var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
         var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
-
         var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
 
         setTimeout(function () {
@@ -721,20 +725,60 @@ uiScene.create = function() {
             });
 
             createAvatarPreview(playerInfo);
-            avatarPreview.setPosition(460, 200);
+            avatarPreview.setPosition(460, 190);
 
-            //titleLabelOutline = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFontOutline', fontSize: '14px', fill: "#743503" });
-            titleLabel = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFont', fontSize: '18px', fill: "#f5e51d" });
-            // usernameLabel.originX = 0.5;
-            levelLabel = uiScene.add.text(220, 320, "5", { fontFamily: 'titleFont', fontSize: '20px', fill: "#f5e51d" });
+            idfoneBlueStar = uiScene.add.image(180, 141, 'idfoneBlueStar');
+
+            titleLabel = uiScene.add.dom(220, 123).createFromCache('gameText');
+            titleLabelText = titleLabel.getChildByID('text');
+            titleLabelText.innerHTML = playerInfo.idfone.title;
+            titleLabelText.className = "titleLabelStyle"
+
+            idfoneUserLabel = uiScene.add.dom(220, 148).createFromCache('gameText');
+            idfoneUserLabelText = idfoneUserLabel.getChildByID('text');
+            idfoneUserLabelText.innerHTML = playerInfo.username;
+            idfoneUserLabelText.className = "idFoneUsernameLabelStyle"
+
+            var idfoneBevel, starBalanceLabel, ecoinBalanceLabel;
+            if (isLocalPlayer) {
+                idfoneBevel = uiScene.add.image(400, 260, 'idfoneBevelBalance');
+
+                starBalanceLabel = uiScene.add.dom(390, 332).createFromCache('gameText');
+                starBalanceLabelText = starBalanceLabel.getChildByID('text');
+                starBalanceLabelText.innerHTML = "Balance: " + playerInfo.stars.toString();
+                starBalanceLabelText.className = "balanceLabelStyle"
+
+                ecoinBalanceLabel = uiScene.add.dom(390, 347).createFromCache('gameText');
+                ecoinBalanceLabelText = ecoinBalanceLabel.getChildByID('text');
+                ecoinBalanceLabelText.innerHTML = "Balance: " + playerInfo.ecoins.toString();
+                ecoinBalanceLabelText.className = "balanceLabelStyle"
+            }
+            else
+                idfoneBevel = uiScene.add.image(400, 260, 'idfoneBevel');
+
+            levelLabelLabel = uiScene.add.dom(185, 328).createFromCache('gameText');
+            levelLabelLabelText = levelLabelLabel.getChildByID('text');
+            levelLabelLabelText.innerHTML = "Level :";
+            levelLabelLabelText.className = "levelLabelLabelStyle"
+
+            levelLabel = uiScene.add.dom(250, 322).createFromCache('gameText');
+            levelLabelText = levelLabel.getChildByID('text');
+            levelLabelText.innerHTML = playerInfo.level;
+            levelLabelText.className = "levelLabelStyle"
+            
+            if (playerInfo.isMember) {
+                console.log("member");
+            }
 
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
 
-            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading];
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel];
 
             closeIDFoneButton.on('pointerdown', () => {
                 for (let i = 0; i < idfoneGroup.length; i++) {
+                    if (!idfoneGroup[i])
+                        continue
                     idfoneGroup[i].destroy();
                 }
             })
@@ -790,6 +834,8 @@ inGame.preload = function() {
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
     
+    this.load.html('gameText', 'html/text.html');
+
     // Load locations and objects
     this.load.image('downtownBg', 'scene/location/downtown/downtown.png');
     this.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
