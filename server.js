@@ -52,7 +52,7 @@ io.on('connection', function (socket) {
             const avatar = await getUserAvatar(result.id);
 
             // add player to our list of online players
-            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory);
+            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins);
             players[socket.id] = player;
 
             // add player to room list
@@ -174,6 +174,10 @@ io.on('connection', function (socket) {
         // update player avatar database
         await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
 
+    })
+
+    socket.on('chatMessage', function(msg) {
+        socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
     })
 
 });
