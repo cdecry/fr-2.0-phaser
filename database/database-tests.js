@@ -20,13 +20,18 @@ async function main() {
     //await changeEquipped(0, [0, 15, 13, -1, 2, 0, -1, -1, -1, -1]);
     // REGISTER USER
     // var newId = await getNumberOfUsers();
-    // await registerUser(newId, 'jake', '123', 'm');
-    // await addAvatar(newId, newId, 'm', 1, 0, [0, 0, 0, -1, 0, 0, -1, -1, -1, -1]);
+    // await registerUser(newId, 'girl0416', '123', 'f');
+    // await addAvatar(newId, newId, 'f', 1, 1, [8, 6, 2, -1, 2, 0, -1, -1, -1, -1]);
     //await changeEquipped(2, [-1, -1, -1, -1, -1, 3, -1, -1, -1]);
 
     
 
-    // await addToInventory(0, 0, 0, false);
+    // await addToInventory(2, 5, 3, false);
+    // await addToInventory(2, 5, 4, true);
+    // await addToInventory(newId, 1, 7, false);
+    // await addToInventory(newId, 2, 2, false);
+    // await addToInventory(newId, 4, 4, false);
+    // await addToInventory(newId, 5, 3, false);
 
     // await addItem(0, 0, 0, 'f', 'Sidebang w/Ribbon', 'Ribbons can make anyone look pretty!', 100, 100, 0, 0, 0, false);
     // await changeEquipped(0, [0, -1, -1, 10, 2, 0, -1, -1, -1]);

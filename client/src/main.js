@@ -242,9 +242,9 @@ uiScene.init = function()
     document.head.appendChild(element);
 
     var sheet = element.sheet;
-    var styles = '@font-face { font-family: "titleFontOutline"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_bld.otf") format("opentype"); }\n';
+    var styles = '@font-face { font-family: "titleFont"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_bld.otf") format("opentype"); }\n';
     sheet.insertRule(styles, 0);
-    var styles = '@font-face { font-family: "titleFont"; src: url("src/assets/fonts/anime_ace_bb/animeace2bb_ot/animeace2_ital.otf") format("opentype"); }\n';
+    var styles = '@font-face { font-family: "idFoneUserFont"; src: url("src/assets/fonts/VAG Rounded Bold.ttf") format("truetype"); }\n';
     sheet.insertRule(styles, 0);
 }
 
@@ -723,10 +723,20 @@ uiScene.create = function() {
             createAvatarPreview(playerInfo);
             avatarPreview.setPosition(460, 200);
 
-            //titleLabelOutline = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFontOutline', fontSize: '14px', fill: "#743503" });
-            titleLabel = uiScene.add.text(200, 120, "fantage rookie", { fontFamily: 'titleFont', fontSize: '18px', fill: "#f5e51d" });
-            // usernameLabel.originX = 0.5;
-            levelLabel = uiScene.add.text(220, 320, "5", { fontFamily: 'titleFont', fontSize: '20px', fill: "#f5e51d" });
+            titleLabel = uiScene.add.dom(200, 120).createFromCache('gameText');
+            titleLabelText = titleLabel.getChildByID('text');
+            titleLabelText.innerHTML = "fantage rookie";
+            titleLabelText.className = "titleLabelStyle"
+
+            levelLabel = uiScene.add.dom(200, 300).createFromCache('gameText');
+            levelLabelText = levelLabel.getChildByID('text');
+            levelLabelText.innerHTML = "7";
+            levelLabelText.className = "levelLabelStyle"
+
+            idFoneUserLabel = uiScene.add.dom(200, 145).createFromCache('gameText');
+            idFoneUserLabelText = idFoneUserLabel.getChildByID('text');
+            idFoneUserLabelText.innerHTML = playerInfo.username;
+            idFoneUserLabelText.className = "idFoneUsernameLabelStyle"
 
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
@@ -790,6 +800,8 @@ inGame.preload = function() {
 
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
     
+    this.load.html('gameText', 'html/text.html');
+
     // Load locations and objects
     this.load.image('downtownBg', 'scene/location/downtown/downtown.png');
     this.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
