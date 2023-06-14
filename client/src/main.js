@@ -255,7 +255,9 @@ uiScene.preload = function() {
     this.load.html('messageWidth', 'html/messagewidth.html');
     this.load.html('chatMessageHTML', 'html/chatmessage.html');
     this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    this.load.html('transparentHTML', 'html/transparent.html');
     this.load.image('uiBar', 'scene/chat/ui-bar.png');
+    
     // Load inventory ui
     this.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
     this.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
@@ -345,6 +347,9 @@ uiScene.create = function() {
     var inventoryUI = this.add.dom(0,0).createFromCache('inventoryUI');
     var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
     
+    transparentScreen = uiScene.add.dom(0, 0).createFromCache('transparentHTML');
+    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+
     inventory.setDepth(1000);
     inventory.setVisible(false);
     inventoryUI.setVisible(false);
@@ -388,7 +393,6 @@ uiScene.create = function() {
         isTyping = true;
       });
 
-    this.input.setTopOnly(true);
     chatBar.addListener('pointerdown');
     chatBar.on('pointerdown', function (event) {
         uiScene.input.stopPropagation();
@@ -562,53 +566,69 @@ uiScene.create = function() {
         }
         else if (event.target.id === 'buddiesButton') {
 
-            
-
-            // the html dom element
             instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
+            instantMessenger.setDepth(100);
+            
             var imWindow = instantMessenger.getChildByID('im-window');
-
-            // set the initial location of the div to be dragged
-            imWindow.style.top = '50px';
-            imWindow.style.left = '100px';
-
-            var diffX = 0, diffY = 0, currX = 0, currY = 0;
-
             var imHeader = instantMessenger.getChildByID('im-header');
-            imHeader.onmousedown = dragMouseDown;
+            
+            enableDivDrag(instantMessenger, imHeader, imWindow);
 
-            function dragMouseDown(e) {
-                isMouseDown = true;
-                e.preventDefault();
-
-                currX = e.clientX;
-                currY = e.clientY;
+            // enabled drag for divs: divHandle is the part of the div to move it by,
+            // divToMove is the whole div we want to move on drag
+            function enableDivDrag(domElement, divHandle, divToMove) {
+                isMouseDown = false;
                 
-                // bg is just a game object that takes up the whole screen so easier to detect mouseup
-                bg.on('pointerup', function(pointer, x, y, event) {
-                    isMouseDown = false;
-                })
+                transparentScreen.addListener('pointerup');
+                transparentScreen.addListener('pointermove');
 
-                instantMessenger.addListener('pointermove');
-                instantMessenger.on('pointermove', function(pointer, x, y, event) {
+                transparentScreen.on('pointerup', function() {
+                    isMouseDown = false;
+                    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+                })
+                transparentScreen.on('pointermove', function(pointer, x, y, event) {
                     if (isMouseDown)
                         dragIM(pointer);
                 })
-            }
 
-            function dragIM(ptr) {
-                diffX = ptr.x - currX;
-                diffY = ptr.y - currY;
-                currX = ptr.x;
-                currY = ptr.y;
+                domElement.addListener('pointerup');
+                domElement.on('pointerup', function() {
+                    isMouseDown = false;
+                    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+                })
+                domElement.addListener('pointermove');
+                domElement.on('pointermove', function(pointer, x, y, event) {
+                    if (isMouseDown)
+                        dragIM(pointer);
+                })
 
-                currTop = parseInt(imWindow.style.top.slice(0, -2));
-                currLeft = parseInt(imWindow.style.left.slice(0, -2));
+                divToMove.style.top = '50px';
+                divToMove.style.left = '100px';
+                var diffX = 0, diffY = 0, currX = 0, currY = 0;
+                divHandle.onmousedown = dragMouseDown;
 
-                imWindow.style.top = (currTop + diffY).toString() + 'px';
-                imWindow.style.left = (currLeft + diffX).toString() + 'px';
+                function dragMouseDown(e) {
+                    isMouseDown = true;
+                    transparentScreen.getChildByID('screen').style.visibility = 'visible';
+
+                    currX = e.clientX;
+                    currY = e.clientY;
+                }
+
+                function dragIM(ptr) {
+                    diffX = ptr.x - currX;
+                    diffY = ptr.y - currY;
+                    currX = ptr.x;
+                    currY = ptr.y;
+
+                    currTop = parseInt(divToMove.style.top.slice(0, -2));
+                    currLeft = parseInt(divToMove.style.left.slice(0, -2));
+                    divToMove.style.top = (currTop + diffY).toString() + 'px';
+                    divToMove.style.left = (currLeft + diffX).toString() + 'px';
+                }
             }
         }
+        
     });
 
     // Define variables for the grid layout
@@ -887,6 +907,7 @@ inGame.preload = function() {
     this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
     
     this.load.html('gameText', 'html/text.html');
+    this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
 
     // Load locations and objects
     this.load.image('downtownBg', 'scene/location/downtown/downtown.png');
@@ -1039,13 +1060,14 @@ inGame.create = function() {
     setCameraPosition(currentLocation);
     this.scene.launch(uiScene);
     initLocation('downtown');
+
     // Load background
     bg = this.add.image(400, 260, 'downtownBg');
     bg.setInteractive();
     bg.setDepth(-500);
+
     this.input.setTopOnly(true);
     bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-
     inGame.sound.pauseOnBlur = false;
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
