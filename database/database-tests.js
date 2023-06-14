@@ -7,7 +7,7 @@ const { userMigration} = require("./migrations");
 main().catch(err => console.log(err));
 
 async function main() {
-    await mongoose.connect('');
+    await mongoose.connect(process.env.DB_URI);
     // await userMigration();
     // for (let i = 0; i < 9; i++) {
     //     await addToInventory(0, 2, i, false);
