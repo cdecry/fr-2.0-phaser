@@ -26,6 +26,11 @@
                 height: 34px;
                 background-color: transparent;
             }
+/* 
+            #im-header:hover {
+                background-color: red;
+            } */
+
 
             #im-title {
                 position: absolute;
@@ -134,29 +139,27 @@
         </style>
     </head>
     <body>
-       
-
         <div id="im-window">
             <div id="im-header"></div>
-            <img class="selectDisable" id="im-title" src="./src/assets/scene/instant-messager-title.png"/>
+            <img class="selectDisable" id="im-title" src="./src/assets/scene/chat/instant-messager-title.png"/>
             <div id="im-close-button">
-                <img class="selectDisable" src="./src/assets/scene/im-close-button.png"/>
+                <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
 
             <div id="im-container">
 
                 <div id="chat-tabs-container">
                     <div id="chat-tabs-flexbox">
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
+                        <div class="chat-tab"></div>
+                        <div class="chat-tab"></div>
+                        <div class="chat-tab"></div>
+                        <div class="chat-tab"></div>
                     </div>
 
-                    <img class="selectDisable" id="new-chat-icon" src="./src/assets/scene/new-chat-icon.png"/>
+                    <img class="selectDisable" id="new-chat-icon" src="./src/assets/scene/chat/new-chat-icon.png"/>
 
                     <div id="chat-tabs-bottom">
-                        <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat-icon.png"/>
+                        <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
                     </div>
                 </div>
 
@@ -166,6 +169,64 @@
                 <div id="chat-input-container"></div>
             </div>
         </div>
+
+        <!-- <script>
+            // make window draggable
+            dragElement(document.getElementById("im-window"));
+
+            function dragElement(elmnt) {
+                var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+                document.getElementById('im-header').onmousedown = dragMouseDown;
+
+                function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+
+                document.onmousemove = elementDrag;
+                }
+
+                function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                }
+
+                function closeDragElement() {
+
+                document.onmouseup = null;
+                document.onmousemove = null;
+                }
+            }
+
+            function clickChatTab(elmnt) {
+                const tabs = document.querySelectorAll('.chat-tab');
+                tabs.forEach(tab => {
+                    tab.style.background = 'white';
+                });
+                elmnt.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+            }
+       </script> -->
+        <!-- <script>
+            function clickChatTab(elmnt) {
+                const tabs = document.querySelectorAll('.chat-tab');
+                tabs.forEach(tab => {
+                    tab.style.background = 'white';
+                });
+                elmnt.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+            }
+        </script> -->
 
     </body>
 </html>

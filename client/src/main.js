@@ -263,7 +263,7 @@ uiScene.preload = function() {
     this.load.image('inventoryAccessoryTab', 'scene/ui/inventoryAccessoryTab.png');
     this.load.image('inventoryArrowUp', 'scene/ui/inventoryArrowUp.png');
     this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
-    this.load.html('inventoryButton', 'html/inventoryButton.html');
+    this.load.html('uiButtons', 'html/uiButtons.html');
     this.load.html('inventoryUI', 'html/inventoryUI.html');
     // Load IDFone ui
     this.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
@@ -343,7 +343,7 @@ uiScene.create = function() {
     var uiBar = this.add.image(400, 490, 'uiBar');
     var inventory = this.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = this.add.dom(0,0).createFromCache('inventoryUI');
-    var inventoryButton = this.add.dom(152, 490).createFromCache('inventoryButton');
+    var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
     
     inventory.setDepth(1000);
     inventory.setVisible(false);
@@ -411,151 +411,203 @@ uiScene.create = function() {
         }
     });
 
-    inventoryButton.addListener('click');
-    inventoryButton.on('click', function (event) {
+    var isMouseDown = false;
 
-        var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
-        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+    uiButtons.addListener('click');
+    uiButtons.on('click', function (event) {
+        if (event.target.id === 'inventoryButton') {
+            var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
+            var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
-        uiScene.input.manager.setCursor({ cursor: 'default' });
-        greyScreen.setInteractive({ useHandCursor: false });
+            uiScene.input.manager.setCursor({ cursor: 'default' });
+            greyScreen.setInteractive({ useHandCursor: false });
 
-        greyScreen.setDepth(1010);
-        inLoading.setDepth(1010);
+            greyScreen.setDepth(1010);
+            inLoading.setDepth(1010);
 
-        uiBar.setDepth(0);
-        chatBar.setDepth(0);
-        disableInput = true;
+            uiBar.setDepth(0);
+            chatBar.setDepth(0);
+            disableInput = true;
 
-        setTimeout(function () {
-            openInventory();
-        }, 400);
+            setTimeout(function () {
+                openInventory();
+            }, 400);
 
-        setTimeout(function () {
-            inLoading.destroy();
-            greyScreen.destroy();
-        }, 700);
-        function openInventory() {
-            inventory.setTexture('inventoryHairTab');
-            inventory.setVisible(true);
-            inventoryUI.setVisible(true);
-            uiBar.setVisible(false);
-            inventoryButton.setVisible(false);
-            chatBar.setVisible(false);
+            setTimeout(function () {
+                inLoading.destroy();
+                greyScreen.destroy();
+            }, 700);
+            function openInventory() {
+                inventory.setTexture('inventoryHairTab');
+                inventory.setVisible(true);
+                inventoryUI.setVisible(true);
+                uiBar.setVisible(false);
+                uiButtons.setVisible(false);
+                chatBar.setVisible(false);
 
-            loadInventory();
+                loadInventory();
 
-            inventoryUI.addListener('click');
-            inventoryUI.on('click', function (event) {
-                if (event.target.id === 'closeInventoryButton') {
-                    disableInput = false;
-                    inventoryButton.setVisible(true);
-                    chatBar.setVisible(true);
-                    uiBar.setVisible(true);
+                inventoryUI.addListener('click');
+                inventoryUI.on('click', function (event) {
+                    if (event.target.id === 'closeInventoryButton') {
+                        disableInput = false;
+                        uiButtons.setVisible(true);
+                        chatBar.setVisible(true);
+                        uiBar.setVisible(true);
 
-                    inventory.setVisible(false);
-                    inventoryUI.setVisible(false);
+                        inventory.setVisible(false);
+                        inventoryUI.setVisible(false);
 
-                    // hide loaded clothes, avatar preview
-                    inventoryItems.forEach(item => item.destroy());
-                    if (prevButton != null)
-                        prevButton.destroy();
-                    if (nextButton != null)
-                        nextButton.destroy();
+                        // hide loaded clothes, avatar preview
+                        inventoryItems.forEach(item => item.destroy());
+                        if (prevButton != null)
+                            prevButton.destroy();
+                        if (nextButton != null)
+                            nextButton.destroy();
 
-                    // Send request to equip all items on avatar preview:
-                    if (avatarPreview.getData('equipped') != null)
-                        globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
-                    
-                    avatarPreview.destroy();
-                }
-                else if (event.target.id === 'hairButton') {
-                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                    inventory.setTexture('inventoryHairTab');
-                    // hair
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(0);
-                    createInventoryItems(0);
-                }
-                else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
-                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
-                    inventory.setTexture('inventoryClothesTab');
-                    // default tops
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(1);
-                    createInventoryItems(1);
-                }
-                else if (event.target.id === 'bottomButton') {
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(2);
-                    createInventoryItems(2);
-                }
+                        // Send request to equip all items on avatar preview:
+                        if (avatarPreview.getData('equipped') != null)
+                            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
+                        
+                        avatarPreview.destroy();
+                    }
+                    else if (event.target.id === 'hairButton') {
+                        inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                        inventory.setTexture('inventoryHairTab');
+                        // hair
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(0);
+                        createInventoryItems(0);
+                    }
+                    else if (event.target.id === 'clothesButton' || event.target.id === 'topButton') {
+                        inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'visible';
+                        inventory.setTexture('inventoryClothesTab');
+                        // default tops
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(1);
+                        createInventoryItems(1);
+                    }
+                    else if (event.target.id === 'bottomButton') {
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(2);
+                        createInventoryItems(2);
+                    }
 
-                else if (event.target.id === 'outfitsButton') {
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(3);
-                    createInventoryItems(3);
-                }
+                    else if (event.target.id === 'outfitsButton') {
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(3);
+                        createInventoryItems(3);
+                    }
 
-                else if (event.target.id === 'costumesButton') {
-                    // FIX
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(1);
-                    createInventoryItems(1);
-                }
+                    else if (event.target.id === 'costumesButton') {
+                        // FIX
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(1);
+                        createInventoryItems(1);
+                    }
 
-                else if (event.target.id === 'shoesButton') {
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(4);
-                    createInventoryItems(4);
-                }
-                else if (event.target.id === 'boardButton') {
-                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                    inventory.setTexture('inventoryBoardTab');
-                    gridWidth = 4;
-                    gridHeight = 3;
-                    cellWidth = 124;
-                    cellHeight = 110;
-                    gridX = 100;
-                    createNavigationButtons(5);
-                    createInventoryItems(5);
-                }
-                else if (event.target.id === 'accessoryButton') {
-                    inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
-                    inventory.setTexture('inventoryAccessoryTab');
-                    gridWidth = 8;
-                    gridHeight = 3;
-                    cellWidth = 62;
-                    cellHeight = 110;
-                    gridX = 70;
-                    createNavigationButtons(7);
-                    createInventoryItems(7)
-                }
-            });
+                    else if (event.target.id === 'shoesButton') {
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(4);
+                        createInventoryItems(4);
+                    }
+                    else if (event.target.id === 'boardButton') {
+                        inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                        inventory.setTexture('inventoryBoardTab');
+                        gridWidth = 4;
+                        gridHeight = 3;
+                        cellWidth = 124;
+                        cellHeight = 110;
+                        gridX = 100;
+                        createNavigationButtons(5);
+                        createInventoryItems(5);
+                    }
+                    else if (event.target.id === 'accessoryButton') {
+                        inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
+                        inventory.setTexture('inventoryAccessoryTab');
+                        gridWidth = 8;
+                        gridHeight = 3;
+                        cellWidth = 62;
+                        cellHeight = 110;
+                        gridX = 70;
+                        createNavigationButtons(7);
+                        createInventoryItems(7)
+                    }
+                });
+            }
+        }
+        else if (event.target.id === 'buddiesButton') {
+
+            
+
+            // the html dom element
+            instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
+            var imWindow = instantMessenger.getChildByID('im-window');
+
+            // set the initial location of the div to be dragged
+            imWindow.style.top = '50px';
+            imWindow.style.left = '100px';
+
+            var diffX = 0, diffY = 0, currX = 0, currY = 0;
+
+            var imHeader = instantMessenger.getChildByID('im-header');
+            imHeader.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                isMouseDown = true;
+                e.preventDefault();
+
+                currX = e.clientX;
+                currY = e.clientY;
+                
+                // bg is just a game object that takes up the whole screen so easier to detect mouseup
+                bg.on('pointerup', function(pointer, x, y, event) {
+                    isMouseDown = false;
+                })
+
+                instantMessenger.addListener('pointermove');
+                instantMessenger.on('pointermove', function(pointer, x, y, event) {
+                    if (isMouseDown)
+                        dragIM(pointer);
+                })
+            }
+
+            function dragIM(ptr) {
+                diffX = ptr.x - currX;
+                diffY = ptr.y - currY;
+                currX = ptr.x;
+                currY = ptr.y;
+
+                currTop = parseInt(imWindow.style.top.slice(0, -2));
+                currLeft = parseInt(imWindow.style.left.slice(0, -2));
+
+                imWindow.style.top = (currTop + diffY).toString() + 'px';
+                imWindow.style.left = (currLeft + diffX).toString() + 'px';
+            }
         }
     });
 

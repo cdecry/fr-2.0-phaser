@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            @font-face {
+                font-family: VAG;
+                src: url("./src/assets/fonts/VAG Rounded Bold.ttf");
+            }
+
+            #leftButtons {
+                position: absolute;
+                align-items: left;
+                display: grid;
+                grid-auto-flow: column;
+                padding-left: 9px;
+                width: 175px;
+                height: 49px;
+                /* border: 1px solid red; */
+            }
+
+            #rightButtons {
+                position: absolute;
+                left: 625px;
+                align-items: right;
+                display: grid;
+                grid-auto-flow: column;
+                padding-right: 9px;
+                width: 175px;
+                height: 49px;
+                /* border: 1px solid red; */
+            }
+
+            /* #homeButton {
+                border: 1px solid red;
+            }
+            #worldMapButton {
+                border: 1px solid red;
+            }
+            #inventoryButton {
+                border: 1px solid red;
+            }
+
+            #buddiesButton {
+                border: 1px solid red;
+            }
+            #partyInvitesButton {
+                border: 1px solid red;
+            }
+            #settingsButton {
+                border: 1px solid red;
+            } */
+
+            button {
+                height: 48px;
+                width: 48px;
+                background-color: transparent;
+                border-radius: 10px;
+            }
+            button:active {
+                background-color: rgba(255, 255, 255, 0.25)
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="leftButtons">
+            <button id="homeButton"></button>
+            <button id="worldMapButton"></button>
+            <button id="inventoryButton"></button>
+        </div>
+
+        <div id="rightButtons">
+            <button id="buddiesButton"></button>
+            <button id="partyInvitesButton"></button>
+            <button id="settingsButton"></button>
+        </div>
+
+    </body>
+</html>

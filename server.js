@@ -18,7 +18,7 @@ const rooms = {};
 // connect to database
 main().catch(err => console.log(err));
 async function main() {
-    await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
+    await mongoose.connect(process.env.DB_URI);
 }
 
 // get files for client
