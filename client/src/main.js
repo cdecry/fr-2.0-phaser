@@ -346,7 +346,11 @@ uiScene.create = function() {
     var inventory = this.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = this.add.dom(0,0).createFromCache('inventoryUI');
     var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
-    
+    var imDiffX = 0, imDiffY = 0, imCurrX = 0, imCurrY = 0;
+    var instantMessenger, imHeader, imWindow;
+    var isClickUI = false;
+    var isMouseDownHandleIM = false;
+
     transparentScreen = uiScene.add.dom(0, 0).createFromCache('transparentHTML');
     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
 
@@ -415,8 +419,6 @@ uiScene.create = function() {
         }
     });
 
-    var isMouseDown = false;
-
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
         if (event.target.id === 'inventoryButton') {
@@ -442,6 +444,8 @@ uiScene.create = function() {
                 greyScreen.destroy();
             }, 700);
             function openInventory() {
+                isClickUI = true;
+
                 inventory.setTexture('inventoryHairTab');
                 inventory.setVisible(true);
                 inventoryUI.setVisible(true);
@@ -454,6 +458,8 @@ uiScene.create = function() {
                 inventoryUI.addListener('click');
                 inventoryUI.on('click', function (event) {
                     if (event.target.id === 'closeInventoryButton') {
+                        isClickUI = false;
+
                         disableInput = false;
                         uiButtons.setVisible(true);
                         chatBar.setVisible(true);
@@ -566,65 +572,84 @@ uiScene.create = function() {
         }
         else if (event.target.id === 'buddiesButton') {
 
+            if (instantMessenger != null) {
+                imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
+                imWindow.style.top = '50px';
+                imWindow.style.left = '100px';
+                imWindow.style.width = '350px';
+                imWindow.style.height = '250px';
+                return;
+            }
+
             instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
             instantMessenger.setDepth(100);
             
-            var imWindow = instantMessenger.getChildByID('im-window');
-            var imHeader = instantMessenger.getChildByID('im-header');
+            imWindow = instantMessenger.getChildByID('im-window');
+            imHeader = instantMessenger.getChildByID('im-header');
+            imWindow.style.visibility = 'visible';
             
             enableDivDrag(instantMessenger, imHeader, imWindow);
 
             // enabled drag for divs: divHandle is the part of the div to move it by,
             // divToMove is the whole div we want to move on drag
             function enableDivDrag(domElement, divHandle, divToMove) {
-                isMouseDown = false;
-                
+                isMouseDownHandleIM = false;
+
                 transparentScreen.addListener('pointerup');
                 transparentScreen.addListener('pointermove');
 
                 transparentScreen.on('pointerup', function() {
-                    isMouseDown = false;
+                    isMouseDownHandleIM = false;
+                    isClickUI = false;
+                    disableInput = false;
                     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
                 })
                 transparentScreen.on('pointermove', function(pointer, x, y, event) {
-                    if (isMouseDown)
+                    if (isMouseDownHandleIM)
                         dragIM(pointer);
                 })
 
                 domElement.addListener('pointerup');
                 domElement.on('pointerup', function() {
-                    isMouseDown = false;
+                    isMouseDownHandleIM = false;
+                    isClickUI = false;
+                    disableInput = false;
                     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
                 })
                 domElement.addListener('pointermove');
                 domElement.on('pointermove', function(pointer, x, y, event) {
-                    if (isMouseDown)
+                    if (isMouseDownHandleIM)
                         dragIM(pointer);
                 })
-
+                domElement.addListener('pointerdown');
+                domElement.on('pointerdown', function() {
+                    isClickUI = true;
+                    inGame.input.stopPropagation();
+                    disableInput = true;
+                })
+            
                 divToMove.style.top = '50px';
                 divToMove.style.left = '100px';
-                var diffX = 0, diffY = 0, currX = 0, currY = 0;
                 divHandle.onmousedown = dragMouseDown;
 
                 function dragMouseDown(e) {
-                    isMouseDown = true;
+                    isMouseDownHandleIM = true;
                     transparentScreen.getChildByID('screen').style.visibility = 'visible';
 
-                    currX = e.clientX;
-                    currY = e.clientY;
+                    imCurrX = e.clientX;
+                    imCurrY = e.clientY;
                 }
 
                 function dragIM(ptr) {
-                    diffX = ptr.x - currX;
-                    diffY = ptr.y - currY;
-                    currX = ptr.x;
-                    currY = ptr.y;
+                    imDiffX = ptr.x - imCurrX;
+                    imDiffY = ptr.y - imCurrY;
+                    imCurrX = ptr.x;
+                    imCurrY = ptr.y;
 
                     currTop = parseInt(divToMove.style.top.slice(0, -2));
                     currLeft = parseInt(divToMove.style.left.slice(0, -2));
-                    divToMove.style.top = (currTop + diffY).toString() + 'px';
-                    divToMove.style.left = (currLeft + diffX).toString() + 'px';
+                    divToMove.style.top = (currTop + imDiffY).toString() + 'px';
+                    divToMove.style.left = (currLeft + imDiffX).toString() + 'px';
                 }
             }
         }
@@ -877,6 +902,9 @@ uiScene.create = function() {
         // })
     }
 
+    uiScene.checkInteractive = function() {
+        return !isClickUI;
+    }
     this.anims.create({
         key: 'inLoad',
         frames: this.anims.generateFrameNumbers('inLoading'),
@@ -1109,10 +1137,9 @@ inGame.create = function() {
                 useHandCursor: true,
             });
 
-            // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
-
             topModelsObject.on('pointerdown', () => {
-                console.log('poladot');
+                if (!uiScene.checkInteractive())
+                    return;
 
                 currentLocation = "topModels";
                 socket.emit('changeRoom', "topModels");
@@ -1312,7 +1339,8 @@ inGame.create = function() {
 
             children[i].on('pointerdown', () => {
                 inGame.input.stopPropagation();
-                uiScene.openIDFone(true, playerInfo);
+                if (uiScene.checkInteractive())
+                    uiScene.openIDFone(true, playerInfo);
             });
         }
     }
@@ -1795,13 +1823,13 @@ inGame.create = function() {
     }
 }
 
-var tween;
+var moveTween;
 var movedRight = false;
 
 function moveX(currentPosX, currentPosY, direction) {
     if (stopMoving)
         return;
-	tween = inGame.tweens.add({
+        moveTween = inGame.tweens.add({
         targets: container,
         x: currentPosX + direction*70,
         y: currentPosY,
@@ -1811,7 +1839,7 @@ function moveX(currentPosX, currentPosY, direction) {
 }
 
 function moveY(currentPosX, currentPosY, direction) {
-	tween = inGame.tweens.add({
+	moveTween = inGame.tweens.add({
         targets: container,
         x: currentPosX,
         y: currentPosY + direction*70,
@@ -1822,8 +1850,8 @@ function moveY(currentPosX, currentPosY, direction) {
 
 function moveXY(newPosX, newPosY) {
 
-    if (tween != undefined && tween != null)
-        tween.stop();
+    if (moveTween != undefined && moveTween != null)
+        moveTween.stop();
 
     if (newPosX - container.x > 0)
         movedRight = true;
@@ -1836,7 +1864,7 @@ function moveXY(newPosX, newPosY) {
 
     var time = distanceXY / 150 * 1000;
 
-	tween = inGame.tweens.add({
+	moveTween = inGame.tweens.add({
         targets: container,
         x: newPosX,
         y: newPosY,
