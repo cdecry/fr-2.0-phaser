@@ -319,9 +319,15 @@ uiScene.create = function() {
     });
 
     var uiBar = this.add.image(400, 490, 'uiBar');
-    var inventory = this.add.image(400, 260, 'inventoryHairTab');
-    var inventoryUI = this.add.dom(400,260).createFromCache('inventoryUI');
     var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
+    uiBar.setInteractive({ pixelPerfect: true});
+
+    var inventory = uiObjectScene.add.image(400, 260, 'inventoryHairTab');
+    var inventoryUI = uiObjectScene.add.dom(400,260).createFromCache('inventoryUI');
+    inventory.setDepth(1000);
+    inventory.setVisible(false);
+    inventoryUI.setVisible(false);
+
     var imDiffX = 0, imDiffY = 0, imCurrX = 0, imCurrY = 0;
     var imHeader, imWindow;
     var isClickUI = false;
@@ -329,11 +335,6 @@ uiScene.create = function() {
 
     transparentScreen = uiScene.add.dom(0, 0).createFromCache('transparentHTML');
     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
-
-    inventory.setDepth(1000);
-    inventory.setVisible(false);
-    inventoryUI.setVisible(false);
-    uiBar.setInteractive({ pixelPerfect: true});
 
     var chatBar = this.add.dom(185, 470).createFromCache('chatBar');
     var inputChat = chatBar.getChildByName('chatInput');
@@ -403,8 +404,8 @@ uiScene.create = function() {
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
         if (event.target.id === 'inventoryButton') {
-            var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
-            var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+            var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
+            var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
             uiScene.input.manager.setCursor({ cursor: 'default' });
             greyScreen.setInteractive({ useHandCursor: false });
@@ -695,7 +696,7 @@ uiScene.create = function() {
         for (let i = startIndex; i < endIndex; i++) {
             var item;
             
-            item = uiScene.add.sprite(0, 0, prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
+            item = uiObjectScene.add.sprite(0, 0, prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
             console.log(prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
 
             item.setInteractive();
@@ -760,13 +761,13 @@ uiScene.create = function() {
             prefix = myPlayerInfo.avatar.gender;
 
         if (typeId == 0 || typeId == 5 && itemId != -1) {
-            equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
-            var equippedItem2 = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
+            equippedItem = uiObjectScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
+            var equippedItem2 = uiObjectScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-2');
             cont.replace(cont.getAt(iMap[typeId][0]), equippedItem, true);
             cont.replace(cont.getAt(iMap[typeId][1]), equippedItem2, true);
         }
         else {
-            equippedItem = uiScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
+            equippedItem = uiObjectScene.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString());
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
         }
 
@@ -809,18 +810,23 @@ uiScene.create = function() {
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
         if (!uiScene.checkInteractive())
             return;
-            
-        var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
-        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+          
+        // var tempScreenBlocker = uiScene.add.dom(0,0).createFromCache('transparentHTML');
+        // tempScreenBlocker.getChildByID('screen').style.backgroundColor = 'rgba(0, 0, 0, 0.1);';
+        // var tempTransparentScreen = uiScene.add.image(400, 260, 'transparentScreen');
+        // tempTransparentScreen.setInteractive();
+
+        var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
+        var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
         var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
 
         setTimeout(function () {
-            idfoneLower = uiScene.add.image(400, 230, 'idfoneLower');
-            idfoneWallpaper = uiScene.add.image(400, 260, 'idfoneDefault');
-            idfoneUpper = uiScene.add.image(400, 260, 'idfoneUpper');
-            idfoneShadow = uiScene.add.image(400, 260, 'idfoneShadow');
+            idfoneLower = uiObjectScene.add.image(400, 230, 'idfoneLower');
+            idfoneWallpaper = uiObjectScene.add.image(400, 260, 'idfoneDefault');
+            idfoneUpper = uiObjectScene.add.image(400, 260, 'idfoneUpper');
+            idfoneShadow = uiObjectScene.add.image(400, 260, 'idfoneShadow');
 
-            tween = uiScene.tweens.add({
+            tween = uiObjectScene.tweens.add({
                 targets: idfoneLower,
                 x: 400,
                 y: 260,
@@ -831,41 +837,41 @@ uiScene.create = function() {
             createAvatarPreview(playerInfo);
             avatarPreview.setPosition(460, 190);
 
-            idfoneBlueStar = uiScene.add.image(180, 141, 'idfoneBlueStar');
+            idfoneBlueStar = uiObjectScene.add.image(180, 141, 'idfoneBlueStar');
 
-            titleLabel = uiScene.add.dom(220, 123).createFromCache('gameText');
+            titleLabel = uiObjectScene.add.dom(220, 123).createFromCache('gameText');
             titleLabelText = titleLabel.getChildByID('text');
             titleLabelText.innerHTML = playerInfo.idfone.title;
             titleLabelText.className = "titleLabelStyle"
 
-            idfoneUserLabel = uiScene.add.dom(220, 148).createFromCache('gameText');
+            idfoneUserLabel = uiObjectScene.add.dom(220, 148).createFromCache('gameText');
             idfoneUserLabelText = idfoneUserLabel.getChildByID('text');
             idfoneUserLabelText.innerHTML = playerInfo.username;
             idfoneUserLabelText.className = "idFoneUsernameLabelStyle"
 
             var idfoneBevel, starBalanceLabel, ecoinBalanceLabel;
             if (isLocalPlayer) {
-                idfoneBevel = uiScene.add.image(400, 260, 'idfoneBevelBalance');
+                idfoneBevel = uiObjectScene.add.image(400, 260, 'idfoneBevelBalance');
 
-                starBalanceLabel = uiScene.add.dom(390, 332).createFromCache('gameText');
+                starBalanceLabel = uiObjectScene.add.dom(390, 332).createFromCache('gameText');
                 starBalanceLabelText = starBalanceLabel.getChildByID('text');
                 starBalanceLabelText.innerHTML = "Balance: " + playerInfo.stars.toString();
                 starBalanceLabelText.className = "balanceLabelStyle"
 
-                ecoinBalanceLabel = uiScene.add.dom(390, 347).createFromCache('gameText');
+                ecoinBalanceLabel = uiObjectScene.add.dom(390, 347).createFromCache('gameText');
                 ecoinBalanceLabelText = ecoinBalanceLabel.getChildByID('text');
                 ecoinBalanceLabelText.innerHTML = "Balance: " + playerInfo.ecoins.toString();
                 ecoinBalanceLabelText.className = "balanceLabelStyle"
             }
             else
-                idfoneBevel = uiScene.add.image(400, 260, 'idfoneBevel');
+                idfoneBevel = uiObjectScene.add.image(400, 260, 'idfoneBevel');
 
-            levelLabelLabel = uiScene.add.dom(185, 328).createFromCache('gameText');
+            levelLabelLabel = uiObjectScene.add.dom(185, 328).createFromCache('gameText');
             levelLabelLabelText = levelLabelLabel.getChildByID('text');
             levelLabelLabelText.innerHTML = "Level :";
             levelLabelLabelText.className = "levelLabelLabelStyle"
 
-            levelLabel = uiScene.add.dom(250, 322).createFromCache('gameText');
+            levelLabel = uiObjectScene.add.dom(250, 322).createFromCache('gameText');
             levelLabelText = levelLabel.getChildByID('text');
             levelLabelText.innerHTML = playerInfo.level;
             levelLabelText.className = "levelLabelStyle"
@@ -912,7 +918,7 @@ uiScene.create = function() {
     uiScene.checkInteractive = function() {
         return !isClickUI;
     }
-    this.anims.create({
+    uiObjectScene.anims.create({
         key: 'inLoad',
         frames: this.anims.generateFrameNumbers('inLoading'),
         frameRate: 40,
@@ -2157,11 +2163,8 @@ var game = new Phaser.Game(config);
 var uiObjectScene = new Phaser.Scene('UIObjectScene');
 
 uiObjectScene.preload = function () {
-  
-    this.load.setBaseURL('/src/assets')
-    // this.load.image('testBg', 'scene/furniture/references/panda-piano-fishtank-light.png');
-    
-  
+    preloadGameAssets(this);
+    preloadUIAssets(this);
 };
 
 uiObjectScene.create = function () {
