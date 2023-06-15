@@ -3,6 +3,12 @@
     <head>
         <style>
 
+            #inventory {
+                width: 800px;
+                height: 520px;
+                /* background-color: red; */
+            }
+
             #closeInventoryButton {
                 position: absolute;
                 border-radius: 100px;
@@ -114,22 +120,26 @@
     </head>
     <body>
 
-        <button id="closeInventoryButton"></button>
-        <div id="tabs">
-            <button id="hairButton"></button>
-            <button id="clothesButton"></button>
-            <button id="boardButton"></button>
-            <button id="accessoryButton"></button>
-            <button id="favoriteButton"></button>
-            <button id="creatureButton"></button>
-        </div>
+        <div id="inventory">
 
-        <div id="clothesSubtabs" class="subtabs">
-            <button id="topButton" class="subtabButtons"></button>
-            <button id="bottomButton" class="subtabButtons"></button>
-            <button id="outfitsButton" class="subtabButtons"></button>
-            <button id="costumesButton" class="subtabButtons"></button>
-            <button id="shoesButton" class="subtabButtons"></button>
+            <button id="closeInventoryButton"></button>
+            <div id="tabs">
+                <button id="hairButton"></button>
+                <button id="clothesButton"></button>
+                <button id="boardButton"></button>
+                <button id="accessoryButton"></button>
+                <button id="favoriteButton"></button>
+                <button id="creatureButton"></button>
+            </div>
+
+            <div id="clothesSubtabs" class="subtabs">
+                <button id="topButton" class="subtabButtons"></button>
+                <button id="bottomButton" class="subtabButtons"></button>
+                <button id="outfitsButton" class="subtabButtons"></button>
+                <button id="costumesButton" class="subtabButtons"></button>
+                <button id="shoesButton" class="subtabButtons"></button>
+            </div>
+
         </div>
 
     </body>

@@ -164,10 +164,11 @@ var iFaceAcc = [];
 var iHeadAcc = [];
 var iBodyAcc = [];
 
-function createSpeechBubble (x, y, quote)
+var instantMessenger;
+
+function createSpeechBubble (x, y, username, quote)
 {
     chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
-    // chatMessage.setInteractive;
     var chatMessageContent = chatMessage.getChildByID('message');
     chatMessageContent.innerHTML = quote;
 
@@ -177,7 +178,7 @@ function createSpeechBubble (x, y, quote)
     chatBubble = inGame.add.image(0, chatBubbleOffsetY, 'message-' + lines.toString());
 
     chatBubble.setDepth(900);
-    chatMessage.setDepth(900);
+    chatMessage.setDepth(-1);
 
     bubbleLifeTime = inGame.plugins.get('rexlifetimeplugin').add(chatBubble, {
         lifeTime: 5000,
@@ -192,6 +193,10 @@ function createSpeechBubble (x, y, quote)
     });
 
     container.add([chatBubble, chatMessage]);
+
+    chatTabs['Current Room'] += username + ": " + quote + '<br>';
+    if (instantMessenger)
+        instantMessenger.getChildByID('chat-history').innerHTML = chatTabs['Current Room'];
 }
 
 function createOtherSpeechBubble (otherPlayer, x, y, quote)
@@ -231,6 +236,10 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherChatMessage': otherChatMessage,
                                             'otherBubbleLifeTime': otherBubbleLifeTime,
                                             'otherMessageLifeTime': otherMessageLifeTime });
+
+    chatTabs['Current Room'] += otherPlayer.getData('username') + ": " + quote + '<br>';
+    if (instantMessenger)
+        instantMessenger.getChildByID('chat-history').innerHTML = chatTabs['Current Room'];
 } 
 
 var uiScene = new Phaser.Scene('UIScene');
@@ -246,78 +255,45 @@ uiScene.init = function()
     sheet.insertRule(styles, 0);
     var styles = '@font-face { font-family: "idFoneUserFont"; src: url("src/assets/fonts/VAG Rounded Bold.ttf") format("truetype"); }\n';
     sheet.insertRule(styles, 0);
+    var styles = '@font-face { font-family: "imLabelFont"; src: url("src/assets/fonts/Arial_12pt_st.ttf") format("truetype"); }\n';
+    sheet.insertRule(styles, 0);
 }
 
 uiScene.preload = function() {
-    this.load.setBaseURL('/src/assets');
-    // Load chat ui
-    this.load.html('chatBar', 'html/chatbar.html');
-    this.load.html('messageWidth', 'html/messagewidth.html');
-    this.load.html('chatMessageHTML', 'html/chatmessage.html');
-    this.load.html('instantMessengerHTML', 'html/instantmessenger.html');
-    this.load.html('transparentHTML', 'html/transparent.html');
-    this.load.image('uiBar', 'scene/chat/ui-bar.png');
-    
-    // Load inventory ui
-    this.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
-    this.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
-    this.load.image('inventoryBoardTab', 'scene/ui/inventoryBoardTab.png');
-    this.load.image('inventoryAccessoryTab', 'scene/ui/inventoryAccessoryTab.png');
-    this.load.image('inventoryArrowUp', 'scene/ui/inventoryArrowUp.png');
-    this.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
-    this.load.html('uiButtons', 'html/uiButtons.html');
-    this.load.html('inventoryUI', 'html/inventoryUI.html');
-    // Load IDFone ui
-    this.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
-    this.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
-    this.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
-    this.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
-    this.load.image('idfoneBevel', 'scene/ui/idfone/idfoneBevel.png');
-    this.load.image('idfoneBevelBalance', 'scene/ui/idfone/idfoneBevelBalance.png');
-
-    this.load.image('idfoneBlueStar', 'scene/ui/idfone/idfoneBlueStar.png');
-    this.load.image('idfoneMemberBadge', 'scene/ui/idfone/idfoneMemberBadge.png');
-
-    this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
-    this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
-    this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
-    this.load.image('greyScreen', 'scene/ui/greyScreen.png');
-    this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
-    //this.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    preloadUIAssets(this);
 }
 
 uiScene.create = function() {
 
     this.input.setTopOnly(true);
     function createAvatarPreview(playerInfo) {
-
-        bodyPreview = uiScene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
-        headPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
-        eyesPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
-        lipsPreview = uiScene.add.sprite(0, 0, 'lips-0');
-        faceAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-        boardLowerPreview = uiScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        hairLowerPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        hairUpperPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        headAccPreview = uiScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-        shoesPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+        bodyPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+        headPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+        eyesPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+        lipsPreview = uiObjectScene.add.sprite(0, 0, 'lips-0');
+        faceAccPreview = uiObjectScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+        boardLowerPreview = uiObjectScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        hairLowerPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        hairUpperPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        headAccPreview = uiObjectScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        shoesPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
-        bottomItemPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
-        topItemPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
-        outfitPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
-        costumePreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
-        bodyAccPreview = uiScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-        browPreview = uiScene.add.sprite(0, 0, 'brow-0');
-        boardUpperPreview = uiScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
-        usernameTagPreview = uiScene.add.sprite(0, 0, 'username-tag');
-        usernameLabelPreview = uiScene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        bottomItemPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        topItemPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+        outfitPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        costumePreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+        bodyAccPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        browPreview = uiObjectScene.add.sprite(0, 0, 'brow-0');
+        boardUpperPreview = uiObjectScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        usernameTagPreview = uiObjectScene.add.sprite(0, 0, 'username-tag');
+        usernameLabelPreview = uiObjectScene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
         usernameLabelPreview.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
         var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
-        avatarPreview = uiScene.add.container(0, 0);
+        avatarPreview = uiObjectScene.add.container(0, 0);
         avatarPreview.add(children);
         avatarPreview.setDepth(1001);
 
@@ -344,10 +320,10 @@ uiScene.create = function() {
 
     var uiBar = this.add.image(400, 490, 'uiBar');
     var inventory = this.add.image(400, 260, 'inventoryHairTab');
-    var inventoryUI = this.add.dom(0,0).createFromCache('inventoryUI');
+    var inventoryUI = this.add.dom(400,260).createFromCache('inventoryUI');
     var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
     var imDiffX = 0, imDiffY = 0, imCurrX = 0, imCurrY = 0;
-    var instantMessenger, imHeader, imWindow;
+    var imHeader, imWindow;
     var isClickUI = false;
     var isMouseDownHandleIM = false;
 
@@ -385,8 +361,11 @@ uiScene.create = function() {
                 chatBubble.destroy()
                 chatMessage.destroy();
             }
-            createSpeechBubble(400, 200, inputChat.value);
-            socket.emit('chatMessage', inputChat.value);
+
+            var filtered = inputChat.value.replace(/<[^>]+>/g, '');
+
+            createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
+            socket.emit('chatMessage', filtered);
             
             inputChat.value = '';
         }
@@ -411,9 +390,11 @@ uiScene.create = function() {
                     chatBubble.destroy()
                     chatMessage.destroy();
                 }
-                createSpeechBubble(400, 200, inputChat.value);
 
-                socket.emit('chatMessage', inputChat.value);
+                var filtered = inputChat.value.replace(/<[^>]+>/g, '');
+                createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
+
+                socket.emit('chatMessage', filtered);
                 globalInputChat.value = '';
             }
         }
@@ -572,7 +553,7 @@ uiScene.create = function() {
         }
         else if (event.target.id === 'buddiesButton') {
 
-            if (instantMessenger != null) {
+            if (instantMessenger != null && imWindow.style.visibility == 'visible') {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
                 imWindow.style.top = '50px';
                 imWindow.style.left = '100px';
@@ -580,14 +561,40 @@ uiScene.create = function() {
                 imWindow.style.height = '250px';
                 return;
             }
+            else if (instantMessenger == null) {
+                instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
+                
+                instantMessenger.setDepth(2000);
+            }
 
-            instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
-            instantMessenger.setDepth(100);
-            
             imWindow = instantMessenger.getChildByID('im-window');
             imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
-            
+
+            chatNameText = instantMessenger.getChildByID('chatName');
+            chatNameText.innerHTML = "Current Room";
+
+            instantMessenger.getChildByID('chat-history').innerHTML = chatTabs['Current Room'];
+
+            instantMessenger.getChildByID('im-close-button').onmousedown = () => {
+                imWindow.style.visibility = 'hidden';
+
+                setTimeout(function () {
+                    isClickUI = false;
+                }, 50);
+            }
+
+            for (var chatTabName in chatTabs) {
+                tab = instantMessenger.getChildByID(chatTabName);
+                tab.onmousedown = () => {
+                    for (var otherTabName in chatTabs) {
+                        otherTab = instantMessenger.getChildByID(otherTabName);
+                        otherTab.style.background = 'white';
+                    };
+                    tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                };
+            }
+
             enableDivDrag(instantMessenger, imHeader, imWindow);
 
             // enabled drag for divs: divHandle is the part of the div to move it by,
@@ -601,7 +608,6 @@ uiScene.create = function() {
                 transparentScreen.on('pointerup', function() {
                     isMouseDownHandleIM = false;
                     isClickUI = false;
-                    disableInput = false;
                     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
                 })
                 transparentScreen.on('pointermove', function(pointer, x, y, event) {
@@ -613,7 +619,6 @@ uiScene.create = function() {
                 domElement.on('pointerup', function() {
                     isMouseDownHandleIM = false;
                     isClickUI = false;
-                    disableInput = false;
                     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
                 })
                 domElement.addListener('pointermove');
@@ -625,7 +630,6 @@ uiScene.create = function() {
                 domElement.on('pointerdown', function() {
                     isClickUI = true;
                     inGame.input.stopPropagation();
-                    disableInput = true;
                 })
             
                 divToMove.style.top = '50px';
@@ -803,6 +807,9 @@ uiScene.create = function() {
     }
 
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
+        if (!uiScene.checkInteractive())
+            return;
+            
         var greyScreen = uiScene.add.image(400, 260, 'greyScreen');
         var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
         var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
@@ -930,126 +937,7 @@ inGame.init = function()
 }
 
 inGame.preload = function() {
-    this.load.setBaseURL('/src/assets')
-
-    this.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-    
-    this.load.html('gameText', 'html/text.html');
-    this.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
-
-    // Load locations and objects
-    this.load.image('downtownBg', 'scene/location/downtown/downtown.png');
-    this.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
-
-    this.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
-    this.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
-    this.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
-    this.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
-    this.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
-    this.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
-    this.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
-    this.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
-    
-    this.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
-    this.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
-    this.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
-    this.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
-    this.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
-    this.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
-
-    this.load.image('beachBg', 'scene/location/beach/beach.png');
-    // this.load.image('avatarCollider', 'avatar/avatarCollider.png');
-
-    // Load bgm
-    this.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
-    this.load.audio('downtownBGM', 'bgm/downtown.mp3');
-
-    // load all avatar bases
-    for (let i = 0; i < 6; i++) {
-        this.load.spritesheet('m-body-' + i.toString(), 'avatar/m-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('m-face-' + i.toString(), 'avatar/m-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('f-body-' + i.toString(), 'avatar/f-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('f-face-' + i.toString(), 'avatar/f-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-    }
-    
-    // load all avatar eyes
-    for (let i = 0; i < 14; i++) {
-        this.load.spritesheet('f-eyes-' + i.toString(), 'avatar/f-eyes-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('m-eyes-' + i.toString(), 'avatar/m-eyes-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-    }
-
-    // load brows and lips
-    this.load.spritesheet('brow-0', 'avatar/brow-0.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('lips-0', 'avatar/lips-0.png', { frameWidth: 300, frameHeight: 250 });
-
-    // load items
-
-    // load null items:
-    for (let i = 0; i < 10; i++) {
-        this.load.spritesheet('f-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('m-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    }
-    this.load.spritesheet('f-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('f-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('m-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('m-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-    this.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-
-    // load hairs & mannequins
-    for (let i = 0; i < 10; i++) {
-        this.load.spritesheet('f-0-' + i.toString() + '-1', 'item/f-0-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('f-0-' + i.toString() + '-2', 'item/f-0-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('f-0-' + i.toString() + '-i', 'item/f-0-' + i.toString() + '-i.png');
-    }
-
-    // load bottoms
-    for (let i = 0; i < 16; i++) {
-        this.load.spritesheet('f-2-' + i.toString(), 'item/f-2-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('f-2-' + i.toString() + '-i', 'item/f-2-' + i.toString() + '-i.png');
-    }
-
-    // load tops
-    for (let i = 0; i < 16; i++) {
-        this.load.spritesheet('f-1-' + i.toString(), 'item/f-1-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('f-1-' + i.toString() + '-i', 'item/f-1-' + i.toString() + '-i.png');
-    }
-
-    // load outfits
-    for (let i = 0; i < 13; i++) {
-        this.load.spritesheet('f-3-' + i.toString(), 'item/f-3-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('f-3-' + i.toString() + '-i', 'item/f-3-' + i.toString() + '-i.png');
-    }
-
-    // load shoes
-    for (let i = 0; i < 5; i++) {
-        this.load.spritesheet('f-4-' + i.toString(), 'item/f-4-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('f-4-' + i.toString() + '-i', 'item/f-4-' + i.toString() + '-i.png');
-    }
-
-    // load boards
-    for (let i = 0; i < 5; i++) {
-        this.load.spritesheet('n-5-' + i.toString() + '-1', 'item/n-5-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.spritesheet('n-5-' + i.toString() + '-2', 'item/n-5-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
-        this.load.image('n-5-' + i.toString() + '-i', 'item/n-5-' + i.toString() + '-i.png');
-    }
-
-    // load placeholder
-    //this.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
-
-    this.load.image('username-tag', 'avatar/username-tag.png');
-    this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
-
-    // load chat message containers
-    for (let i = 1; i < 11; i++) {
-        this.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
-    }
-
-    // load anim data
-    this.load.json('bodyAnims', 'anims/bodyAnims.json');
-    this.load.json('bottomShoes', 'anims/bottomShoes.json');
-    this.load.json('eyesAnims', 'anims/eyesAnims.json');
-    this.load.json('hairAnims', 'anims/hairAnims.json');
-    this.load.json('lipsAnims', 'anims/lipsAnims.json');
+    preloadGameAssets(this);
 }
 
 var camPosX = 0;
@@ -1063,6 +951,170 @@ var clickOffsetX = 0;
 var clickOffsetY = 110;
 var currentLocation = "downtown";
 var boundOffset = 150;
+
+var chatTabs = {
+    "Current Room": ""
+}
+
+var preloadGameAssets = (thisScene) => {
+    thisScene.load.setBaseURL('/src/assets')
+
+    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+    
+    thisScene.load.html('gameText', 'html/text.html');
+    thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
+
+    // Load locations and objects
+    thisScene.load.image('downtownBg', 'scene/location/downtown/downtown.png');
+    thisScene.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
+
+    thisScene.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
+    thisScene.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
+    thisScene.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
+    thisScene.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
+    thisScene.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
+    thisScene.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
+    thisScene.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
+    thisScene.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
+    
+    thisScene.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
+    thisScene.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
+    thisScene.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
+    thisScene.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
+    thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
+    thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
+
+    thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
+    // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
+
+    // Load bgm
+    thisScene.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
+    thisScene.load.audio('downtownBGM', 'bgm/downtown.mp3');
+
+    // load all avatar bases
+    for (let i = 0; i < 6; i++) {
+        thisScene.load.spritesheet('m-body-' + i.toString(), 'avatar/m-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('m-face-' + i.toString(), 'avatar/m-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('f-body-' + i.toString(), 'avatar/f-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('f-face-' + i.toString(), 'avatar/f-face-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
+    
+    // load all avatar eyes
+    for (let i = 0; i < 14; i++) {
+        thisScene.load.spritesheet('f-eyes-' + i.toString(), 'avatar/f-eyes-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('m-eyes-' + i.toString(), 'avatar/m-eyes-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+    }
+
+    // load brows and lips
+    thisScene.load.spritesheet('brow-0', 'avatar/brow-0.png', { frameWidth: 300, frameHeight: 250 });
+    thisScene.load.spritesheet('lips-0', 'avatar/lips-0.png', { frameWidth: 300, frameHeight: 250 });
+
+    // load items
+
+    // load null items:
+    for (let i = 0; i < 10; i++) {
+        thisScene.load.spritesheet('f-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('m-' + i.toString() + '--1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    }
+    thisScene.load.spritesheet('f-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    thisScene.load.spritesheet('f-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    thisScene.load.spritesheet('m-0--1-1', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    thisScene.load.spritesheet('m-0--1-2', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+    thisScene.load.spritesheet('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+
+    // load hairs & mannequins
+    for (let i = 0; i < 10; i++) {
+        thisScene.load.spritesheet('f-0-' + i.toString() + '-1', 'item/f-0-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('f-0-' + i.toString() + '-2', 'item/f-0-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.image('f-0-' + i.toString() + '-i', 'item/f-0-' + i.toString() + '-i.png');
+    }
+
+    // load bottoms
+    for (let i = 0; i < 16; i++) {
+        thisScene.load.spritesheet('f-2-' + i.toString(), 'item/f-2-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.image('f-2-' + i.toString() + '-i', 'item/f-2-' + i.toString() + '-i.png');
+    }
+
+    // load tops
+    for (let i = 0; i < 16; i++) {
+        thisScene.load.spritesheet('f-1-' + i.toString(), 'item/f-1-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.image('f-1-' + i.toString() + '-i', 'item/f-1-' + i.toString() + '-i.png');
+    }
+
+    // load outfits
+    for (let i = 0; i < 13; i++) {
+        thisScene.load.spritesheet('f-3-' + i.toString(), 'item/f-3-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.image('f-3-' + i.toString() + '-i', 'item/f-3-' + i.toString() + '-i.png');
+    }
+
+    // load shoes
+    for (let i = 0; i < 5; i++) {
+        thisScene.load.spritesheet('f-4-' + i.toString(), 'item/f-4-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.image('f-4-' + i.toString() + '-i', 'item/f-4-' + i.toString() + '-i.png');
+    }
+
+    // load boards
+    for (let i = 0; i < 5; i++) {
+        thisScene.load.spritesheet('n-5-' + i.toString() + '-1', 'item/n-5-' + i.toString() + '-1.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.spritesheet('n-5-' + i.toString() + '-2', 'item/n-5-' + i.toString() + '-2.png', { frameWidth: 300, frameHeight: 250 });
+        thisScene.load.image('n-5-' + i.toString() + '-i', 'item/n-5-' + i.toString() + '-i.png');
+    }
+
+    // load placeholder
+    //thisScene.load.image('nullItem', 'item/null.png', { frameWidth: 300, frameHeight: 250 });
+
+    thisScene.load.image('username-tag', 'avatar/username-tag.png');
+    thisScene.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+
+    // load chat message containers
+    for (let i = 1; i < 11; i++) {
+        thisScene.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
+    }
+
+    // load anim data
+    thisScene.load.json('bodyAnims', 'anims/bodyAnims.json');
+    thisScene.load.json('bottomShoes', 'anims/bottomShoes.json');
+    thisScene.load.json('eyesAnims', 'anims/eyesAnims.json');
+    thisScene.load.json('hairAnims', 'anims/hairAnims.json');
+    thisScene.load.json('lipsAnims', 'anims/lipsAnims.json');
+}
+
+var preloadUIAssets = (thisScene) => {
+    thisScene.load.setBaseURL('/src/assets');
+    // Load chat ui
+    thisScene.load.html('chatBar', 'html/chatbar.html');
+    thisScene.load.html('messageWidth', 'html/messagewidth.html');
+    thisScene.load.html('chatMessageHTML', 'html/chatmessage.html');
+    thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    thisScene.load.html('transparentHTML', 'html/transparent.html');
+    thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
+    
+    // Load inventory ui
+    thisScene.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
+    thisScene.load.image('inventoryClothesTab', 'scene/ui/inventoryClothesTab.png');
+    thisScene.load.image('inventoryBoardTab', 'scene/ui/inventoryBoardTab.png');
+    thisScene.load.image('inventoryAccessoryTab', 'scene/ui/inventoryAccessoryTab.png');
+    thisScene.load.image('inventoryArrowUp', 'scene/ui/inventoryArrowUp.png');
+    thisScene.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
+    thisScene.load.html('uiButtons', 'html/uiButtons.html');
+    thisScene.load.html('inventoryUI', 'html/inventoryUI.html');
+    // Load IDFone ui
+    thisScene.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
+    thisScene.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
+    thisScene.load.image('idfoneShadow', 'scene/ui/idfone/idfoneShadow.png');
+    thisScene.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
+    thisScene.load.image('idfoneBevel', 'scene/ui/idfone/idfoneBevel.png');
+    thisScene.load.image('idfoneBevelBalance', 'scene/ui/idfone/idfoneBevelBalance.png');
+
+    thisScene.load.image('idfoneBlueStar', 'scene/ui/idfone/idfoneBlueStar.png');
+    thisScene.load.image('idfoneMemberBadge', 'scene/ui/idfone/idfoneMemberBadge.png');
+
+    thisScene.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
+    thisScene.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
+    thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
+    thisScene.load.image('greyScreen', 'scene/ui/greyScreen.png');
+    thisScene.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+}
 
 var locationConfig = {
     downtown: {
@@ -1339,8 +1391,7 @@ inGame.create = function() {
 
             children[i].on('pointerdown', () => {
                 inGame.input.stopPropagation();
-                if (uiScene.checkInteractive())
-                    uiScene.openIDFone(true, playerInfo);
+                uiScene.openIDFone(true, playerInfo);
             });
         }
     }
@@ -1811,7 +1862,7 @@ inGame.create = function() {
     function clickMovement(pointer) {
         console.log("Clicked on bg");
         
-        if (disableInput) return;
+        if (!uiScene.checkInteractive() || disableInput) return;
         
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
@@ -2098,3 +2149,43 @@ var config = {
 };
 
 var game = new Phaser.Game(config);
+
+
+
+
+//#region uiOverlay Game
+var uiObjectScene = new Phaser.Scene('UIObjectScene');
+
+uiObjectScene.preload = function () {
+  
+    this.load.setBaseURL('/src/assets')
+    // this.load.image('testBg', 'scene/furniture/references/panda-piano-fishtank-light.png');
+    
+  
+};
+
+uiObjectScene.create = function () {
+    console.log('test');
+};
+//#endregion
+
+var uiConfig = {
+    type: Phaser.AUTO,
+    parent: 'ui',
+    width: 800,
+    height: 520,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false
+        }
+    },
+    dom: {
+        createContainer: true
+        },
+    pixelArt: true,
+    scene: [uiObjectScene],
+    transparent: true
+};
+
+var uiOverlay = new Phaser.Game(uiConfig);
