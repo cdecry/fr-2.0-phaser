@@ -175,11 +175,6 @@ io.on('connection', function (socket) {
         await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
 
     })
-
-    socket.on('chatMessage', function(msg) {
-        socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
-    })
-
 });
 
 server.listen(8081, function () {
