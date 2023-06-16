@@ -403,7 +403,11 @@ uiScene.create = function() {
 
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
+        if (!uiScene.checkInteractive)
+                return;
+
         if (event.target.id === 'inventoryButton') {
+
             var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
             var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
@@ -425,6 +429,7 @@ uiScene.create = function() {
                 inLoading.destroy();
                 greyScreen.destroy();
             }, 700);
+
             function openInventory() {
                 isClickUI = true;
 
@@ -810,11 +815,16 @@ uiScene.create = function() {
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
         if (!uiScene.checkInteractive())
             return;
-          
-        // var tempScreenBlocker = uiScene.add.dom(0,0).createFromCache('transparentHTML');
-        // tempScreenBlocker.getChildByID('screen').style.backgroundColor = 'rgba(0, 0, 0, 0.1);';
-        // var tempTransparentScreen = uiScene.add.image(400, 260, 'transparentScreen');
-        // tempTransparentScreen.setInteractive();
+
+        var tempDomBlocker;
+        // var tempDomBlocker = uiScene.add.dom(0,0).createFromCache('transparentHTML');
+        // tempDomBlocker.getChildByID('screen').style.backgroundColor = 'rgba(0, 0, 0, 0.1);';
+        var tempObjectBlocker = uiScene.add.image(400, 260, 'transparentScreen');
+        tempObjectBlocker.setInteractive();
+
+        disableInput = true;
+        uiButtons.visible = false;
+        chatBar.visible = false;
 
         var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
         var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
@@ -883,25 +893,22 @@ uiScene.create = function() {
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
 
-            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel];
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel, tempDomBlocker, tempObjectBlocker];
 
             closeIDFoneButton.on('pointerdown', () => {
                 for (let i = 0; i < idfoneGroup.length; i++) {
                     if (!idfoneGroup[i])
                         continue
                     idfoneGroup[i].destroy();
+                    disableInput = false;
+                    uiButtons.visible = true;
+                    chatBar.visible = true;
                 }
             })
         }, 400);
         
         uiScene.input.manager.setCursor({ cursor: 'default' });
         greyScreen.setInteractive({ useHandCursor: false });
-
-        // greyScreen.disableInteractive();
-        // idfoneLower.setInteractive();
-
-        uiBar.setDepth(0);
-        chatBar.setDepth(0);
 
         // var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
         // closeIDFoneButton.setInteractive({ useHandCursor: true });
@@ -916,7 +923,7 @@ uiScene.create = function() {
     }
 
     uiScene.checkInteractive = function() {
-        return !isClickUI;
+        return !(isClickUI || disableInput);
     }
     uiObjectScene.anims.create({
         key: 'inLoad',
@@ -1868,7 +1875,7 @@ inGame.create = function() {
     function clickMovement(pointer) {
         console.log("Clicked on bg");
         
-        if (!uiScene.checkInteractive() || disableInput) return;
+        if (!uiScene.checkInteractive()) return;
         
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
