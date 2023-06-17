@@ -348,7 +348,8 @@ uiScene.create = function() {
     uiBar.setDepth(1000);
 
     inGame.input.keyboard.on('keydown-ENTER', function (event) {
-        if (disableInput) return;
+        if (disableInput || document.activeElement.id == 'chat-input') return;
+
         if (isTyping === false) {
             globalInputChat.value = '';
             globalInputChat.focus();
@@ -385,21 +386,25 @@ uiScene.create = function() {
         {   
             if (globalInputChat.value !== '')
             {
-                if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
-                    bubbleLifeTime.stop();
-                    messageLifeTime.stop();
-                    chatBubble.destroy()
-                    chatMessage.destroy();
-                }
-
-                var filtered = inputChat.value.replace(/<[^>]+>/g, '');
-                createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
-
-                socket.emit('chatMessage', filtered);
+                uiScene.sendChatMessage(inputChat.value);
                 globalInputChat.value = '';
             }
         }
     });
+
+    uiScene.sendChatMessage = (msg) => {
+        if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
+            bubbleLifeTime.stop();
+            messageLifeTime.stop();
+            chatBubble.destroy()
+            chatMessage.destroy();
+        }
+
+        var filtered = msg.replace(/<[^>]+>/g, '');
+        createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
+
+        socket.emit('chatMessage', filtered);
+    }
 
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
@@ -569,13 +574,25 @@ uiScene.create = function() {
             }
             else if (instantMessenger == null) {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
-                
+
                 instantMessenger.setDepth(2000);
             }
 
             imWindow = instantMessenger.getChildByID('im-window');
             imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
+
+
+            uiScene.input.keyboard.on('keydown-ENTER', function (event) {
+                
+                if (document.activeElement.id != 'chat-input')
+                    return
+
+                chatInput = instantMessenger.getChildByID('chat-input');
+                
+                uiScene.sendChatMessage(chatInput.value);
+                chatInput.value = '';
+            })
 
             chatNameText = instantMessenger.getChildByID('chatName');
             chatNameText.innerHTML = "Current Room";
@@ -1185,6 +1202,7 @@ inGame.create = function() {
     // keySpace = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     keyEnter = inGame.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    keyEnterUI = uiScene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
     function initLocation(location) {
 
@@ -1230,8 +1248,8 @@ inGame.create = function() {
                 bgm.destroy();
 
 
-        var loadingScreen = uiScene.add.image(400, 260, 'loadingScreen');
-        var inLoading = uiScene.add.sprite(400, 260, 'inLoading').play('inLoad');
+        var loadingScreen = uiObjectScene.add.image(400, 260, 'loadingScreen');
+        var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
         for (let i = 0; i < locationObjects.length; i++) {
             locationObjects[i].destroy();
@@ -1873,13 +1891,14 @@ inGame.create = function() {
     //#endregion
 
     function clickMovement(pointer) {
-        console.log("Clicked on bg");
-        
-        if (!uiScene.checkInteractive()) return;
-        
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
         globalInputChat.blur();
+
+        if (instantMessenger)
+            instantMessenger.getChildByID('chat-input').blur();
+
+        if (!uiScene.checkInteractive()) return;
         
         globalPointer.x = pointer.x + clickOffsetX;
         globalPointer.y = pointer.y;
