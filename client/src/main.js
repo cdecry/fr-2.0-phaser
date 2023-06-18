@@ -357,18 +357,7 @@ uiScene.create = function() {
         }
         else if (inputChat.value !== ''){
 
-            if (bubbleLifeTime != undefined && bubbleLifeTime.isAlive) {
-                bubbleLifeTime.stop();
-                messageLifeTime.stop();
-                chatBubble.destroy()
-                chatMessage.destroy();
-            }
-
-            var filtered = inputChat.value.replace(/<[^>]+>/g, '');
-
-            createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
-            socket.emit('chatMessage', filtered);
-            
+            uiScene.sendChatMessage(inputChat.value);
             inputChat.value = '';
         }
     });
@@ -401,6 +390,9 @@ uiScene.create = function() {
         }
 
         var filtered = msg.replace(/<[^>]+>/g, '');
+
+        if (filtered.length == 0) return;
+
         createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
 
         socket.emit('chatMessage', filtered);
@@ -585,7 +577,7 @@ uiScene.create = function() {
 
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
                 
-                if (document.activeElement.id != 'chat-input')
+                if (document.activeElement.id != 'chat-input' || chatInput.value.trim().length == 0)
                     return
 
                 chatInput = instantMessenger.getChildByID('chat-input');
