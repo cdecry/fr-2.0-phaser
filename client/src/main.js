@@ -1721,7 +1721,7 @@ inGame.create = function() {
 
     globalThis.socket.on('chatMessageResponse', function (playerInfo, msg) {
         otherPlayers.getChildren().forEach(function (p) {
-            if (playerInfo.id === p.id && !p.getAt(cMap.player).anims.isPlaying && !p.getAt(cMap.eyes).anims.isPlaying) {
+            if (playerInfo.id === p.id) {
 
                 var msgData = p.getData('messageData');
                 if (msgData['hasMessage']) {
