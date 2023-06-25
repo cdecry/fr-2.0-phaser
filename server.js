@@ -13,6 +13,7 @@ const { Player } = require('./network/player');
 // const clients = new Object();
 
 const players = {};
+const usernameToId = {};
 const rooms = {};
 
 // connect to database
@@ -54,6 +55,7 @@ io.on('connection', function (socket) {
             // add player to our list of online players
             var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins);
             players[socket.id] = player;
+            usernameToId[username] = socket.id;
 
             // add player to room list
             if (rooms['downtown'] == null)
@@ -106,6 +108,10 @@ io.on('connection', function (socket) {
 
     socket.on('chatMessage', function(msg) {
         socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
+    })
+
+    socket.on('privateMessage', function(msg, toUser) {
+        io.to(usernameToId[toUser]).emit('privateMessageResponse', players[socket.id], msg);
     })
 
     socket.on('changeRoom', function(room) {

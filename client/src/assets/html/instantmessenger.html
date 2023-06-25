@@ -75,7 +75,6 @@
 
             #chat-tabs-container {
                 position: absolute;
-                /* background-color: green; */
                 left: 2px;
                 width: calc(100% - 4px);
                 height: 56px;
@@ -90,8 +89,8 @@
                 grid-auto-flow: column;
                 overflow-x: scroll;
                 overflow-y: hidden;
-                /* display: flex;
-                flex-direction: row; */
+                display: flex;
+                flex-direction: row;
             }
 
             .chat-tab {
@@ -104,24 +103,31 @@
                 border-top: 1px solid #189af6;
                 border-left: 1px solid #189af6;
                 border-right: 1px solid #189af6;
-                background: white;
+                /* background: white; */
+                background: linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)
             }
 
             .chat-tab:hover {
                 cursor: pointer;
             }
-
-            #new-chat-icon {
+            
+            #new-chat-button {
                 position: absolute;
                 top: 10px;
                 right: 11px;
             }
 
+            #new-chat-button:hover {
+                cursor: pointer;
+            }
+
             #chat-tabs-bottom {
+                margin-left: 2px;
+                margin-right: 2px;
                 position: absolute;
                 top: 30px;
-                width: 100%;
-                height: calc(100% - 30px);
+                width: calc(100% - 4px);
+                height: 26px;
                 border-radius: 5px;
                 background: linear-gradient(to bottom, #20a0f0, #3fccf0, #42d0f0);
             }
@@ -297,13 +303,15 @@
                             <div id="tabName">Current Room</div>
                         </div>
                     </div>
+                </div>
 
-                    <img id="new-chat-icon" src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
+                <div id="new-chat-button">
+                    <img src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
+                </div>
 
-                    <div id="chat-tabs-bottom">
-                        <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
-                        <div id="chatName">Current Room</div>
-                    </div>
+                <div id="chat-tabs-bottom">
+                    <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
+                    <div id="chatName">Current Room</div>
                 </div>
 
                 <div id="chat-content-container">
