@@ -13,12 +13,13 @@ const { Player } = require('./network/player');
 // const clients = new Object();
 
 const players = {};
+const usernameToId = {};
 const rooms = {};
 
 // connect to database
 main().catch(err => console.log(err));
 async function main() {
-    await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
+    await mongoose.connect(process.env.DB_URI);
 }
 
 // get files for client
@@ -54,6 +55,7 @@ io.on('connection', function (socket) {
             // add player to our list of online players
             var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins);
             players[socket.id] = player;
+            usernameToId[username] = socket.id;
 
             // add player to room list
             if (rooms['downtown'] == null)
@@ -106,6 +108,10 @@ io.on('connection', function (socket) {
 
     socket.on('chatMessage', function(msg) {
         socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
+    })
+
+    socket.on('privateMessage', function(msg, toUser) {
+        io.to(usernameToId[toUser]).emit('privateMessageResponse', players[socket.id], msg);
     })
 
     socket.on('changeRoom', function(room) {
@@ -175,11 +181,6 @@ io.on('connection', function (socket) {
         await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
 
     })
-
-    socket.on('chatMessage', function(msg) {
-        socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
-    })
-
 });
 
 server.listen(8081, function () {

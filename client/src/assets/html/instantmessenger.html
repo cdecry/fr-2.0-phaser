@@ -2,11 +2,22 @@
 <html>
     <head>
         <style>
+            html {
+                z-index: 100;
+            }
             body {
                 background-color: burlywood;
             }
 
+            text {
+                text-align: left;
+                -webkit-user-select: none; /* Safari */
+                -ms-user-select: none; /* IE 10 and IE 11 */
+                user-select: none; /* Standard syntax */
+            }
+
             #im-window {
+                border: 1px solid white;
                 position: absolute;
                 left: 100px;
                 top: 50px;
@@ -16,8 +27,11 @@
                 min-height: 200px;
                 border-radius: 5px;
                 background: linear-gradient(to bottom, #597898 0px, #597898 12.5px, #15406d 12.5px, #15406d 100%);
-                overflow: hidden;
+                overflow: auto;
+                max-width: 350px;
+                max-height: 500px;
                 resize: both;
+                overflow: hidden;
             }
 
             #im-header {
@@ -26,6 +40,10 @@
                 height: 34px;
                 background-color: transparent;
             }
+/* 
+            #im-header:hover {
+                background-color: red;
+            } */
 
             #im-title {
                 position: absolute;
@@ -38,6 +56,10 @@
                 top: 4px;
                 right: 5px;
                 border-radius: 100%;
+            }
+
+            #im-close-button:hover {
+                cursor: pointer;
             }
 
             #im-container {
@@ -53,7 +75,6 @@
 
             #chat-tabs-container {
                 position: absolute;
-                /* background-color: green; */
                 left: 2px;
                 width: calc(100% - 4px);
                 height: 56px;
@@ -68,8 +89,8 @@
                 grid-auto-flow: column;
                 overflow-x: scroll;
                 overflow-y: hidden;
-                /* display: flex;
-                flex-direction: row; */
+                display: flex;
+                flex-direction: row;
             }
 
             .chat-tab {
@@ -82,20 +103,31 @@
                 border-top: 1px solid #189af6;
                 border-left: 1px solid #189af6;
                 border-right: 1px solid #189af6;
-                background: white;
+                /* background: white; */
+                background: linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)
             }
 
-            #new-chat-icon {
+            .chat-tab:hover {
+                cursor: pointer;
+            }
+            
+            #new-chat-button {
                 position: absolute;
                 top: 10px;
                 right: 11px;
             }
 
+            #new-chat-button:hover {
+                cursor: pointer;
+            }
+
             #chat-tabs-bottom {
+                margin-left: 2px;
+                margin-right: 2px;
                 position: absolute;
                 top: 30px;
-                width: 100%;
-                height: calc(100% - 30px);
+                width: calc(100% - 4px);
+                height: 26px;
                 border-radius: 5px;
                 background: linear-gradient(to bottom, #20a0f0, #3fccf0, #42d0f0);
             }
@@ -108,11 +140,63 @@
 
             #chat-content-container {
                 position: absolute;
-                /* background-color: red; */
                 height: calc(100% - 121px);
-                width: calc(100% - 25px);
+                width: calc(100% - 2px);
                 top: 56px;
                 left: 2px;
+            }
+            
+            #chat-input-top {
+                margin: 3px;
+                bottom: 40px;
+                position: absolute;
+                width: calc(100% - 6px);
+                height: 21px;
+                border-radius: 5px;
+                border-bottom-left-radius: 0%;
+                border-bottom-right-radius: 0%;
+                background-color: #42d0f0;
+            }
+
+            #chat-input-container {
+                margin: 3px;
+                bottom: 0px;
+                position: absolute;
+                width: calc(100% - 6px);
+                height: 39px;
+                border-radius: 5px;
+                border-top-left-radius: 0%;
+                border-top-right-radius: 0%;
+                background-color: #a0e0e0;
+                overflow: hidden;
+            }
+
+            #chat-input {
+                position: absolute;
+                font-size: 12px;
+                padding:3px;
+                vertical-align: top;
+                width: 100%;
+                height: 100%;
+                left: 0px;
+                top: 0px;
+                background: none;
+                border: none;
+                outline: none;
+                font-family: Arial, Helvetica, sans-serif;
+                overflow-y: scroll;
+            }
+
+            #chat-input::-webkit-scrollbar {
+                display: none; /* Chrome, Safari, and Opera */
+            }
+
+            textarea:focus, input:focus{
+                outline: none;
+            }
+
+            *:focus {
+                outline: none;
             }
 
             .selectDisable {
@@ -131,41 +215,113 @@
                 -o-user-select: text;
                 user-select: text;
             }
+
+            #tabName {
+                margin-top: 3px;
+                font-family: imLabelFont;
+                text-rendering: optimizeLegibility;
+                font-size: 11px;
+                color: white;
+                text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+            }
+
+            #chatName {
+                position: absolute;
+                left: 35px;
+                bottom: 5px;
+                text-align: left;
+                font-family: imLabelFont;
+                text-rendering: optimizeLegibility;
+                font-size: 12px;
+                color: black;
+            }
+
+            #chat-history {
+                margin-top: 2px;
+                margin-bottom: 2px;
+                text-align: left;
+                width: calc(100% - 7px);
+                height: calc(100% - 4px);
+                overflow-y: auto;
+                overflow-wrap: break-word;
+            }
+
+            #chat-history::-webkit-scrollbar {
+                width: 16px;
+                height: 83px;
+                background-color: #dcdcdc;
+                border: 1px solid #a2a2a2;
+            }
+
+            #chat-history::-webkit-scrollbar-thumb {
+                background: linear-gradient(to left, #15406d 50%, #2c537b 50%);
+                border: 1px solid white;
+                margin-top: 1px;
+                margin-bottom: 1px;
+            }
+
+            #chat-history::-webkit-scrollbar-button:vertical {
+                height: 15px;
+                width: 16px;
+                outline: 1px solid white;
+            }
+
+            #chat-history::-webkit-scrollbar-button:start:decrement,
+            #chat-history::-webkit-scrollbar-button:end:increment {
+                display: block;
+            }
+
+            #chat-history::-webkit-scrollbar-button:start:decrement{
+                background-image: url(/src/assets/scene/chat/im-scrollbar-up.png);
+            }
+
+            #chat-history::-webkit-scrollbar-button:end:increment{
+                background-image: url(/src/assets/scene/chat/im-scrollbar-down.png);
+            }
+            
+
+            /* #chat-history::-webkit-scrollbar-button:vertical:decrement {
+                background-color: #444;
+            } */
+
+
         </style>
     </head>
     <body>
-       
-
         <div id="im-window">
             <div id="im-header"></div>
-            <img class="selectDisable" id="im-title" src="./src/assets/scene/instant-messager-title.png"/>
+            <img class="selectDisable" id="im-title" src="./src/assets/scene/chat/instant-messager-title.png"/>
             <div id="im-close-button">
-                <img class="selectDisable" src="./src/assets/scene/im-close-button.png"/>
+                <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
 
             <div id="im-container">
 
                 <div id="chat-tabs-container">
                     <div id="chat-tabs-flexbox">
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
-                        <div onclick="clickChatTab(this)" class="chat-tab"></div>
+                        <div class="chat-tab" id="Current Room">
+                            <div id="tabName">Current Room</div>
+                        </div>
                     </div>
+                </div>
 
-                    <img class="selectDisable" id="new-chat-icon" src="./src/assets/scene/new-chat-icon.png"/>
+                <div id="new-chat-button">
+                    <img src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
+                </div>
 
-                    <div id="chat-tabs-bottom">
-                        <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat-icon.png"/>
-                    </div>
+                <div id="chat-tabs-bottom">
+                    <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
+                    <div id="chatName">Current Room</div>
                 </div>
 
                 <div id="chat-content-container">
-                    <p>user1: hi this is a chat message</p>
+                    <div id="chat-history"></div>
                 </div>
-                <div id="chat-input-container"></div>
+                <div id="chat-input-top"></div>
+                <div id="chat-input-container">
+                    <textarea id="chat-input" spellcheck="false"></textarea>
+                </div>
             </div>
         </div>
-
     </body>
 </html>
