@@ -195,8 +195,11 @@ function createSpeechBubble (x, y, username, quote)
     container.add([chatBubble, chatMessage]);
 
     chatTabs['Current Room'] += username + ": " + quote + '<br>';
-    if (instantMessenger)
-        instantMessenger.getChildByID('chat-history').innerHTML = chatTabs['Current Room'];
+    if (instantMessenger) {
+        var chatHistory = instantMessenger.getChildByID('chat-history');
+        chatHistory.innerHTML = chatTabs['Current Room'];
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
 }
 
 function createOtherSpeechBubble (otherPlayer, x, y, quote)
@@ -238,8 +241,11 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherMessageLifeTime': otherMessageLifeTime });
 
     chatTabs['Current Room'] += otherPlayer.getData('username') + ": " + quote + '<br>';
-    if (instantMessenger)
-        instantMessenger.getChildByID('chat-history').innerHTML = chatTabs['Current Room'];
+    if (instantMessenger) {
+        var chatHistory = instantMessenger.getChildByID('chat-history');
+        chatHistory.innerHTML = chatTabs['Current Room'];
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
 } 
 
 var uiScene = new Phaser.Scene('UIScene');
@@ -566,14 +572,12 @@ uiScene.create = function() {
             }
             else if (instantMessenger == null) {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
-
                 instantMessenger.setDepth(2000);
             }
 
             imWindow = instantMessenger.getChildByID('im-window');
             imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
-
 
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
                 
@@ -589,7 +593,9 @@ uiScene.create = function() {
             chatNameText = instantMessenger.getChildByID('chatName');
             chatNameText.innerHTML = "Current Room";
 
-            instantMessenger.getChildByID('chat-history').innerHTML = chatTabs['Current Room'];
+            chatHistory = document.getElementById('chat-history');
+            chatHistory.innerHTML = chatTabs['Current Room'];
+            chatHistory.scrollTop = chatHistory.scrollHeight;
 
             instantMessenger.getChildByID('im-close-button').onmousedown = () => {
                 imWindow.style.visibility = 'hidden';
