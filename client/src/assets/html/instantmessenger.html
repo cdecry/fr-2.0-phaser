@@ -283,7 +283,7 @@
             #buddy-window {
                 border: 1px solid white;
                 position: absolute;
-                left: 80px;
+                left: 0px;
                 top: 50px;
                 width: 202px;
                 height: 202px;
@@ -323,9 +323,8 @@
                 position: absolute;
                 top: 34px;
                 left: 4px;
-                /* border: 1px solid green; */
                 width: calc(100% - 8px);
-                height: calc(100% - 37px);
+                height: 146px;
                 border-radius: 5px;
                 background-color: white;
             }
@@ -393,6 +392,16 @@
                 left: 2px;
             }
 
+            #myBuddiesLabel {
+                position: absolute;
+                left: 20px;
+                top: 8px;
+                font-family: imLabelFont;
+                text-rendering: optimizeLegibility;
+                font-size: 11px;
+                color: #fcfcfc;
+                text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+            }
 
         </style>
     </head>
@@ -409,7 +418,7 @@
                 <div id="chat-tabs-container">
                     <div id="chat-tabs-flexbox">
                         <div class="chat-tab" id="Current Room">
-                            <div id="tabName">Current Room</div>
+                            <div id="tabName" class="selectDisable">Current Room</div>
                         </div>
                     </div>
                 </div>
@@ -420,7 +429,7 @@
 
                 <div id="chat-tabs-bottom">
                     <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
-                    <div id="chatName">Current Room</div>
+                    <div id="chatName" class="selectDisable">Current Room</div>
                 </div>
 
                 <div id="chat-content-container">
@@ -435,7 +444,7 @@
 
         <div id="buddy-window">
             <div id="buddy-header"></div>
-                <div id="myBuddiesLabel">My Buddies</div>
+                <div id="myBuddiesLabel" class="selectDisable">My Buddies</div>
                 <div id="buddy-close-button">
                 <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
