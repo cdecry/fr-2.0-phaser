@@ -590,9 +590,83 @@ uiScene.create = function() {
 
                 buddyWindow = instantMessenger.getChildByID('buddy-window');
                 buddyHeader = instantMessenger.getChildByID('buddy-header');
+                instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
 
                 enableIMDrag(instantMessenger, imHeader, imWindow);
                 enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
+
+                // Sort buddies
+                sortTable();
+
+                // function sortTable() {
+                //     var table, rows, switching, i, x, y, shouldSwitch;
+                //     table = document.getElementById("buddy-table");
+                //     switching = true;
+
+                //     while (switching) {
+
+                //         switching = false;
+                //         rows = table.rows;
+
+                //         for (i = 0; i < (rows.length - 1); i++) {
+                //             shouldSwitch = false;
+                //             x = rows[i].getElementsByTagName("TD")[0];
+                //             y = rows[i + 1].getElementsByTagName("TD")[0];
+
+                //         if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                //             shouldSwitch = true;
+                //             break;
+                //         }
+                //         }
+                //         if (shouldSwitch) {
+                //             rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                //             switching = true;
+                //         }
+                //     }
+                // }
+
+                function sortTable() {
+                    var table = document.getElementById("buddy-table");
+                    var rows = Array.from(table.rows); // Exclude the header row
+                    quickSort(rows, 0, rows.length - 1);
+                    
+                    console.log(rows);
+
+                    for (var i = 0; i < rows.length; i++) {
+                      table.appendChild(rows[i]);
+                    }
+                }
+                  
+                function quickSort(arr, left, right) {
+                    if (left < right) {
+                      var pivotIndex = partition(arr, left, right);
+                      quickSort(arr, left, pivotIndex - 1);
+                      quickSort(arr, pivotIndex + 1, right);
+                    }
+                }
+                  
+                function partition(arr, left, right) {
+                    var pivot = arr[right].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+                    var i = left - 1;
+                    
+                    for (var j = left; j < right; j++) {
+                      var currentValue = arr[j].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+                      
+                      if (currentValue <= pivot) {
+                        i++;
+                        swap(arr, i, j);
+                      }
+                    }
+                    
+                    swap(arr, i + 1, right);
+                    return i + 1;
+                  }
+                  
+                function swap(arr, i, j) {
+                    var temp = arr[i];
+                    arr[i] = arr[j];
+                    arr[j] = temp;
+                }
             }
 
             // Set IM visible (open)
@@ -692,6 +766,16 @@ uiScene.create = function() {
                     chatHistory.innerHTML = chatTabs[openChatTab];
                     chatHistory.scrollTop = chatHistory.scrollHeight;
                 };
+            }
+
+            instantMessenger.getChildByID("Buddy List").onmousedown = () => {
+                instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                instantMessenger.getChildByID("Ignore List").style.background = 'white'
+            }
+
+            instantMessenger.getChildByID("Ignore List").onmousedown = () => {
+                instantMessenger.getChildByID("Ignore List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                instantMessenger.getChildByID("Buddy List").style.background = 'white'
             }
 
             function enableIMDrag() {

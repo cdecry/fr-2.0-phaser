@@ -246,36 +246,43 @@
                 overflow-wrap: break-word;
             }
 
-            #chat-history::-webkit-scrollbar {
+            #chat-history::-webkit-scrollbar,
+            #buddies-container::-webkit-scrollbar {
                 width: 16px;
                 height: 83px;
                 background-color: #dcdcdc;
                 border: 1px solid #a2a2a2;
             }
 
-            #chat-history::-webkit-scrollbar-thumb {
+            #chat-history::-webkit-scrollbar-thumb,
+            #buddies-container::-webkit-scrollbar-thumb {
                 background: linear-gradient(to left, #15406d 50%, #2c537b 50%);
                 border: 1px solid white;
                 margin-top: 1px;
                 margin-bottom: 1px;
             }
 
-            #chat-history::-webkit-scrollbar-button:vertical {
+            #chat-history::-webkit-scrollbar-button:vertical,
+            #buddies-container::-webkit-scrollbar-button:vertical {
                 height: 15px;
                 width: 16px;
                 outline: 1px solid white;
             }
 
             #chat-history::-webkit-scrollbar-button:start:decrement,
-            #chat-history::-webkit-scrollbar-button:end:increment {
+            #chat-history::-webkit-scrollbar-button:end:increment,
+            #buddies-container::-webkit-scrollbar-button:start:decrement,
+            #buddies-container::-webkit-scrollbar-button:end:increment {
                 display: block;
             }
 
-            #chat-history::-webkit-scrollbar-button:start:decrement{
+            #chat-history::-webkit-scrollbar-button:start:decrement,
+            #buddies-container::-webkit-scrollbar-button:start:decrement {
                 background-image: url(/src/assets/scene/chat/im-scrollbar-up.png);
             }
 
-            #chat-history::-webkit-scrollbar-button:end:increment{
+            #chat-history::-webkit-scrollbar-button:end:increment,
+            #buddies-container::-webkit-scrollbar-button:end:increment {
                 background-image: url(/src/assets/scene/chat/im-scrollbar-down.png);
             }
             
@@ -386,10 +393,12 @@
 
             #buddies-container {
                 position: absolute;
-                height: calc(100% - 121px);
-                width: calc(100% - 2px);
-                top: 56px;
+                height: calc(100% - 67px);
+                width: calc(100% - 4px);
+                top: 63px;
                 left: 2px;
+                overflow-x: hidden;
+                overflow-y: auto;
             }
 
             #myBuddiesLabel {
@@ -401,6 +410,35 @@
                 font-size: 11px;
                 color: #fcfcfc;
                 text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+            }
+
+            #buddy-table {
+                font-size: 13px;
+                font-family: imLabelFont;
+                border-collapse: collapse;
+                width: 100%;
+                color: #505090;
+            }
+
+            .buddy-table-data {
+                vertical-align: top;
+                padding-top: 1px;
+                padding-left: 2px;
+                text-align: left;
+            }
+
+            .buddy-table-data img,
+            .buddy-table-data div {
+                display: inline-block;
+                vertical-align: middle;
+            }
+
+            #buddy_username {
+                padding-left: 5px;
+            }
+
+            tr:nth-child(odd) {
+                background-color: #d0ffff;
             }
 
         </style>
@@ -466,6 +504,64 @@
                 </div>
 
                 <div id="buddies-container">
+                    <table id="buddy-table">
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">zork</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">apple_123</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">girlzz__</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">bluerberry7</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">jake</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">2341</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">i_am_drowning</div>
+                            </td>
+                        </tr>
+                        <tr class="buddy-table-row">
+                            <td class="buddy-table-data">
+                                <img class="selectDisable" class="offline" src="./src/assets/scene/chat/offline-icon.png"/>
+                                <img class="selectDisable" class="unlocked" src="./src/assets/scene/chat/home-icon.png"/>
+                                <div id="buddy-username" class="selectDisable">noooom_2</div>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
