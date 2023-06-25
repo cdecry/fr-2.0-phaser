@@ -335,9 +335,11 @@ uiScene.create = function() {
     inventoryUI.setVisible(false);
 
     var imDiffX = 0, imDiffY = 0, imCurrX = 0, imCurrY = 0;
-    var imHeader, imWindow;
+    var buddyDiffX = 0, buddyDiffY = 0, buddyCurrX = 0, buddyCurrY = 0;
+    var imHeader, imWindow, buddyHeader, buddyWindow;
     var isClickUI = false;
     var isMouseDownHandleIM = false;
+    var isMouseDownHandleBuddy = false;
 
     transparentScreen = uiScene.add.dom(0, 0).createFromCache('transparentHTML');
     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
@@ -574,6 +576,8 @@ uiScene.create = function() {
             // Create IM for first time
             else if (instantMessenger == null) {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
+                // buddyList = uiScene.add.dom(0, 123).createFromCache('buddyListHTML')
+
                 instantMessenger.setDepth(2000);
             }
 
@@ -581,6 +585,10 @@ uiScene.create = function() {
             imWindow = instantMessenger.getChildByID('im-window');
             imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
+
+            buddyWindow = instantMessenger.getChildByID('buddy-window');
+            buddyHeader = instantMessenger.getChildByID('buddy-header');
+            // buddyWindow.style.visibility = 'visible';
 
             // Load chat name & history for open tab, auto-scroll to bottom
             chatNameText = instantMessenger.getChildByID('chatName');
@@ -669,8 +677,10 @@ uiScene.create = function() {
                 };
             }
 
-            enableDivDrag(instantMessenger, imHeader, imWindow);
-            function enableDivDrag(domElement, divHandle, divToMove) {
+            enableIMDrag(instantMessenger, imHeader, imWindow);
+            enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
+
+            function enableIMDrag() {
                 isMouseDownHandleIM = false;
 
                 transparentScreen.addListener('pointerup');
@@ -686,26 +696,26 @@ uiScene.create = function() {
                         dragIM(pointer);
                 })
 
-                domElement.addListener('pointerup');
-                domElement.on('pointerup', function() {
+                instantMessenger.addListener('pointerup');
+                instantMessenger.on('pointerup', function() {
                     isMouseDownHandleIM = false;
                     isClickUI = false;
                     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
                 })
-                domElement.addListener('pointermove');
-                domElement.on('pointermove', function(pointer, x, y, event) {
+                instantMessenger.addListener('pointermove');
+                instantMessenger.on('pointermove', function(pointer, x, y, event) {
                     if (isMouseDownHandleIM)
                         dragIM(pointer);
                 })
-                domElement.addListener('pointerdown');
-                domElement.on('pointerdown', function() {
+                instantMessenger.addListener('pointerdown');
+                instantMessenger.on('pointerdown', function() {
                     isClickUI = true;
                     inGame.input.stopPropagation();
                 })
             
-                divToMove.style.top = '50px';
-                divToMove.style.left = '100px';
-                divHandle.onmousedown = dragMouseDown;
+                imWindow.style.top = '50px';
+                imWindow.style.left = '100px';
+                imHeader.onmousedown = dragMouseDown;
 
                 function dragMouseDown(e) {
                     isMouseDownHandleIM = true;
@@ -721,10 +731,68 @@ uiScene.create = function() {
                     imCurrX = ptr.x;
                     imCurrY = ptr.y;
 
-                    currTop = parseInt(divToMove.style.top.slice(0, -2));
-                    currLeft = parseInt(divToMove.style.left.slice(0, -2));
-                    divToMove.style.top = (currTop + imDiffY).toString() + 'px';
-                    divToMove.style.left = (currLeft + imDiffX).toString() + 'px';
+                    currTop = parseInt(imWindow.style.top.slice(0, -2));
+                    currLeft = parseInt(imWindow.style.left.slice(0, -2));
+                    imWindow.style.top = (currTop + imDiffY).toString() + 'px';
+                    imWindow.style.left = (currLeft + imDiffX).toString() + 'px';
+                }
+            }
+
+            function enableBuddyDrag() {
+                isMouseDownHandleBuddy = false;
+
+                transparentScreen.addListener('pointerup');
+                transparentScreen.addListener('pointermove');
+
+                transparentScreen.on('pointerup', function() {
+                    isMouseDownHandleBuddy = false;
+                    isClickUI = false;
+                    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+                })
+                transparentScreen.on('pointermove', function(pointer, x, y, event) {
+                    if (isMouseDownHandleBuddy)
+                        dragBuddy(pointer);
+                })
+
+                instantMessenger.addListener('pointerup');
+                instantMessenger.on('pointerup', function() {
+                    isMouseDownHandleBuddy = false;
+                    isClickUI = false;
+                    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+                })
+                instantMessenger.addListener('pointermove');
+                instantMessenger.on('pointermove', function(pointer, x, y, event) {
+                    if (isMouseDownHandleBuddy)
+                        dragBuddy(pointer);
+                })
+                instantMessenger.addListener('pointerdown');
+                instantMessenger.on('pointerdown', function() {
+                    isClickUI = true;
+                    inGame.input.stopPropagation();
+                })
+            
+                buddyWindow.style.top = '50px';
+                buddyWindow.style.left = '100px';
+                buddyHeader.onmousedown = dragMouseDown;
+
+                function dragMouseDown(e) {
+                    isMouseDownHandleBuddy = true;
+                    transparentScreen.getChildByID('screen').style.visibility = 'visible';
+
+                    buddyCurrX = e.clientX;
+                    buddyCurrY = e.clientY;
+                }
+
+                function dragBuddy(ptr) {
+                    buddyDiffX = ptr.x - buddyCurrX;
+                    buddyDiffY = ptr.y - buddyCurrY;
+                    buddyCurrX = ptr.x;
+                    buddyCurrY = ptr.y;
+
+                    currTop = parseInt(buddyWindow.style.top.slice(0, -2));
+                    currLeft = parseInt(buddyWindow.style.left.slice(0, -2));
+                    buddyWindow.style.top = (currTop + buddyDiffY).toString() + 'px';
+                    buddyWindow.style.left = (currLeft + buddyDiffX).toString() + 'px';
                 }
             }
         }
@@ -1165,6 +1233,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.html('messageWidth', 'html/messagewidth.html');
     thisScene.load.html('chatMessageHTML', 'html/chatmessage.html');
     thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
+    thisScene.load.html('buddyListHTML', 'html/buddyList.html');
     thisScene.load.html('transparentHTML', 'html/transparent.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
     

@@ -53,7 +53,7 @@ io.on('connection', function (socket) {
             const avatar = await getUserAvatar(result.id);
 
             // add player to our list of online players
-            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins);
+            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins, result.buddies);
             players[socket.id] = player;
             usernameToId[username] = socket.id;
 

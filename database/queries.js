@@ -40,7 +40,7 @@ exports.registerUser =  async function (id, username, password, gender) {
 
 exports.loginRequest = async function (username, password) {
     return new Promise((resolve, reject) => {
-        User.findOne({ 'username': username }, 'id username password inventory level isMember idfone stars ecoins', function (err, user) {
+        User.findOne({ 'username': username }, 'id username password inventory level isMember idfone stars ecoins buddies', function (err, user) {
             if (user != null && password === user.password)
                 resolve(user);
             else
