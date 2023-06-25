@@ -640,6 +640,7 @@ uiScene.create = function() {
                 
                 chatTabs['jake'] = "";
                 chatHistory.innerHTML = "";
+                chatNameText.innerHTML = 'jake';
 
                 addChatTabListener();
             }
