@@ -195,7 +195,7 @@ function createSpeechBubble (x, y, username, quote)
     container.add([chatBubble, chatMessage]);
 
     chatTabs['Current Room'] += username + ": " + quote + '<br>';
-    if (instantMessenger) {
+    if (instantMessenger && openChatTab == 'Current Room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
         chatHistory.innerHTML = chatTabs['Current Room'];
         chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -241,7 +241,7 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherMessageLifeTime': otherMessageLifeTime });
 
     chatTabs['Current Room'] += otherPlayer.getData('username') + ": " + quote + '<br>';
-    if (instantMessenger) {
+    if (instantMessenger && openChatTab == 'Current Room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
         chatHistory.innerHTML = chatTabs['Current Room'];
         chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -562,6 +562,7 @@ uiScene.create = function() {
         }
         else if (event.target.id === 'buddiesButton') {
 
+            // Click buddies button while IM is open to reset window to default
             if (instantMessenger != null && imWindow.style.visibility == 'visible') {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
                 imWindow.style.top = '50px';
@@ -570,15 +571,25 @@ uiScene.create = function() {
                 imWindow.style.height = '250px';
                 return;
             }
+            // Create IM for first time
             else if (instantMessenger == null) {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
                 instantMessenger.setDepth(2000);
             }
 
+            // Set IM visible (open)
             imWindow = instantMessenger.getChildByID('im-window');
             imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
 
+            // Load chat name & history for open tab, auto-scroll to bottom
+            chatNameText = instantMessenger.getChildByID('chatName');
+            chatHistory = document.getElementById('chat-history');
+            chatNameText.innerHTML = openChatTab;
+            chatHistory.innerHTML = chatTabs[openChatTab];
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
                 
                 if (document.activeElement.id != 'chat-input' || chatInput.value.trim().length == 0)
@@ -586,40 +597,78 @@ uiScene.create = function() {
 
                 chatInput = instantMessenger.getChildByID('chat-input');
                 
-                uiScene.sendChatMessage(chatInput.value);
+                msg = chatInput.value;
                 chatInput.value = '';
+
+                if (openChatTab == "Current Room")
+                    uiScene.sendChatMessage(msg);
+                else {
+                    var filtered = msg.replace(/<[^>]+>/g, '');
+                    if (filtered.length == 0) return;
+                    chatTabs[openChatTab] += myPlayerInfo.username + ": " + msg + '<br>';
+                    chatHistory.innerHTML = chatTabs[openChatTab];
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                    socket.emit('privateMessage', filtered, openChatTab);
+                }
             })
 
-            chatNameText = instantMessenger.getChildByID('chatName');
-            chatNameText.innerHTML = "Current Room";
-
-            chatHistory = document.getElementById('chat-history');
-            chatHistory.innerHTML = chatTabs['Current Room'];
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
+            // Add listener: click to close instant messenger
             instantMessenger.getChildByID('im-close-button').onmousedown = () => {
                 imWindow.style.visibility = 'hidden';
-
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
             }
 
-            for (var chatTabName in chatTabs) {
-                tab = instantMessenger.getChildByID(chatTabName);
-                tab.onmousedown = () => {
+            instantMessenger.getChildByID('new-chat-button').onmousedown = () => {
+                // Test${Object.keys(chatTabs).length.toString()}
+                // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
+                var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+                var html = `<div class="chat-tab" id="jake">
+                                <div id="tabName">jake</div>
+                            </div> `
+                tabsFlexbox.innerHTML += html;
+
+                tab = instantMessenger.getChildByID('jake');
+                for (var otherTabName in chatTabs) {
+                    otherTab = instantMessenger.getChildByID(otherTabName);
+                    otherTab.style.background = 'white';
+                };
+                openChatTab = 'jake';
+                tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                
+                chatTabs['jake'] = "";
+                chatHistory.innerHTML = "";
+
+                addChatTabListener();
+            }
+            
+            // Add listener: click to switch to chat tab
+            addChatTabListener();
+
+            function addChatTabListener() {
+                for (var chatTabName in chatTabs) {
+                    var tab = instantMessenger.getChildByID(chatTabName);
+                    tab.onmousedown = createTabClickListener(tab);
+                }
+            }
+            
+            function createTabClickListener(tab) {
+                return function() {
                     for (var otherTabName in chatTabs) {
-                        otherTab = instantMessenger.getChildByID(otherTabName);
+                        var otherTab = instantMessenger.getChildByID(otherTabName);
                         otherTab.style.background = 'white';
-                    };
+                    }
                     tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                    openChatTab = tab.id;
+                    chatNameText.innerHTML = openChatTab;
+                    chatHistory.innerHTML = chatTabs[openChatTab];
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
                 };
             }
 
             enableDivDrag(instantMessenger, imHeader, imWindow);
-
-            // enabled drag for divs: divHandle is the part of the div to move it by,
-            // divToMove is the whole div we want to move on drag
             function enableDivDrag(domElement, divHandle, divToMove) {
                 isMouseDownHandleIM = false;
 
@@ -980,6 +1029,7 @@ var clickOffsetY = 110;
 var currentLocation = "downtown";
 var boundOffset = 150;
 
+var openChatTab = "Current Room";
 var chatTabs = {
     "Current Room": ""
 }
@@ -1739,6 +1789,12 @@ inGame.create = function() {
                 createOtherSpeechBubble(p, playerInfo.x, playerInfo.y, msg);
             }
             }.bind(this));
+
+    }.bind(this));
+
+    globalThis.socket.on('privateMessageResponse', function (playerInfo, msg) {
+        // if no chat tab open, add this chat tab
+        console.log('Incoming PM from ' + playerInfo.username + ': ' + msg);
 
     }.bind(this));
 
