@@ -565,30 +565,39 @@ uiScene.create = function() {
         else if (event.target.id === 'buddiesButton') {
 
             // Click buddies button while IM is open to reset window to default
-            if (instantMessenger != null && imWindow.style.visibility == 'visible') {
+            if (instantMessenger != null && (imWindow.style.visibility == 'visible' || buddyWindow.style.visibility == 'visible')) {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
+                buddyCurrX = 0, buddyCurrY = 0, buddyDiffX = 0, buddyDiffY = 0;
                 imWindow.style.top = '50px';
                 imWindow.style.left = '100px';
                 imWindow.style.width = '350px';
                 imWindow.style.height = '250px';
+                buddyWindow.style.top = '50px';
+                buddyWindow.style.left = '-104px';
+
+                imWindow.style.visibility = 'visible';
+                buddyWindow.style.visibility = 'visible';
+
                 return;
             }
             // Create IM for first time
             else if (instantMessenger == null) {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
-                // buddyList = uiScene.add.dom(0, 123).createFromCache('buddyListHTML')
-
                 instantMessenger.setDepth(2000);
+
+                imWindow = instantMessenger.getChildByID('im-window');
+                imHeader = instantMessenger.getChildByID('im-header');
+
+                buddyWindow = instantMessenger.getChildByID('buddy-window');
+                buddyHeader = instantMessenger.getChildByID('buddy-header');
+
+                enableIMDrag(instantMessenger, imHeader, imWindow);
+                enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
             }
 
             // Set IM visible (open)
-            imWindow = instantMessenger.getChildByID('im-window');
-            imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
-
-            buddyWindow = instantMessenger.getChildByID('buddy-window');
-            buddyHeader = instantMessenger.getChildByID('buddy-header');
-            // buddyWindow.style.visibility = 'visible';
+            buddyWindow.style.visibility = 'visible';
 
             // Load chat name & history for open tab, auto-scroll to bottom
             chatNameText = instantMessenger.getChildByID('chatName');
@@ -624,6 +633,14 @@ uiScene.create = function() {
             // Add listener: click to close instant messenger
             instantMessenger.getChildByID('im-close-button').onmousedown = () => {
                 imWindow.style.visibility = 'hidden';
+                setTimeout(function () {
+                    isClickUI = false;
+                }, 50);
+            }
+
+            // Add listener: click to close bududy list
+            instantMessenger.getChildByID('buddy-close-button').onmousedown = () => {
+                buddyWindow.style.visibility = 'hidden';
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
@@ -676,9 +693,6 @@ uiScene.create = function() {
                     chatHistory.scrollTop = chatHistory.scrollHeight;
                 };
             }
-
-            enableIMDrag(instantMessenger, imHeader, imWindow);
-            enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
 
             function enableIMDrag() {
                 isMouseDownHandleIM = false;
@@ -1233,7 +1247,6 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.html('messageWidth', 'html/messagewidth.html');
     thisScene.load.html('chatMessageHTML', 'html/chatmessage.html');
     thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
-    thisScene.load.html('buddyListHTML', 'html/buddyList.html');
     thisScene.load.html('transparentHTML', 'html/transparent.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
     
