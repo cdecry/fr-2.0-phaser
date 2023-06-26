@@ -557,7 +557,6 @@ uiScene.create = function() {
             }
         }
         else if (event.target.id === 'buddiesButton') {
-
             // Click buddies button while IM is open to reset window to default
             if (instantMessenger != null && (imWindow.style.visibility == 'visible' || buddyWindow.style.visibility == 'visible')) {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
@@ -589,6 +588,7 @@ uiScene.create = function() {
 
                 enableIMDrag(instantMessenger, imHeader, imWindow);
                 enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
+            }
 
             // Set IM visible (open)
             imWindow.style.visibility = 'visible';
@@ -668,7 +668,6 @@ uiScene.create = function() {
                 arr[i] = arr[j];
                 arr[j] = temp;
             }
-        }
 
             // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
