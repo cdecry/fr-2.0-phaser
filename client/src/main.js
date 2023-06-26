@@ -326,9 +326,11 @@ uiScene.create = function() {
 
     var inventory = uiObjectScene.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = uiObjectScene.add.dom(400,260).createFromCache('inventoryUI');
+    var idfoneButtonsHTML = uiObjectScene.add.dom(400, 260).createFromCache('idfoneButtonsHTML');
     inventory.setDepth(1000);
     inventory.setVisible(false);
     inventoryUI.setVisible(false);
+    idfoneButtonsHTML.setVisible(false);
 
     var imDiffX = 0, imDiffY = 0, imCurrX = 0, imCurrY = 0;
     var buddyDiffX = 0, buddyDiffY = 0, buddyCurrX = 0, buddyCurrY = 0;
@@ -1046,13 +1048,17 @@ uiScene.create = function() {
         disableInput = true;
         uiButtons.visible = false;
         chatBar.visible = false;
-
+        
         var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
         var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
-        var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
+        var idfoneLower, idfoneButtons, idfoneWallpaper, idfoneUpper, idfoneShadow;
 
         setTimeout(function () {
             idfoneLower = uiObjectScene.add.image(400, 230, 'idfoneLower');
+
+            if (!isLocalPlayer)
+                idfoneButtons = uiObjectScene.add.image(400, 230, 'idfoneButtons');
+
             idfoneWallpaper = uiObjectScene.add.image(400, 260, 'idfoneDefault');
             idfoneUpper = uiObjectScene.add.image(400, 260, 'idfoneUpper');
             idfoneShadow = uiObjectScene.add.image(400, 260, 'idfoneShadow');
@@ -1064,6 +1070,18 @@ uiScene.create = function() {
                 ease: 'Linear',
                 duration: 300,
             });
+
+            if (!isLocalPlayer) {
+                idfoneButtonsHTML.visible = true;
+
+                tween = uiObjectScene.tweens.add({
+                    targets: idfoneButtons,
+                    x: 400,
+                    y: 260,
+                    ease: 'Linear',
+                    duration: 300,
+                });
+            }
 
             createAvatarPreview(playerInfo);
             avatarPreview.setPosition(460, 190);
@@ -1114,7 +1132,9 @@ uiScene.create = function() {
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
 
-            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel, tempDomBlocker, tempObjectBlocker];
+
+
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneButtons, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel, tempDomBlocker, tempObjectBlocker];
 
             closeIDFoneButton.on('pointerdown', () => {
                 for (let i = 0; i < idfoneGroup.length; i++) {
@@ -1122,6 +1142,7 @@ uiScene.create = function() {
                         continue
                     idfoneGroup[i].destroy();
                     disableInput = false;
+                    idfoneButtonsHTML.visible = false;
                     uiButtons.visible = true;
                     chatBar.visible = true;
                 }
@@ -1333,6 +1354,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     thisScene.load.html('uiButtons', 'html/uiButtons.html');
     thisScene.load.html('inventoryUI', 'html/inventoryUI.html');
+    thisScene.load.html('idfoneButtonsHTML', 'html/idfoneButtons.html');
     // Load IDFone ui
     thisScene.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
     thisScene.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
@@ -1340,6 +1362,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
     thisScene.load.image('idfoneBevel', 'scene/ui/idfone/idfoneBevel.png');
     thisScene.load.image('idfoneBevelBalance', 'scene/ui/idfone/idfoneBevelBalance.png');
+    thisScene.load.image('idfoneButtons', 'scene/ui/idfone/idfoneButtonsSet.png');
 
     thisScene.load.image('idfoneBlueStar', 'scene/ui/idfone/idfoneBlueStar.png');
     thisScene.load.image('idfoneMemberBadge', 'scene/ui/idfone/idfoneMemberBadge.png');

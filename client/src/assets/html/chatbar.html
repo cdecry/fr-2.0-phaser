@@ -49,6 +49,14 @@
             button:active{
                 background-color: rgba(255, 255, 255, 0.25)
             }
+            .selectDisable {
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -o-user-select: none;
+                user-select: none;
+                pointer-events: none;
+            }
         </style>
     </head>
     <body>
@@ -57,7 +65,7 @@
             <button class="chatButton"></button>
             <button class="chatButton"></button>
             <button class="chatButton"></button>
-            <input id="chatInput" type="text" name="chatInput" spellcheck="false" autocomplete="off" maxlength="80"/>
+            <input id="chatInput" type="text" name="chatInput" spellcheck="false" autocomplete="off" maxlength="80" class="selectDisable"/>
             <button id="sendButton" name="sendChatButton"></button>
         </div>
 
