@@ -65,10 +65,10 @@
                     inset 0 0 3px 5px rgba(0,0,0,.05),
                     2px 2px 4px 0 rgba(0,0,0,.20);
             }
-            #yes-button {
+            #br-yes-button {
                 background-color: #09a903;
             }
-            #no-button {
+            #br-no-button {
                 background-color: #d11501;
             }
             #panel button:before, #panel button:after {
@@ -99,6 +99,16 @@
             -o-user-select: none;
             user-select: none;
         }
+        #panel button:hover {
+            cursor: pointer;
+        }
+
+        #br-yes-button:active{
+            background-color: #0c9707b6;
+        }
+        #br-no-button:active{
+            background-color: #bd1805af;
+        }
 
         </style>
     </head>
@@ -108,8 +118,8 @@
             <div id="accept-buddy-label" class="selectDisable">Accept Buddy?</div>
             <div id="request-user-label" class="selectDisable">lotusrainxoxo</div>
             <div id="button-container">
-                <button id="yes-button" class="selectDisable">Yes</button>
-                <button id="no-button" class="selectDisable">No</button>
+                <button id="br-yes-button">Yes</button>
+                <button id="br-no-button">No</button>
             </div>
         </div>
 

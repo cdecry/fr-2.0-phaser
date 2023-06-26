@@ -6,7 +6,7 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar, changeEquipped } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped, addBuddy } = require('./database/queries');
 const { Player } = require('./network/player');
 
 // store clients (id: socketid)
@@ -51,7 +51,7 @@ io.on('connection', function (socket) {
 
             // get avatar
             const avatar = await getUserAvatar(result.id);
-
+            
             // add player to our list of online players
             var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins, result.buddies);
             players[socket.id] = player;
@@ -114,8 +114,17 @@ io.on('connection', function (socket) {
         io.to(usernameToId[toUser]).emit('privateMessageResponse', players[socket.id], msg);
     })
 
-    socket.on('friendRequest', function(toUser) {
-        io.to(usernameToId[toUser]).emit('friendRequestResponse', players[socket.id]);
+    socket.on('buddyRequest', function(toUser) {
+        io.to(usernameToId[toUser]).emit('buddyRequestResponse', players[socket.id]);
+    })
+
+    socket.on('acceptBuddyRequest', async (userId, username) => {
+
+        await addBuddy(players[socket.id].pid, userId, username);
+        await addBuddy(userId, players[socket.id].pid, players[socket.id].username);
+            io.to(socket.id).emit('acceptBuddyRequestResponse', players[socket.id].buddies);
+        if (usernameToId.hasOwnProperty(username))
+            io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies);
     })
 
     socket.on('changeRoom', function(room) {
