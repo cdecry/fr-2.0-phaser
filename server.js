@@ -115,8 +115,7 @@ io.on('connection', function (socket) {
     })
 
     socket.on('friendRequest', function(toUser) {
-        console.log('received friend request');
-        io.to(usernameToId[toUser]).emit('friendRequestResponse', players[socket.id].username);
+        io.to(usernameToId[toUser]).emit('friendRequestResponse', players[socket.id]);
     })
 
     socket.on('changeRoom', function(room) {

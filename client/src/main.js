@@ -580,9 +580,6 @@ uiScene.create = function() {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
                 instantMessenger.setDepth(2000);
 
-                buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
-                buddyRequestPopup.setDepth(3000);
-
                 imWindow = instantMessenger.getChildByID('im-window');
                 imHeader = instantMessenger.getChildByID('im-header');
 
@@ -607,8 +604,9 @@ uiScene.create = function() {
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // Load buddy list (if on buddy list tab)
+            // Load buddy list and requests
             loadBuddyList();
+            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
 
             function loadBuddyList() {
                 var buddyRows = [];
@@ -713,6 +711,18 @@ uiScene.create = function() {
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
+            }
+
+            // Add listener: click on buddy requests
+            var buddyRequestButtons = document.getElementsByClassName("buddyRequestIcon");
+            
+            for (var buddyRequest in buddyRequestButtons) {
+                buddyRequest.onmousedown = createBuddyRequestListener(buddyRequest);
+            }
+
+            function createBuddyRequestListener(buddyRequest) {
+                buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
+                buddyRequestPopup.setDepth(3000);
             }
 
             instantMessenger.getChildByID('new-chat-button').onmousedown = () => {
@@ -1215,6 +1225,7 @@ var clickOffsetY = 110;
 var currentLocation = "downtown";
 var boundOffset = 150;
 
+var buddyRequests = '';
 var openChatTab = "Current Room";
 var chatTabs = {
     "Current Room": ""
@@ -1968,10 +1979,17 @@ inGame.create = function() {
 
     }.bind(this));
 
-    globalThis.socket.on('friendRequestResponse', function (username) {
-        console.log('Incoming friend request from ' + username);
-        buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
-        buddyRequestPopup.setDepth(3000);
+    globalThis.socket.on('friendRequestResponse', function (playerInfo) {
+        console.log('Incoming friend request from ' + playerInfo.username);
+
+        var gender = 'girl';
+        if (playerInfo.avatar.gender == 'm')
+            gender = 'boy';
+
+        buddyRequests += `<img id='br-${playerInfo.username}' class="buddyRequestIcon" class="selectDisable" src="./src/assets/scene/chat/${gender}-icon.png"/>`;
+        if (document.getElementById("buddy-window") != null)
+            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
+
     }.bind(this));
 
     //#region Action Animations
