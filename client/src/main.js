@@ -427,18 +427,101 @@ uiScene.create = function() {
         var buddyRequestButtons = document.getElementsByClassName("buddy-request-icon");
         for (var i = 0; i < buddyRequestButtons.length; i++) {
             var buddyRequest = buddyRequestButtons[i];
-            console.log('buddy req: ' + buddyRequest.innerHTML);
             buddyRequest.onmousedown = createBuddyReqClickListener(buddyRequest);
         }
     }
 
     function createBuddyReqClickListener(buddyRequest) {
         return function() {
-            $('#' + buddyRequest.id).remove();
             buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
             buddyRequestPopup.setDepth(3000);
-            $('#request-user-label').html(buddyRequest.id.slice(3));
+            $('#request-user-label').html(buddyRequest.id.slice(3).split('-')[1]);
+
+            function removeBuddyRequest() {
+                var pattern = new RegExp('<img\\s*[^>]*>(?!.*<\\/img>)');
+                buddyRequests = buddyRequests.replace(pattern, '');
+                $('#' + buddyRequest.id).remove();
+                buddyRequestPopup.destroy();
+            }
+
+            $('#br-yes-button').on('mousedown', function() {
+
+                var userInfo = buddyRequest.id.slice(3);
+                var [id, username] = userInfo.split('-');
+
+                socket.emit('acceptBuddyRequest', Number(id), username);
+                removeBuddyRequest();
+            });
+
+            $('#br-no-button').on('mousedown', function() {
+                removeBuddyRequest();
+            });
         };
+    }
+
+    uiScene.loadBuddyList = () => {
+        var buddyRows = [];
+
+        myPlayerInfo.buddies.forEach(buddyObj => {
+            const row = `
+            <tr class="buddy-table-row">
+                <td class="buddy-table-data">
+                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                <div id="buddy-username" class="selectDisable">${buddyObj.username}</div>
+                </td>
+            </tr>
+            `;
+            buddyRows.push(row);
+        });
+
+        var buddyRowsHtml = buddyRows.join('');
+        var table = document.getElementById("buddy-table");
+        table.innerHTML = buddyRowsHtml;
+        
+        // Sort buddies
+        sortTable();
+    }
+
+    function sortTable() {
+        var table = document.getElementById("buddy-table");
+        var rows = Array.from(table.rows); // Exclude the header row
+        quickSort(rows, 0, rows.length - 1);
+
+        for (var i = 0; i < rows.length; i++) {
+          table.appendChild(rows[i]);
+        }
+    }
+      
+    function quickSort(arr, left, right) {
+        if (left < right) {
+          var pivotIndex = partition(arr, left, right);
+          quickSort(arr, left, pivotIndex - 1);
+          quickSort(arr, pivotIndex + 1, right);
+        }
+    }
+      
+    function partition(arr, left, right) {
+        var pivot = arr[right].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+        var i = left - 1;
+        
+        for (var j = left; j < right; j++) {
+          var currentValue = arr[j].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+          
+          if (currentValue <= pivot) {
+            i++;
+            swap(arr, i, j);
+          }
+        }
+        
+        swap(arr, i + 1, right);
+        return i + 1;
+      }
+      
+    function swap(arr, i, j) {
+        var temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
     }
 
     uiButtons.addListener('click');
@@ -644,73 +727,8 @@ uiScene.create = function() {
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             // Load buddy list and requests
-            loadBuddyList();
+            uiScene.loadBuddyList();
             instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
-
-            function loadBuddyList() {
-                var buddyRows = [];
-
-                myPlayerInfo.buddies.forEach(username => {
-                    const row = `
-                    <tr class="buddy-table-row">
-                        <td class="buddy-table-data">
-                        <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
-                        <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
-                        <div id="buddy-username" class="selectDisable">${username}</div>
-                        </td>
-                    </tr>
-                    `;
-                    buddyRows.push(row);
-                });
-
-                var buddyRowsHtml = buddyRows.join('');
-                var table = document.getElementById("buddy-table");
-                table.innerHTML = buddyRowsHtml;
-                
-                // Sort buddies
-                sortTable();
-            }
-
-            function sortTable() {
-                var table = document.getElementById("buddy-table");
-                var rows = Array.from(table.rows); // Exclude the header row
-                quickSort(rows, 0, rows.length - 1);
-
-                for (var i = 0; i < rows.length; i++) {
-                  table.appendChild(rows[i]);
-                }
-            }
-              
-            function quickSort(arr, left, right) {
-                if (left < right) {
-                  var pivotIndex = partition(arr, left, right);
-                  quickSort(arr, left, pivotIndex - 1);
-                  quickSort(arr, pivotIndex + 1, right);
-                }
-            }
-              
-            function partition(arr, left, right) {
-                var pivot = arr[right].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
-                var i = left - 1;
-                
-                for (var j = left; j < right; j++) {
-                  var currentValue = arr[j].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
-                  
-                  if (currentValue <= pivot) {
-                    i++;
-                    swap(arr, i, j);
-                  }
-                }
-                
-                swap(arr, i + 1, right);
-                return i + 1;
-              }
-              
-            function swap(arr, i, j) {
-                var temp = arr[i];
-                arr[i] = arr[j];
-                arr[j] = temp;
-            }
 
             // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
@@ -785,7 +803,7 @@ uiScene.create = function() {
             instantMessenger.getChildByID("Buddy List").onmousedown = () => {
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
                 instantMessenger.getChildByID("Ignore List").style.background = 'white';
-                loadBuddyList();
+                uiScene.loadBuddyList();
             }
 
             instantMessenger.getChildByID("Ignore List").onmousedown = () => {
@@ -1105,8 +1123,7 @@ uiScene.create = function() {
 
                 idfoneButtonsHTML.visible = true;
                 idfoneButtonsHTML.getChildByID('addButton').onmousedown = () => {
-                    socket.emit('friendRequest', playerInfo.username);
-                    console.log('sending friend request to ' + playerInfo.username);
+                    socket.emit('buddyRequest', playerInfo.username);
                 }
             }
 
@@ -1620,7 +1637,7 @@ inGame.create = function() {
 
     function createPlayer(playerInfo) {
         myPlayerInfo = playerInfo;
-
+        
         head = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
         lips = inGame.add.sprite(0, 0, 'lips-0');
@@ -1988,19 +2005,24 @@ inGame.create = function() {
 
     }.bind(this));
 
-    globalThis.socket.on('friendRequestResponse', function (playerInfo) {
-        console.log('Incoming friend request from ' + playerInfo.username);
-
+    globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
         var gender = 'girl';
         if (playerInfo.avatar.gender == 'm')
             gender = 'boy';
 
-        buddyRequests += `<img id='br-${playerInfo.username}' class="buddy-request-icon" class="selectDisable" src="./src/assets/scene/chat/${gender}-icon.png"/>`;
+        buddyRequests += `<img id='br-${playerInfo.pid}-${playerInfo.username}' class="buddy-request-icon" class="selectDisable" src="./src/assets/scene/chat/${gender}-icon.png"/>`;
         if (document.getElementById("buddy-window") != null) {
             instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
             uiScene.addBuddyRequestListener();
         }
 
+    }.bind(this));
+
+    globalThis.socket.on('acceptBuddyRequestResponse', function (buddies) {
+        // notify player that buddy request sent
+        myPlayerInfo.buddies = buddies;
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
     }.bind(this));
 
     //#region Action Animations
