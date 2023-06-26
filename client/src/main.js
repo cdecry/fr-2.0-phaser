@@ -478,7 +478,6 @@ uiScene.create = function() {
         var buddyRowsHtml = buddyRows.join('');
         var table = document.getElementById("buddy-table");
         table.innerHTML = buddyRowsHtml;
-        
         // Sort buddies
         sortTable();
     }
