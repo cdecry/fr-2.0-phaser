@@ -147,6 +147,7 @@ var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, 
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel, faceAcc, headAcc, bodyAcc, outfit;
 var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
+var notifBubbleLifeTime, notifLifeTime, notifBubble, notifMessage;
 var myPlayerInfo;
 var avatarPreview = null;
 var locationObjects = [];
@@ -1370,6 +1371,11 @@ var preloadGameAssets = (thisScene) => {
     for (let i = 1; i < 11; i++) {
         thisScene.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
     }
+    
+    // load notification containers
+    for (let i = 1; i < 5; i++) {
+        thisScene.load.image('notification-' + i.toString(), 'scene/chat/notification-' + i.toString() + '.png');
+    }
 
     // load anim data
     thisScene.load.json('bodyAnims', 'anims/bodyAnims.json');
@@ -1381,6 +1387,9 @@ var preloadGameAssets = (thisScene) => {
 
 var preloadUIAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets');
+
+    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+
     // Load chat ui
     thisScene.load.html('chatBar', 'html/chatbar.html');
     thisScene.load.html('messageWidth', 'html/messagewidth.html');
@@ -2005,6 +2014,33 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
+
+        if (notifLifeTime != undefined && notifLifeTime.isAlive) {
+            notifBubbleLifeTime.stop();
+            notifLifeTime.stop();
+            notifBubble.destroy()
+            notifMessage.destroy();
+        }
+
+        notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
+        var notifMsgContent = notifMessage.getChildByID('message');
+        notifMsgContent.style.width = '150px';
+
+        notifMessage.getChildByID('message').innerHTML = "Buddy request from: \"" + playerInfo.username + "\", click here on buddy list to accept/deny";
+        notifBubble = uiScene.add.image(645, 410, 'notification-3');
+
+        notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
+        notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
         var gender = 'girl';
         if (playerInfo.avatar.gender == 'm')
             gender = 'boy';
@@ -2017,8 +2053,34 @@ inGame.create = function() {
 
     }.bind(this));
 
-    globalThis.socket.on('acceptBuddyRequestResponse', function (buddies) {
-        // notify player that buddy request sent
+    globalThis.socket.on('acceptBuddyRequestResponse', function (buddies, newBuddy) {
+
+        if (notifLifeTime != undefined && notifLifeTime.isAlive) {
+            notifBubbleLifeTime.stop();
+            notifLifeTime.stop();
+            notifBubble.destroy()
+            notifMessage.destroy();
+        }
+
+        notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
+        var notifMsgContent = notifMessage.getChildByID('message');
+        notifMsgContent.style.width = '150px';
+
+        notifMessage.getChildByID('message').innerHTML = "User " + newBuddy + " is now your buddy";
+        notifBubble = uiScene.add.image(645, 410, 'notification-2');
+
+        notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
+        notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();

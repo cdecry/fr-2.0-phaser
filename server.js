@@ -123,12 +123,12 @@ io.on('connection', function (socket) {
 
         // add buddy to this player's buddy list
         players[socket.id].buddies =  await addBuddy(players[socket.id].pid, userId, username);
-        io.to(socket.id).emit('acceptBuddyRequestResponse', players[socket.id].buddies);
+        io.to(socket.id).emit('acceptBuddyRequestResponse', players[socket.id].buddies, username);
 
         var updatedBuddies = await addBuddy(userId, players[socket.id].pid, players[socket.id].username);
         if (usernameToId.hasOwnProperty(username)) {
             players[usernameToId[username]].buddies = updatedBuddies;
-            io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies);
+            io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies, players[socket.id].username);
         }
     })
 
