@@ -39,6 +39,7 @@ io.on('connection', function (socket) {
         if (players!= null && players[socket.id] != null) {
             console.log('player disconnected: ' + players[socket.id].username);
             socket.to(players[socket.id].room).emit('removePlayer', socket.id);
+            delete usernameToId[players[socket.id].username];
             delete players[socket.id];
         }
         else
@@ -120,11 +121,15 @@ io.on('connection', function (socket) {
 
     socket.on('acceptBuddyRequest', async (userId, username) => {
 
-        await addBuddy(players[socket.id].pid, userId, username);
-        await addBuddy(userId, players[socket.id].pid, players[socket.id].username);
-            io.to(socket.id).emit('acceptBuddyRequestResponse', players[socket.id].buddies);
-        if (usernameToId.hasOwnProperty(username))
+        // add buddy to this player's buddy list
+        players[socket.id].buddies =  await addBuddy(players[socket.id].pid, userId, username);
+        io.to(socket.id).emit('acceptBuddyRequestResponse', players[socket.id].buddies);
+
+        var updatedBuddies = await addBuddy(userId, players[socket.id].pid, players[socket.id].username);
+        if (usernameToId.hasOwnProperty(username)) {
+            players[usernameToId[username]].buddies = updatedBuddies;
             io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies);
+        }
     })
 
     socket.on('changeRoom', function(room) {
