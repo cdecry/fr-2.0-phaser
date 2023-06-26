@@ -317,10 +317,6 @@ uiScene.create = function() {
     WebFont.load({
         custom: {
             families: [ 'usernameFont', 'titleFont', 'titleFontOutline' ]
-        },
-        active: function ()
-        {
-            console.log('font loaded');
         }
     });
 
@@ -349,9 +345,7 @@ uiScene.create = function() {
     globalInputChat = inputChat;
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
-    setTimeout(() => {
-        inputChat.value = defaultChatBarMessage;
-    }, 800);
+    inputChat.value = defaultChatBarMessage;
 
     uiBar.setDepth(1000);
 
@@ -590,84 +584,11 @@ uiScene.create = function() {
 
                 buddyWindow = instantMessenger.getChildByID('buddy-window');
                 buddyHeader = instantMessenger.getChildByID('buddy-header');
+                
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
 
                 enableIMDrag(instantMessenger, imHeader, imWindow);
                 enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
-
-                // Sort buddies
-                sortTable();
-
-                // function sortTable() {
-                //     var table, rows, switching, i, x, y, shouldSwitch;
-                //     table = document.getElementById("buddy-table");
-                //     switching = true;
-
-                //     while (switching) {
-
-                //         switching = false;
-                //         rows = table.rows;
-
-                //         for (i = 0; i < (rows.length - 1); i++) {
-                //             shouldSwitch = false;
-                //             x = rows[i].getElementsByTagName("TD")[0];
-                //             y = rows[i + 1].getElementsByTagName("TD")[0];
-
-                //         if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                //             shouldSwitch = true;
-                //             break;
-                //         }
-                //         }
-                //         if (shouldSwitch) {
-                //             rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                //             switching = true;
-                //         }
-                //     }
-                // }
-
-                function sortTable() {
-                    var table = document.getElementById("buddy-table");
-                    var rows = Array.from(table.rows); // Exclude the header row
-                    quickSort(rows, 0, rows.length - 1);
-                    
-                    console.log(rows);
-
-                    for (var i = 0; i < rows.length; i++) {
-                      table.appendChild(rows[i]);
-                    }
-                }
-                  
-                function quickSort(arr, left, right) {
-                    if (left < right) {
-                      var pivotIndex = partition(arr, left, right);
-                      quickSort(arr, left, pivotIndex - 1);
-                      quickSort(arr, pivotIndex + 1, right);
-                    }
-                }
-                  
-                function partition(arr, left, right) {
-                    var pivot = arr[right].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
-                    var i = left - 1;
-                    
-                    for (var j = left; j < right; j++) {
-                      var currentValue = arr[j].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
-                      
-                      if (currentValue <= pivot) {
-                        i++;
-                        swap(arr, i, j);
-                      }
-                    }
-                    
-                    swap(arr, i + 1, right);
-                    return i + 1;
-                  }
-                  
-                function swap(arr, i, j) {
-                    var temp = arr[i];
-                    arr[i] = arr[j];
-                    arr[j] = temp;
-                }
-            }
 
             // Set IM visible (open)
             imWindow.style.visibility = 'visible';
@@ -679,6 +600,75 @@ uiScene.create = function() {
             chatNameText.innerHTML = openChatTab;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Load buddy list (if on buddy list tab)
+            loadBuddyList();
+
+            function loadBuddyList() {
+                var buddyRows = [];
+
+                myPlayerInfo.buddies.forEach(username => {
+                    const row = `
+                    <tr class="buddy-table-row">
+                        <td class="buddy-table-data">
+                        <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                        <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
+                        <div id="buddy-username" class="selectDisable">${username}</div>
+                        </td>
+                    </tr>
+                    `;
+                    buddyRows.push(row);
+                });
+
+                var buddyRowsHtml = buddyRows.join('');
+                var table = document.getElementById("buddy-table");
+                table.innerHTML = buddyRowsHtml;
+                
+                // Sort buddies
+                sortTable();
+            }
+
+            function sortTable() {
+                var table = document.getElementById("buddy-table");
+                var rows = Array.from(table.rows); // Exclude the header row
+                quickSort(rows, 0, rows.length - 1);
+
+                for (var i = 0; i < rows.length; i++) {
+                  table.appendChild(rows[i]);
+                }
+            }
+              
+            function quickSort(arr, left, right) {
+                if (left < right) {
+                  var pivotIndex = partition(arr, left, right);
+                  quickSort(arr, left, pivotIndex - 1);
+                  quickSort(arr, pivotIndex + 1, right);
+                }
+            }
+              
+            function partition(arr, left, right) {
+                var pivot = arr[right].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+                var i = left - 1;
+                
+                for (var j = left; j < right; j++) {
+                  var currentValue = arr[j].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+                  
+                  if (currentValue <= pivot) {
+                    i++;
+                    swap(arr, i, j);
+                  }
+                }
+                
+                swap(arr, i + 1, right);
+                return i + 1;
+              }
+              
+            function swap(arr, i, j) {
+                var temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
 
             // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
@@ -770,12 +760,14 @@ uiScene.create = function() {
 
             instantMessenger.getChildByID("Buddy List").onmousedown = () => {
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                instantMessenger.getChildByID("Ignore List").style.background = 'white'
+                instantMessenger.getChildByID("Ignore List").style.background = 'white';
+                loadBuddyList();
             }
 
             instantMessenger.getChildByID("Ignore List").onmousedown = () => {
                 instantMessenger.getChildByID("Ignore List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                instantMessenger.getChildByID("Buddy List").style.background = 'white'
+                instantMessenger.getChildByID("Buddy List").style.background = 'white';
+                $("#buddy-table tr").remove(); 
             }
 
             function enableIMDrag() {
@@ -933,7 +925,6 @@ uiScene.create = function() {
             var item;
             
             item = uiObjectScene.add.sprite(0, 0, prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
-            console.log(prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
 
             item.setInteractive();
             item.setDepth(1001);
@@ -1489,8 +1480,6 @@ inGame.create = function() {
                 // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
     
                 topModelsObject.on('pointerdown', () => {
-                    console.log('poladot');
-    
                     currentLocation = "topModels";
                     socket.emit('changeRoom', "topModels");
     
@@ -1612,9 +1601,9 @@ inGame.create = function() {
 
         container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         
-        for (let i =0; i < 17; i++) {
-            console.log(i + ", " + JSON.stringify(container.getAt(i)));
-        }
+        // for (let i =0; i < 17; i++) {
+        //     console.log(i + ", " + JSON.stringify(container.getAt(i)));
+        // }
 
         //container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
@@ -1726,14 +1715,12 @@ inGame.create = function() {
         Object.keys(players).forEach(function (id) {
 
                 if (players[id].id === globalThis.socket.id && player == null) {
-                    console.log('creating player ' + players[id].username);
                     createPlayer(players[id]);
                     
                 } else if (players[id].id != globalThis.socket.id) {
                     addOtherPlayers(players[id]);
                 }
         });
-        console.log('Recieved msg from server: spawnCurrentPlayers');
     });
 
     globalThis.socket.on('spawnNewPlayer', function (p) {
@@ -1742,12 +1729,8 @@ inGame.create = function() {
 
     // Everyone removes the player with this id
     globalThis.socket.on('removePlayer', function (id) {
-        console.log("received remove player msg");
         for (let i = 0; i < otherPlayers.getLength(); i++) {
             var p = otherPlayers.getChildren()[i];
-
-            console.log('otherplayer id: ' + p.getData('username'));
-            console.log('id, pid' + id + ',' + p.id);
             if (id === p.id) {
 
                 var msgData = p.getData('messageData');
@@ -1811,8 +1794,6 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('changeClothesResponse', function (pid, changed) {
-        console.log("recieved change clothes response.");
-        console.log(JSON.stringify(changed));
         if (pid == myPlayerInfo.id) {
             for (let i = 0; i < Object.keys(changed).length; i++) {
                 if (changed[i].length > 0) {
@@ -1826,13 +1807,8 @@ inGame.create = function() {
         }
 
         otherPlayers.getChildren().forEach(function (p) {
-            console.log("checking here");
             if (pid === p.id) {
-                console.log("found the bastard");
                 for (let i = 0; i < Object.keys(changed).length; i++) {
-                    console.log("looking for changed");
-                    console.log(JSON.stringify(changed[i]));
-                    console.log(changed[i].length);
                     if (changed[i].length > 0) {
                         if (changed[i][0] == -1)
                             changeClothes(p, i, changed[i][0], false);
@@ -1850,9 +1826,6 @@ inGame.create = function() {
 
         if (typeId != 5)
             prefix = myPlayerInfo.avatar['gender'];
-
-        console.log("equipping " + typeId);
-
 
         if (typeId == 0 && isLocalPlayer) {
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
@@ -1883,7 +1856,6 @@ inGame.create = function() {
             equippedItem.flipX = player.flipX;
         }
         else {
-            console.log("HERERERERER: " + prefix + '-'+ typeId+ '-' + itemId);
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId+ '-' + itemId);
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
 
@@ -2178,23 +2150,12 @@ function moveXY(newPosX, newPosY) {
 }
 
 inGame.update = function() {
-    // if (container)
-    //     console.log("Position x: " + container.x + ", y: " + container.y);
-
     // Camera can't pan if already panning
     this.cameras.main.on('camerapancomplete', function () {
         setTimeout(function () {
             isPanning = false;
         }, 0);
     });
-
-    // Change rooms test
-    // if (keySpace.isDown) {
-    //     console.log("hi, moving to new room...");
-    //     socket.emit('changeRoom', "beach");
-    //     bg.destroy();
-    //     bg = this.add.image(400, 260, 'beachBg');
-    // }
 
     let panDistance = 300;
 
@@ -2221,8 +2182,6 @@ inGame.update = function() {
             this.cameras.main.pan(camPosX, camPosY, 1500);
         }
 
-        // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
-        //     console.log('hit left bound');
         container.setDepth(container.y);
 
         if (!disableInput) {
@@ -2235,7 +2194,6 @@ inGame.update = function() {
             } else if (keyRight.isDown) {
                 container.body.setVelocity(0);
                 moveX(container.x, container.y, 1);
-                console.log(camPosX);
             }
 
             // Vertical movement
@@ -2290,9 +2248,6 @@ inGame.update = function() {
 
             // Actions
         if (key1.isDown) {
-
-            console.log(container.x, container.y);
-
             if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
                 container.getAt(cMap.player).play(myPlayerInfo.avatar.gender + '-body-' + container.getData('skinTone') + '-wave');
@@ -2415,7 +2370,7 @@ uiObjectScene.preload = function () {
 };
 
 uiObjectScene.create = function () {
-    console.log('test');
+    console.log('uiObjectScene created');
 };
 //#endregion
 
