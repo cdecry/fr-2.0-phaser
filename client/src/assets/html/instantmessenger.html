@@ -385,6 +385,25 @@
                 background: linear-gradient(to bottom, #20a0f0, #3fccf0, #42d0f0);
             }
 
+            #buddy-tabs-bottom-flexbox {
+                position: absolute;
+                top: 7px;
+                left: 3px;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -o-user-select: none;
+                user-select: none;
+            }
+
+            #buddy-tabs-bottom-flexbox div{
+                margin-left: 15px;
+            }
+
+            .buddyRequestIcon:hover{
+                cursor: pointer;
+            }
+
             #buddy-icon {
                 position: absolute;
                 left: 4px;
@@ -501,6 +520,12 @@
                 </div>
 
                 <div id="buddy-tabs-bottom">
+                    <div id="buddy-tabs-bottom-flexbox">
+                        <img class="buddyRequestIcon" class="selectDisable" src="./src/assets/scene/chat/girl-icon.png"/>
+                        <img class="buddyRequestIcon" class="selectDisable" src="./src/assets/scene/chat/girl-icon.png"/>
+                        <img class="buddyRequestIcon" class="selectDisable" src="./src/assets/scene/chat/boy-icon.png"/>
+                        <img class="buddyRequestIcon" class="selectDisable" src="./src/assets/scene/chat/girl-icon.png"/>
+                    </div>
                 </div>
 
                 <div id="buddies-container">

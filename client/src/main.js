@@ -1072,8 +1072,6 @@ uiScene.create = function() {
             });
 
             if (!isLocalPlayer) {
-                idfoneButtonsHTML.visible = true;
-
                 tween = uiObjectScene.tweens.add({
                     targets: idfoneButtons,
                     x: 400,
@@ -1081,6 +1079,12 @@ uiScene.create = function() {
                     ease: 'Linear',
                     duration: 300,
                 });
+
+                idfoneButtonsHTML.visible = true;
+                idfoneButtonsHTML.getChildByID('addButton').onmousedown = () => {
+                    socket.emit('friendRequest', playerInfo.username);
+                    console.log('sending friend request to ' + playerInfo.username);
+                }
             }
 
             createAvatarPreview(playerInfo);
@@ -1957,6 +1961,10 @@ inGame.create = function() {
         // if no chat tab open, add this chat tab
         console.log('Incoming PM from ' + playerInfo.username + ': ' + msg);
 
+    }.bind(this));
+
+    globalThis.socket.on('friendRequestResponse', function (username) {
+        console.log('Incoming friend request from ' + username);
     }.bind(this));
 
     //#region Action Animations
