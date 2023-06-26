@@ -580,11 +580,15 @@ uiScene.create = function() {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
                 instantMessenger.setDepth(2000);
 
+                buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
+                buddyRequestPopup.setDepth(3000);
+
                 imWindow = instantMessenger.getChildByID('im-window');
                 imHeader = instantMessenger.getChildByID('im-header');
 
                 buddyWindow = instantMessenger.getChildByID('buddy-window');
                 buddyHeader = instantMessenger.getChildByID('buddy-header');
+                
                 
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
 
@@ -1347,6 +1351,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.html('chatMessageHTML', 'html/chatmessage.html');
     thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     thisScene.load.html('transparentHTML', 'html/transparent.html');
+    thisScene.load.html('buddyRequestPopup', 'html/buddyRequestPopup.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
     
     // Load inventory ui
@@ -1965,6 +1970,8 @@ inGame.create = function() {
 
     globalThis.socket.on('friendRequestResponse', function (username) {
         console.log('Incoming friend request from ' + username);
+        buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
+        buddyRequestPopup.setDepth(3000);
     }.bind(this));
 
     //#region Action Animations
