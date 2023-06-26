@@ -92,17 +92,24 @@
             background: rgba(0,0,0,.10);
             box-shadow: 0 0px 2px 0 rgba(0,0,0,.10);
         }
+        .selectDisable {
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -o-user-select: none;
+            user-select: none;
+        }
 
         </style>
     </head>
     <body>
         <div id="panel">
             <div id="panel-header"></div>
-            <div id="accept-buddy-label">Accept Buddy?</div>
-            <div id="request-user-label">lotusrainxoxo</div>
+            <div id="accept-buddy-label" class="selectDisable">Accept Buddy?</div>
+            <div id="request-user-label" class="selectDisable">lotusrainxoxo</div>
             <div id="button-container">
-                <button id="yes-button">Yes</button>
-                <button id="no-button">No</button>
+                <button id="yes-button" class="selectDisable">Yes</button>
+                <button id="no-button" class="selectDisable">No</button>
             </div>
         </div>
 

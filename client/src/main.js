@@ -402,6 +402,45 @@ uiScene.create = function() {
         socket.emit('chatMessage', filtered);
     }
 
+    uiScene.addChatTabListener = () => {
+        for (var chatTabName in chatTabs) {
+            var tab = instantMessenger.getChildByID(chatTabName);
+            tab.onmousedown = createTabClickListener(tab);
+        }
+    }
+    
+    function createTabClickListener(tab) {
+        return function() {
+            for (var otherTabName in chatTabs) {
+                var otherTab = instantMessenger.getChildByID(otherTabName);
+                otherTab.style.background = 'white';
+            }
+            tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+            openChatTab = tab.id;
+            chatNameText.innerHTML = openChatTab;
+            chatHistory.innerHTML = chatTabs[openChatTab];
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        };
+    }
+
+    uiScene.addBuddyRequestListener = () => {
+        var buddyRequestButtons = document.getElementsByClassName("buddy-request-icon");
+        for (var i = 0; i < buddyRequestButtons.length; i++) {
+            var buddyRequest = buddyRequestButtons[i];
+            console.log('buddy req: ' + buddyRequest.innerHTML);
+            buddyRequest.onmousedown = createBuddyReqClickListener(buddyRequest);
+        }
+    }
+
+    function createBuddyReqClickListener(buddyRequest) {
+        return function() {
+            $('#' + buddyRequest.id).remove();
+            buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
+            buddyRequestPopup.setDepth(3000);
+            $('#request-user-label').html(buddyRequest.id.slice(3));
+        };
+    }
+
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
         if (!uiScene.checkInteractive)
@@ -713,18 +752,6 @@ uiScene.create = function() {
                 }, 50);
             }
 
-            // Add listener: click on buddy requests
-            var buddyRequestButtons = document.getElementsByClassName("buddyRequestIcon");
-            
-            for (var buddyRequest in buddyRequestButtons) {
-                buddyRequest.onmousedown = createBuddyRequestListener(buddyRequest);
-            }
-
-            function createBuddyRequestListener(buddyRequest) {
-                buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
-                buddyRequestPopup.setDepth(3000);
-            }
-
             instantMessenger.getChildByID('new-chat-button').onmousedown = () => {
                 // Test${Object.keys(chatTabs).length.toString()}
                 // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
@@ -746,32 +773,14 @@ uiScene.create = function() {
                 chatHistory.innerHTML = "";
                 chatNameText.innerHTML = 'jake';
 
-                addChatTabListener();
+                uiScene.addChatTabListener();
             }
             
             // Add listener: click to switch to chat tab
-            addChatTabListener();
+            uiScene.addChatTabListener();
 
-            function addChatTabListener() {
-                for (var chatTabName in chatTabs) {
-                    var tab = instantMessenger.getChildByID(chatTabName);
-                    tab.onmousedown = createTabClickListener(tab);
-                }
-            }
-            
-            function createTabClickListener(tab) {
-                return function() {
-                    for (var otherTabName in chatTabs) {
-                        var otherTab = instantMessenger.getChildByID(otherTabName);
-                        otherTab.style.background = 'white';
-                    }
-                    tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                    openChatTab = tab.id;
-                    chatNameText.innerHTML = openChatTab;
-                    chatHistory.innerHTML = chatTabs[openChatTab];
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
-                };
-            }
+            // Add listener: buddy request icons
+            uiScene.addBuddyRequestListener();
 
             instantMessenger.getChildByID("Buddy List").onmousedown = () => {
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
@@ -1986,9 +1995,11 @@ inGame.create = function() {
         if (playerInfo.avatar.gender == 'm')
             gender = 'boy';
 
-        buddyRequests += `<img id='br-${playerInfo.username}' class="buddyRequestIcon" class="selectDisable" src="./src/assets/scene/chat/${gender}-icon.png"/>`;
-        if (document.getElementById("buddy-window") != null)
+        buddyRequests += `<img id='br-${playerInfo.username}' class="buddy-request-icon" class="selectDisable" src="./src/assets/scene/chat/${gender}-icon.png"/>`;
+        if (document.getElementById("buddy-window") != null) {
             instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
+            uiScene.addBuddyRequestListener();
+        }
 
     }.bind(this));
 
