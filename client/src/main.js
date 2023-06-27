@@ -473,9 +473,9 @@ uiScene.create = function() {
             const row = `
             <tr class="buddy-table-row">
                 <td class="buddy-table-data">
-                <img class="selectDisable" src="./src/assets/scene/chat/${buddyStatus}-icon.png"/>
-                <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
-                <div id="buddy-username" class="selectDisable">${buddyObj.username}</div>
+                <img src="./src/assets/scene/chat/${buddyStatus}-icon.png"/>
+                <img src="./src/assets/scene/chat/home-icon.png"/>
+                <div class="buddy-username">${buddyObj.username}</div>
                 </td>
             </tr>
             `;
@@ -487,6 +487,33 @@ uiScene.create = function() {
         table.innerHTML = buddyRowsHtml;
         // Sort buddies
         sortTable();
+        addBuddyMenuListener();
+    }
+
+    function addBuddyMenuListener() {
+        var buddyNames = document.getElementsByClassName("buddy-username");
+        for (var i = 0; i < buddyNames.length; i++) {
+            buddyNames[i].onmousedown = createBuddyMenuListener(buddyNames[i]);
+        }
+    }
+
+    function createBuddyMenuListener(buddyName) {
+        return function(event) {
+            $('#buddy-menu').css({
+                visibility: 'visible',
+                left: (event.pageX - 260).toString() + 'px',
+                top: (event.pageY - 175).toString() + 'px',
+            });
+
+            var buddyMenu = document.getElementById('buddy-menu');
+
+            document.onmousedown = (event) => {
+                var target = event.target;
+                if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
+                    buddyMenu.style.visibility = 'hidden';
+                }
+            };
+        };
     }
 
     function sortTable() {
@@ -1484,7 +1511,9 @@ inGame.create = function() {
     bg.setDepth(-500);
 
     this.input.setTopOnly(true);
-    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+    bg.on('pointerdown', function (pointer) {
+        clickMovement(pointer);
+    });
     inGame.sound.pauseOnBlur = false;
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
