@@ -100,7 +100,8 @@ loading.create = function() {
     this.anims.create(animConfig);
     sprite.play('outLoad');
 
-    globalThis.socket.on('login success', (inventory) => {
+    globalThis.socket.on('login success', (inventory, onlinePlayers) => {
+        onlineUsers = onlinePlayers;
         myInventory = inventory;
         setTimeout(() => {
             this.scene.transition( {
@@ -464,10 +465,15 @@ uiScene.create = function() {
         var buddyRows = [];
 
         myPlayerInfo.buddies.forEach(buddyObj => {
+            
+            var buddyStatus = 'offline';
+            if (onlineUsers.hasOwnProperty(buddyObj.username))
+                buddyStatus = 'online';
+
             const row = `
             <tr class="buddy-table-row">
                 <td class="buddy-table-data">
-                <img class="selectDisable" src="./src/assets/scene/chat/offline-icon.png"/>
+                <img class="selectDisable" src="./src/assets/scene/chat/${buddyStatus}-icon.png"/>
                 <img class="selectDisable" src="./src/assets/scene/chat/home-icon.png"/>
                 <div id="buddy-username" class="selectDisable">${buddyObj.username}</div>
                 </td>
@@ -485,11 +491,28 @@ uiScene.create = function() {
 
     function sortTable() {
         var table = document.getElementById("buddy-table");
-        var rows = Array.from(table.rows); // Exclude the header row
-        quickSort(rows, 0, rows.length - 1);
+        var rows = Array.from(table.rows);
+
+        var rowsOnline = [];
+        var rowsOffline = [];
 
         for (var i = 0; i < rows.length; i++) {
-          table.appendChild(rows[i]);
+            var currentValue = rows[i].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+            if (currentValue.includes("online")) {
+                rowsOnline.push(rows[i]);
+            } else {
+                rowsOffline.push(rows[i]);
+            }
+        }
+
+        quickSort(rowsOnline, 0, rowsOnline.length - 1);
+        quickSort(rowsOffline, 0, rowsOffline.length - 1);
+
+        for (var i = 0; i < rowsOnline.length; i++) {
+          table.appendChild(rowsOnline[i]);
+        }
+        for (var i = 0; i < rowsOffline.length; i++) {
+            table.appendChild(rowsOffline[i]);
         }
     }
       
@@ -1256,6 +1279,7 @@ var openChatTab = "Current Room";
 var chatTabs = {
     "Current Room": ""
 }
+var onlineUsers = [];
 
 var preloadGameAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets')
@@ -1448,6 +1472,7 @@ var locationConfig = {
 }
 
 inGame.create = function() {
+
     // Init Camera
     setCameraPosition(currentLocation);
     this.scene.launch(uiScene);
@@ -1801,6 +1826,18 @@ inGame.create = function() {
 
     globalThis.socket.on('spawnNewPlayer', function (p) {
         addOtherPlayers(p);
+    });
+
+    globalThis.socket.on('playerOnline', function (p) {
+        onlineUsers[p.username] = p.pid;
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
+    });
+
+    globalThis.socket.on('playerOffline', function (username) {
+        delete onlineUsers[username];
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
     });
 
     // Everyone removes the player with this id
