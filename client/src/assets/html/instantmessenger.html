@@ -453,12 +453,51 @@
                 vertical-align: middle;
             }
 
-            #buddy_username {
+            /* #buddy_username {
                 padding-left: 5px;
-            }
+            } */
 
             #buddy-table tr:nth-child(even) {
                 background-color: #d0ffff;
+            }
+
+            #buddy-menu {
+                font-family: Arial;
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                padding-left: 5px;
+                padding-top: 2px;
+                padding-bottom: 2px;
+                width: 140px;
+                height: 68px;
+                border-radius: 3px;
+                background-color: #016fff;
+                box-shadow: inset 1px 1px 1px 0 #55a9ff, inset -2px -2px 2px 0 rgba(0,82,195,255);
+                color: #d3f2fd;
+                justify-content: space-evenly;
+                align-items: flex-start;
+                font-size: 14px;
+            }
+
+            #buddy-menu-divider {
+                height: 1px;
+                width: 94%;
+                align-self: center;
+                background-color: #d3f2fd;
+            }
+
+            #delete-buddy-option {
+                padding-top: 2px;
+            }
+
+            .buddy-menu-option {
+                display: flex;
+                gap: 5px;
+            }
+
+            .buddy-menu-option:hover {
+                cursor: pointer;
             }
 
         </style>
@@ -539,8 +578,39 @@
                             </td>
                         </tr> -->
                     </table>
+                    <!-- <div id="buddy-menu">
+                        <div id="chat-with-buddy-option" class="buddy-menu-option">
+                            <img src="./src/assets/scene/chat/buddy-menu-icon.png" class="selectDisable"/>
+                            <div id="buddy-menu-option-label" class="selectDisable">Chat With Buddy</div>
+                        </div>
+                        <div id="view-idfone-option" class="buddy-menu-option">
+                            <img src="./src/assets/scene/chat/buddy-menu-icon.png" class="selectDisable"/>
+                            <div id="buddy-menu-option-label" class="selectDisable">View IDFone</div>
+                        </div>
+                        <div id="buddy-menu-divider"></div>
+                        <div id="delete-buddy-option" class="buddy-menu-option">
+                            <img src="./src/assets/scene/chat/buddy-menu-icon.png" class="selectDisable"/>
+                            <div id="buddy-menu-option-label" class="selectDisable">Delete Buddy</div>
+                        </div>
+                    </div> -->
                 </div>
             </div>
         </div>
+
+        <!-- <div id="buddy-menu">
+            <div id="chat-with-buddy-option" class="buddy-menu-option">
+                <img src="./src/assets/scene/chat/buddy-menu-icon.png" class="selectDisable"/>
+                <div id="buddy-menu-option-label" class="selectDisable">Chat With Buddy</div>
+            </div>
+            <div id="view-idfone-option" class="buddy-menu-option">
+                <img src="./src/assets/scene/chat/buddy-menu-icon.png" class="selectDisable"/>
+                <div id="buddy-menu-option-label" class="selectDisable">View IDFone</div>
+            </div>
+            <div id="buddy-menu-divider"></div>
+            <div id="delete-buddy-option" class="buddy-menu-option">
+                <img src="./src/assets/scene/chat/buddy-menu-icon.png" class="selectDisable"/>
+                <div id="buddy-menu-option-label" class="selectDisable">Delete Buddy</div>
+            </div>
+        </div> -->
     </body>
 </html>
