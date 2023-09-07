@@ -6,19 +6,21 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar, changeEquipped } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped, addBuddy } = require('./database/queries');
 const { Player } = require('./network/player');
 
 // store clients (id: socketid)
 // const clients = new Object();
 
 const players = {};
+const usernameToId = {};
+const usernameToPID = {};
 const rooms = {};
 
 // connect to database
 main().catch(err => console.log(err));
 async function main() {
-    await mongoose.connect('mongodb+srv://root:CjCajFoCCSlW8VJ9@fr-cluster.qaeqyz4.mongodb.net/?retryWrites=true&w=majority');
+    await mongoose.connect(process.env.DB_URI);
 }
 
 // get files for client
@@ -38,6 +40,10 @@ io.on('connection', function (socket) {
         if (players!= null && players[socket.id] != null) {
             console.log('player disconnected: ' + players[socket.id].username);
             socket.to(players[socket.id].room).emit('removePlayer', socket.id);
+            io.emit("playerOffline", players[socket.id].username);
+
+            delete usernameToId[players[socket.id].username];
+            delete usernameToPID[players[socket.id].username];
             delete players[socket.id];
         }
         else
@@ -50,10 +56,12 @@ io.on('connection', function (socket) {
 
             // get avatar
             const avatar = await getUserAvatar(result.id);
-
+            
             // add player to our list of online players
-            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory);
+            var player = new Player(socket.id, result.id, username, 'downtown', avatar, false, 400, 200, result.inventory, result.level, result.isMember, result.idfone, result.stars, result.ecoins, result.buddies);
             players[socket.id] = player;
+            usernameToId[username] = socket.id;
+            usernameToPID[username] = result.id;
 
             // add player to room list
             if (rooms['downtown'] == null)
@@ -65,7 +73,7 @@ io.on('connection', function (socket) {
             // load game
             socket.join('downtown');
             // load local player
-            io.to(socket.id).emit('login success', result.inventory);
+            io.to(socket.id).emit('login success', result.inventory, usernameToPID);
         }
         else {
             console.log('Invalid username/password. Please try again.');
@@ -76,8 +84,11 @@ io.on('connection', function (socket) {
     socket.on('game loaded', function() {
         // assume everyone spawns in downtown
         let playersInThisRoom =  Object.values(players).filter(player => player.room === "downtown");
+        // load players online
+
         io.to(socket.id).emit('spawnCurrentPlayers', playersInThisRoom);
         socket.to("downtown").emit("spawnNewPlayer", players[socket.id]);
+        io.emit("playerOnline", players[socket.id]);
     });
 
     socket.on('playerMovement', function (movementData) {
@@ -106,6 +117,27 @@ io.on('connection', function (socket) {
 
     socket.on('chatMessage', function(msg) {
         socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
+    })
+
+    socket.on('privateMessage', function(msg, toUser) {
+        io.to(usernameToId[toUser]).emit('privateMessageResponse', players[socket.id], msg);
+    })
+
+    socket.on('buddyRequest', function(toUser) {
+        io.to(usernameToId[toUser]).emit('buddyRequestResponse', players[socket.id]);
+    })
+
+    socket.on('acceptBuddyRequest', async (userId, username) => {
+
+        // add buddy to this player's buddy list
+        players[socket.id].buddies =  await addBuddy(players[socket.id].pid, userId, username);
+        io.to(socket.id).emit('acceptBuddyRequestResponse', players[socket.id].buddies, username);
+
+        var updatedBuddies = await addBuddy(userId, players[socket.id].pid, players[socket.id].username);
+        if (usernameToId.hasOwnProperty(username)) {
+            players[usernameToId[username]].buddies = updatedBuddies;
+            io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies, players[socket.id].username);
+        }
     })
 
     socket.on('changeRoom', function(room) {
@@ -175,7 +207,6 @@ io.on('connection', function (socket) {
         await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
 
     })
-
 });
 
 server.listen(8081, function () {
