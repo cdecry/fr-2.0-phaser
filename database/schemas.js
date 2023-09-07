@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
 // idfone Object:
 /*
 {
+    title: "fantage rookie",
     skin: 0,
     stickerPages: [ {
         stickerId: 12,
@@ -32,7 +33,7 @@ const userSchema = new mongoose.Schema({
         flipX: false,
         givenBy: "bobbyBob123",
         date: "04/28/2023"
-    }
+    },
     medals: [ {
         medalId: 3, // name and title retrieved by medalId (client side)
         level: 15,

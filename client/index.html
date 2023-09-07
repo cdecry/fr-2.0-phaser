@@ -5,6 +5,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Fantage Rewritten</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <script src="https://github.com/rexrainbow/phaser3-rex-notes/blob/master/dist/rexboardplugin.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -39,6 +40,7 @@
                 <td background="./src/assets/index/left.png" width="15" height="520"></td>
                 <td>
                     <div id="app"></div>
+                    <div id="ui"></div>
                 </td>
                 <td background="./src/assets/index/right.png" width="15" height="520"></td>
                 </tr>
@@ -53,6 +55,8 @@
     </centre>
 
     <script src="src/main.js"></script>
+    <!-- <script src="src/userInterface.js"></script> -->
+
     <style>
         body{
             background-color: #edfcff;
@@ -84,6 +88,16 @@
         #lastrow {
             transform: translateY(-20%);
         }
+        #app {
+            position: absolute;
+            top: 30px;
+        }
+        #ui {
+            position: absolute;
+            top: 30px;
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+        
     </style>
 </body>
 
