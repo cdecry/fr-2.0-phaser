@@ -25,6 +25,7 @@ exports.userMigration = async function () {
       const documents = await User.find();
       for (const doc of documents) {
         // Add the new fields to each document
+        doc.buddies = [];
         doc.idfone = {
           title: 'fantage novice',
           skin: 0,

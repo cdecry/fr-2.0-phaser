@@ -100,7 +100,8 @@ loading.create = function() {
     this.anims.create(animConfig);
     sprite.play('outLoad');
 
-    globalThis.socket.on('login success', (inventory) => {
+    globalThis.socket.on('login success', (inventory, onlinePlayers) => {
+        onlineUsers = onlinePlayers;
         myInventory = inventory;
         setTimeout(() => {
             this.scene.transition( {
@@ -147,6 +148,7 @@ var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, 
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel, faceAcc, headAcc, bodyAcc, outfit;
 var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
+var notifBubbleLifeTime, notifLifeTime, notifBubble, notifMessage;
 var myPlayerInfo;
 var avatarPreview = null;
 var locationObjects = [];
@@ -317,10 +319,6 @@ uiScene.create = function() {
     WebFont.load({
         custom: {
             families: [ 'usernameFont', 'titleFont', 'titleFontOutline' ]
-        },
-        active: function ()
-        {
-            console.log('font loaded');
         }
     });
 
@@ -330,14 +328,18 @@ uiScene.create = function() {
 
     var inventory = uiObjectScene.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = uiObjectScene.add.dom(400,260).createFromCache('inventoryUI');
+    var idfoneButtonsHTML = uiObjectScene.add.dom(400, 260).createFromCache('idfoneButtonsHTML');
     inventory.setDepth(1000);
     inventory.setVisible(false);
     inventoryUI.setVisible(false);
+    idfoneButtonsHTML.setVisible(false);
 
     var imDiffX = 0, imDiffY = 0, imCurrX = 0, imCurrY = 0;
-    var imHeader, imWindow;
+    var buddyDiffX = 0, buddyDiffY = 0, buddyCurrX = 0, buddyCurrY = 0;
+    var imHeader, imWindow, buddyHeader, buddyWindow;
     var isClickUI = false;
     var isMouseDownHandleIM = false;
+    var isMouseDownHandleBuddy = false;
 
     transparentScreen = uiScene.add.dom(0, 0).createFromCache('transparentHTML');
     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
@@ -347,9 +349,7 @@ uiScene.create = function() {
     globalInputChat = inputChat;
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
-    setTimeout(() => {
-        inputChat.value = defaultChatBarMessage;
-    }, 800);
+    inputChat.value = defaultChatBarMessage;
 
     uiBar.setDepth(1000);
 
@@ -402,6 +402,176 @@ uiScene.create = function() {
         createSpeechBubble(400, 200, myPlayerInfo.username, filtered);
 
         socket.emit('chatMessage', filtered);
+    }
+
+    uiScene.addChatTabListener = () => {
+        for (var chatTabName in chatTabs) {
+            var tab = instantMessenger.getChildByID(chatTabName);
+            tab.onmousedown = createTabClickListener(tab);
+        }
+    }
+    
+    function createTabClickListener(tab) {
+        return function() {
+            for (var otherTabName in chatTabs) {
+                var otherTab = instantMessenger.getChildByID(otherTabName);
+                otherTab.style.background = 'white';
+            }
+            tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+            openChatTab = tab.id;
+            chatNameText.innerHTML = openChatTab;
+            chatHistory.innerHTML = chatTabs[openChatTab];
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        };
+    }
+
+    uiScene.addBuddyRequestListener = () => {
+        var buddyRequestButtons = document.getElementsByClassName("buddy-request-icon");
+        for (var i = 0; i < buddyRequestButtons.length; i++) {
+            var buddyRequest = buddyRequestButtons[i];
+            buddyRequest.onmousedown = createBuddyReqClickListener(buddyRequest);
+        }
+    }
+
+    function createBuddyReqClickListener(buddyRequest) {
+        return function() {
+            buddyRequestPopup = uiScene.add.dom(400, 260).createFromCache('buddyRequestPopup');
+            buddyRequestPopup.setDepth(3000);
+            $('#request-user-label').html(buddyRequest.id.slice(3).split('-')[1]);
+
+            function removeBuddyRequest() {
+                var pattern = new RegExp('<img\\s*[^>]*>(?!.*<\\/img>)');
+                buddyRequests = buddyRequests.replace(pattern, '');
+                $('#' + buddyRequest.id).remove();
+                buddyRequestPopup.destroy();
+            }
+
+            $('#br-yes-button').on('mousedown', function() {
+
+                var userInfo = buddyRequest.id.slice(3);
+                var [id, username] = userInfo.split('-');
+
+                socket.emit('acceptBuddyRequest', Number(id), username);
+                removeBuddyRequest();
+            });
+
+            $('#br-no-button').on('mousedown', function() {
+                removeBuddyRequest();
+            });
+        };
+    }
+
+    uiScene.loadBuddyList = () => {
+        var buddyRows = [];
+
+        myPlayerInfo.buddies.forEach(buddyObj => {
+            
+            var buddyStatus = 'offline';
+            if (onlineUsers.hasOwnProperty(buddyObj.username))
+                buddyStatus = 'online';
+
+            const row = `
+            <tr class="buddy-table-row">
+                <td class="buddy-table-data">
+                <img src="./src/assets/scene/chat/${buddyStatus}-icon.png"/>
+                <img src="./src/assets/scene/chat/home-icon.png"/>
+                <div class="buddy-username">${buddyObj.username}</div>
+                </td>
+            </tr>
+            `;
+            buddyRows.push(row);
+        });
+
+        var buddyRowsHtml = buddyRows.join('');
+        var table = document.getElementById("buddy-table");
+        table.innerHTML = buddyRowsHtml;
+        // Sort buddies
+        sortTable();
+        addBuddyMenuListener();
+    }
+
+    function addBuddyMenuListener() {
+        var buddyNames = document.getElementsByClassName("buddy-username");
+        for (var i = 0; i < buddyNames.length; i++) {
+            buddyNames[i].onmousedown = createBuddyMenuListener(buddyNames[i]);
+        }
+    }
+
+    function createBuddyMenuListener(buddyName) {
+        return function(event) {
+            $('#buddy-menu').css({
+                visibility: 'visible',
+                left: (event.pageX - 260).toString() + 'px',
+                top: (event.pageY - 175).toString() + 'px',
+            });
+
+            var buddyMenu = document.getElementById('buddy-menu');
+
+            document.onmousedown = (event) => {
+                var target = event.target;
+                if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
+                    buddyMenu.style.visibility = 'hidden';
+                }
+            };
+        };
+    }
+
+    function sortTable() {
+        var table = document.getElementById("buddy-table");
+        var rows = Array.from(table.rows);
+
+        var rowsOnline = [];
+        var rowsOffline = [];
+
+        for (var i = 0; i < rows.length; i++) {
+            var currentValue = rows[i].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+            if (currentValue.includes("online")) {
+                rowsOnline.push(rows[i]);
+            } else {
+                rowsOffline.push(rows[i]);
+            }
+        }
+
+        quickSort(rowsOnline, 0, rowsOnline.length - 1);
+        quickSort(rowsOffline, 0, rowsOffline.length - 1);
+
+        for (var i = 0; i < rowsOnline.length; i++) {
+          table.appendChild(rowsOnline[i]);
+        }
+        for (var i = 0; i < rowsOffline.length; i++) {
+            table.appendChild(rowsOffline[i]);
+        }
+    }
+      
+    function quickSort(arr, left, right) {
+        if (left < right) {
+          var pivotIndex = partition(arr, left, right);
+          quickSort(arr, left, pivotIndex - 1);
+          quickSort(arr, pivotIndex + 1, right);
+        }
+    }
+      
+    function partition(arr, left, right) {
+        var pivot = arr[right].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+        var i = left - 1;
+        
+        for (var j = left; j < right; j++) {
+          var currentValue = arr[j].getElementsByTagName("TD")[0].innerHTML.toLowerCase();
+          
+          if (currentValue <= pivot) {
+            i++;
+            swap(arr, i, j);
+          }
+        }
+        
+        swap(arr, i + 1, right);
+        return i + 1;
+      }
+      
+    function swap(arr, i, j) {
+        var temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
     }
 
     uiButtons.addListener('click');
@@ -561,26 +731,43 @@ uiScene.create = function() {
             }
         }
         else if (event.target.id === 'buddiesButton') {
-
             // Click buddies button while IM is open to reset window to default
-            if (instantMessenger != null && imWindow.style.visibility == 'visible') {
+            if (instantMessenger != null && (imWindow.style.visibility == 'visible' || buddyWindow.style.visibility == 'visible')) {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
+                buddyCurrX = 0, buddyCurrY = 0, buddyDiffX = 0, buddyDiffY = 0;
                 imWindow.style.top = '50px';
                 imWindow.style.left = '100px';
                 imWindow.style.width = '350px';
                 imWindow.style.height = '250px';
+                buddyWindow.style.top = '50px';
+                buddyWindow.style.left = '-104px';
+
+                imWindow.style.visibility = 'visible';
+                buddyWindow.style.visibility = 'visible';
+
                 return;
             }
             // Create IM for first time
             else if (instantMessenger == null) {
                 instantMessenger = uiScene.add.dom(200, 123).createFromCache('instantMessengerHTML');
                 instantMessenger.setDepth(2000);
+
+                imWindow = instantMessenger.getChildByID('im-window');
+                imHeader = instantMessenger.getChildByID('im-header');
+
+                buddyWindow = instantMessenger.getChildByID('buddy-window');
+                buddyHeader = instantMessenger.getChildByID('buddy-header');
+                
+                
+                instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+
+                enableIMDrag(instantMessenger, imHeader, imWindow);
+                enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
             }
 
             // Set IM visible (open)
-            imWindow = instantMessenger.getChildByID('im-window');
-            imHeader = instantMessenger.getChildByID('im-header');
             imWindow.style.visibility = 'visible';
+            buddyWindow.style.visibility = 'visible';
 
             // Load chat name & history for open tab, auto-scroll to bottom
             chatNameText = instantMessenger.getChildByID('chatName');
@@ -588,6 +775,10 @@ uiScene.create = function() {
             chatNameText.innerHTML = openChatTab;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Load buddy list and requests
+            uiScene.loadBuddyList();
+            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
 
             // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
@@ -621,6 +812,14 @@ uiScene.create = function() {
                 }, 50);
             }
 
+            // Add listener: click to close bududy list
+            instantMessenger.getChildByID('buddy-close-button').onmousedown = () => {
+                buddyWindow.style.visibility = 'hidden';
+                setTimeout(function () {
+                    isClickUI = false;
+                }, 50);
+            }
+
             instantMessenger.getChildByID('new-chat-button').onmousedown = () => {
                 // Test${Object.keys(chatTabs).length.toString()}
                 // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
@@ -642,35 +841,28 @@ uiScene.create = function() {
                 chatHistory.innerHTML = "";
                 chatNameText.innerHTML = 'jake';
 
-                addChatTabListener();
+                uiScene.addChatTabListener();
             }
             
             // Add listener: click to switch to chat tab
-            addChatTabListener();
+            uiScene.addChatTabListener();
 
-            function addChatTabListener() {
-                for (var chatTabName in chatTabs) {
-                    var tab = instantMessenger.getChildByID(chatTabName);
-                    tab.onmousedown = createTabClickListener(tab);
-                }
-            }
-            
-            function createTabClickListener(tab) {
-                return function() {
-                    for (var otherTabName in chatTabs) {
-                        var otherTab = instantMessenger.getChildByID(otherTabName);
-                        otherTab.style.background = 'white';
-                    }
-                    tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                    openChatTab = tab.id;
-                    chatNameText.innerHTML = openChatTab;
-                    chatHistory.innerHTML = chatTabs[openChatTab];
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
-                };
+            // Add listener: buddy request icons
+            uiScene.addBuddyRequestListener();
+
+            instantMessenger.getChildByID("Buddy List").onmousedown = () => {
+                instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                instantMessenger.getChildByID("Ignore List").style.background = 'white';
+                uiScene.loadBuddyList();
             }
 
-            enableDivDrag(instantMessenger, imHeader, imWindow);
-            function enableDivDrag(domElement, divHandle, divToMove) {
+            instantMessenger.getChildByID("Ignore List").onmousedown = () => {
+                instantMessenger.getChildByID("Ignore List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                instantMessenger.getChildByID("Buddy List").style.background = 'white';
+                $("#buddy-table tr").remove(); 
+            }
+
+            function enableIMDrag() {
                 isMouseDownHandleIM = false;
 
                 transparentScreen.addListener('pointerup');
@@ -686,26 +878,26 @@ uiScene.create = function() {
                         dragIM(pointer);
                 })
 
-                domElement.addListener('pointerup');
-                domElement.on('pointerup', function() {
+                instantMessenger.addListener('pointerup');
+                instantMessenger.on('pointerup', function() {
                     isMouseDownHandleIM = false;
                     isClickUI = false;
                     transparentScreen.getChildByID('screen').style.visibility = 'hidden';
                 })
-                domElement.addListener('pointermove');
-                domElement.on('pointermove', function(pointer, x, y, event) {
+                instantMessenger.addListener('pointermove');
+                instantMessenger.on('pointermove', function(pointer, x, y, event) {
                     if (isMouseDownHandleIM)
                         dragIM(pointer);
                 })
-                domElement.addListener('pointerdown');
-                domElement.on('pointerdown', function() {
+                instantMessenger.addListener('pointerdown');
+                instantMessenger.on('pointerdown', function() {
                     isClickUI = true;
                     inGame.input.stopPropagation();
                 })
             
-                divToMove.style.top = '50px';
-                divToMove.style.left = '100px';
-                divHandle.onmousedown = dragMouseDown;
+                imWindow.style.top = '50px';
+                imWindow.style.left = '100px';
+                imHeader.onmousedown = dragMouseDown;
 
                 function dragMouseDown(e) {
                     isMouseDownHandleIM = true;
@@ -721,10 +913,68 @@ uiScene.create = function() {
                     imCurrX = ptr.x;
                     imCurrY = ptr.y;
 
-                    currTop = parseInt(divToMove.style.top.slice(0, -2));
-                    currLeft = parseInt(divToMove.style.left.slice(0, -2));
-                    divToMove.style.top = (currTop + imDiffY).toString() + 'px';
-                    divToMove.style.left = (currLeft + imDiffX).toString() + 'px';
+                    currTop = parseInt(imWindow.style.top.slice(0, -2));
+                    currLeft = parseInt(imWindow.style.left.slice(0, -2));
+                    imWindow.style.top = (currTop + imDiffY).toString() + 'px';
+                    imWindow.style.left = (currLeft + imDiffX).toString() + 'px';
+                }
+            }
+
+            function enableBuddyDrag() {
+                isMouseDownHandleBuddy = false;
+
+                transparentScreen.addListener('pointerup');
+                transparentScreen.addListener('pointermove');
+
+                transparentScreen.on('pointerup', function() {
+                    isMouseDownHandleBuddy = false;
+                    isClickUI = false;
+                    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+                })
+                transparentScreen.on('pointermove', function(pointer, x, y, event) {
+                    if (isMouseDownHandleBuddy)
+                        dragBuddy(pointer);
+                })
+
+                instantMessenger.addListener('pointerup');
+                instantMessenger.on('pointerup', function() {
+                    isMouseDownHandleBuddy = false;
+                    isClickUI = false;
+                    transparentScreen.getChildByID('screen').style.visibility = 'hidden';
+                })
+                instantMessenger.addListener('pointermove');
+                instantMessenger.on('pointermove', function(pointer, x, y, event) {
+                    if (isMouseDownHandleBuddy)
+                        dragBuddy(pointer);
+                })
+                instantMessenger.addListener('pointerdown');
+                instantMessenger.on('pointerdown', function() {
+                    isClickUI = true;
+                    inGame.input.stopPropagation();
+                })
+            
+                buddyWindow.style.top = '50px';
+                buddyWindow.style.left = '100px';
+                buddyHeader.onmousedown = dragMouseDown;
+
+                function dragMouseDown(e) {
+                    isMouseDownHandleBuddy = true;
+                    transparentScreen.getChildByID('screen').style.visibility = 'visible';
+
+                    buddyCurrX = e.clientX;
+                    buddyCurrY = e.clientY;
+                }
+
+                function dragBuddy(ptr) {
+                    buddyDiffX = ptr.x - buddyCurrX;
+                    buddyDiffY = ptr.y - buddyCurrY;
+                    buddyCurrX = ptr.x;
+                    buddyCurrY = ptr.y;
+
+                    currTop = parseInt(buddyWindow.style.top.slice(0, -2));
+                    currLeft = parseInt(buddyWindow.style.left.slice(0, -2));
+                    buddyWindow.style.top = (currTop + buddyDiffY).toString() + 'px';
+                    buddyWindow.style.left = (currLeft + buddyDiffX).toString() + 'px';
                 }
             }
         }
@@ -767,7 +1017,6 @@ uiScene.create = function() {
             var item;
             
             item = uiObjectScene.add.sprite(0, 0, prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
-            console.log(prefix + '-' + typeId.toString()+ '-' + myInventory[typeId][i].id.toString() + '-i');
 
             item.setInteractive();
             item.setDepth(1001);
@@ -890,13 +1139,17 @@ uiScene.create = function() {
         disableInput = true;
         uiButtons.visible = false;
         chatBar.visible = false;
-
+        
         var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
         var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
-        var idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow;
+        var idfoneLower, idfoneButtons, idfoneWallpaper, idfoneUpper, idfoneShadow;
 
         setTimeout(function () {
             idfoneLower = uiObjectScene.add.image(400, 230, 'idfoneLower');
+
+            if (!isLocalPlayer)
+                idfoneButtons = uiObjectScene.add.image(400, 230, 'idfoneButtons');
+
             idfoneWallpaper = uiObjectScene.add.image(400, 260, 'idfoneDefault');
             idfoneUpper = uiObjectScene.add.image(400, 260, 'idfoneUpper');
             idfoneShadow = uiObjectScene.add.image(400, 260, 'idfoneShadow');
@@ -908,6 +1161,21 @@ uiScene.create = function() {
                 ease: 'Linear',
                 duration: 300,
             });
+
+            if (!isLocalPlayer) {
+                tween = uiObjectScene.tweens.add({
+                    targets: idfoneButtons,
+                    x: 400,
+                    y: 260,
+                    ease: 'Linear',
+                    duration: 300,
+                });
+
+                idfoneButtonsHTML.visible = true;
+                idfoneButtonsHTML.getChildByID('addButton').onmousedown = () => {
+                    socket.emit('buddyRequest', playerInfo.username);
+                }
+            }
 
             createAvatarPreview(playerInfo);
             avatarPreview.setPosition(460, 190);
@@ -958,7 +1226,9 @@ uiScene.create = function() {
             var closeIDFoneButton = uiScene.add.circle(554, 88, 12, 0x0000ff, 0);
             closeIDFoneButton.setInteractive({ useHandCursor: true });
 
-            var idfoneGroup = [greyScreen, idfoneLower, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel, tempDomBlocker, tempObjectBlocker];
+
+
+            var idfoneGroup = [greyScreen, idfoneLower, idfoneButtons, idfoneWallpaper, idfoneUpper, idfoneShadow, avatarPreview, closeIDFoneButton, inLoading, titleLabel, levelLabel, levelLabelLabel, idfoneUserLabel, starBalanceLabel, ecoinBalanceLabel, idfoneBlueStar, idfoneBevel, tempDomBlocker, tempObjectBlocker];
 
             closeIDFoneButton.on('pointerdown', () => {
                 for (let i = 0; i < idfoneGroup.length; i++) {
@@ -966,6 +1236,7 @@ uiScene.create = function() {
                         continue
                     idfoneGroup[i].destroy();
                     disableInput = false;
+                    idfoneButtonsHTML.visible = false;
                     uiButtons.visible = true;
                     chatBar.visible = true;
                 }
@@ -1030,10 +1301,12 @@ var clickOffsetY = 110;
 var currentLocation = "downtown";
 var boundOffset = 150;
 
+var buddyRequests = '';
 var openChatTab = "Current Room";
 var chatTabs = {
     "Current Room": ""
 }
+var onlineUsers = [];
 
 var preloadGameAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets')
@@ -1149,6 +1422,11 @@ var preloadGameAssets = (thisScene) => {
     for (let i = 1; i < 11; i++) {
         thisScene.load.image('message-' + i.toString(), 'scene/chat/message-' + i.toString() + '.png');
     }
+    
+    // load notification containers
+    for (let i = 1; i < 5; i++) {
+        thisScene.load.image('notification-' + i.toString(), 'scene/chat/notification-' + i.toString() + '.png');
+    }
 
     // load anim data
     thisScene.load.json('bodyAnims', 'anims/bodyAnims.json');
@@ -1160,12 +1438,16 @@ var preloadGameAssets = (thisScene) => {
 
 var preloadUIAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets');
+
+    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+
     // Load chat ui
     thisScene.load.html('chatBar', 'html/chatbar.html');
     thisScene.load.html('messageWidth', 'html/messagewidth.html');
     thisScene.load.html('chatMessageHTML', 'html/chatmessage.html');
     thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     thisScene.load.html('transparentHTML', 'html/transparent.html');
+    thisScene.load.html('buddyRequestPopup', 'html/buddyRequestPopup.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
     
     // Load inventory ui
@@ -1177,6 +1459,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('inventoryArrowDown', 'scene/ui/inventoryArrowDown.png');
     thisScene.load.html('uiButtons', 'html/uiButtons.html');
     thisScene.load.html('inventoryUI', 'html/inventoryUI.html');
+    thisScene.load.html('idfoneButtonsHTML', 'html/idfoneButtons.html');
     // Load IDFone ui
     thisScene.load.image('idfoneUpper', 'scene/ui/idfone/idfoneUpper.png');
     thisScene.load.image('idfoneLower', 'scene/ui/idfone/idfoneLower.png');
@@ -1184,6 +1467,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('idfoneDefault', 'scene/ui/idfone/wallpaper/default.png');
     thisScene.load.image('idfoneBevel', 'scene/ui/idfone/idfoneBevel.png');
     thisScene.load.image('idfoneBevelBalance', 'scene/ui/idfone/idfoneBevelBalance.png');
+    thisScene.load.image('idfoneButtons', 'scene/ui/idfone/idfoneButtonsSet.png');
 
     thisScene.load.image('idfoneBlueStar', 'scene/ui/idfone/idfoneBlueStar.png');
     thisScene.load.image('idfoneMemberBadge', 'scene/ui/idfone/idfoneMemberBadge.png');
@@ -1215,6 +1499,7 @@ var locationConfig = {
 }
 
 inGame.create = function() {
+
     // Init Camera
     setCameraPosition(currentLocation);
     this.scene.launch(uiScene);
@@ -1226,7 +1511,9 @@ inGame.create = function() {
     bg.setDepth(-500);
 
     this.input.setTopOnly(true);
-    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+    bg.on('pointerdown', function (pointer) {
+        clickMovement(pointer);
+    });
     inGame.sound.pauseOnBlur = false;
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
@@ -1323,8 +1610,6 @@ inGame.create = function() {
                 // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
     
                 topModelsObject.on('pointerdown', () => {
-                    console.log('poladot');
-    
                     currentLocation = "topModels";
                     socket.emit('changeRoom', "topModels");
     
@@ -1414,7 +1699,7 @@ inGame.create = function() {
 
     function createPlayer(playerInfo) {
         myPlayerInfo = playerInfo;
-
+        
         head = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-face-' +  playerInfo.avatar['skinTone']);
         eyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
         lips = inGame.add.sprite(0, 0, 'lips-0');
@@ -1446,9 +1731,9 @@ inGame.create = function() {
 
         container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         
-        for (let i =0; i < 17; i++) {
-            console.log(i + ", " + JSON.stringify(container.getAt(i)));
-        }
+        // for (let i =0; i < 17; i++) {
+        //     console.log(i + ", " + JSON.stringify(container.getAt(i)));
+        // }
 
         //container.add([hairLower, head, eyes, lips, faceAcc, boardLower, hairUpper, brow, headAcc, player, shoes, bottomItem, topItem, outfit, costume, bodyAcc, boardUpper, usernameTag, usernameLabel]);
         inGame.physics.add.existing(container, false);
@@ -1560,28 +1845,34 @@ inGame.create = function() {
         Object.keys(players).forEach(function (id) {
 
                 if (players[id].id === globalThis.socket.id && player == null) {
-                    console.log('creating player ' + players[id].username);
                     createPlayer(players[id]);
                     
                 } else if (players[id].id != globalThis.socket.id) {
                     addOtherPlayers(players[id]);
                 }
         });
-        console.log('Recieved msg from server: spawnCurrentPlayers');
     });
 
     globalThis.socket.on('spawnNewPlayer', function (p) {
         addOtherPlayers(p);
     });
 
+    globalThis.socket.on('playerOnline', function (p) {
+        onlineUsers[p.username] = p.pid;
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
+    });
+
+    globalThis.socket.on('playerOffline', function (username) {
+        delete onlineUsers[username];
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
+    });
+
     // Everyone removes the player with this id
     globalThis.socket.on('removePlayer', function (id) {
-        console.log("received remove player msg");
         for (let i = 0; i < otherPlayers.getLength(); i++) {
             var p = otherPlayers.getChildren()[i];
-
-            console.log('otherplayer id: ' + p.getData('username'));
-            console.log('id, pid' + id + ',' + p.id);
             if (id === p.id) {
 
                 var msgData = p.getData('messageData');
@@ -1645,8 +1936,6 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('changeClothesResponse', function (pid, changed) {
-        console.log("recieved change clothes response.");
-        console.log(JSON.stringify(changed));
         if (pid == myPlayerInfo.id) {
             for (let i = 0; i < Object.keys(changed).length; i++) {
                 if (changed[i].length > 0) {
@@ -1660,13 +1949,8 @@ inGame.create = function() {
         }
 
         otherPlayers.getChildren().forEach(function (p) {
-            console.log("checking here");
             if (pid === p.id) {
-                console.log("found the bastard");
                 for (let i = 0; i < Object.keys(changed).length; i++) {
-                    console.log("looking for changed");
-                    console.log(JSON.stringify(changed[i]));
-                    console.log(changed[i].length);
                     if (changed[i].length > 0) {
                         if (changed[i][0] == -1)
                             changeClothes(p, i, changed[i][0], false);
@@ -1684,9 +1968,6 @@ inGame.create = function() {
 
         if (typeId != 5)
             prefix = myPlayerInfo.avatar['gender'];
-
-        console.log("equipping " + typeId);
-
 
         if (typeId == 0 && isLocalPlayer) {
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
@@ -1717,7 +1998,6 @@ inGame.create = function() {
             equippedItem.flipX = player.flipX;
         }
         else {
-            console.log("HERERERERER: " + prefix + '-'+ typeId+ '-' + itemId);
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId+ '-' + itemId);
             cont.replace(cont.getAt(iMap[typeId]), equippedItem, true);
 
@@ -1797,6 +2077,79 @@ inGame.create = function() {
         // if no chat tab open, add this chat tab
         console.log('Incoming PM from ' + playerInfo.username + ': ' + msg);
 
+    }.bind(this));
+
+    globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
+
+        if (notifLifeTime != undefined && notifLifeTime.isAlive) {
+            notifBubbleLifeTime.stop();
+            notifLifeTime.stop();
+            notifBubble.destroy()
+            notifMessage.destroy();
+        }
+
+        notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
+        var notifMsgContent = notifMessage.getChildByID('message');
+        notifMsgContent.style.width = '150px';
+
+        notifMessage.getChildByID('message').innerHTML = "Buddy request from: \"" + playerInfo.username + "\", click here on buddy list to accept/deny";
+        notifBubble = uiScene.add.image(645, 410, 'notification-3');
+
+        notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
+        notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
+        var gender = 'girl';
+        if (playerInfo.avatar.gender == 'm')
+            gender = 'boy';
+
+        buddyRequests += `<img id='br-${playerInfo.pid}-${playerInfo.username}' class="buddy-request-icon" class="selectDisable" src="./src/assets/scene/chat/${gender}-icon.png"/>`;
+        if (document.getElementById("buddy-window") != null) {
+            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
+            uiScene.addBuddyRequestListener();
+        }
+
+    }.bind(this));
+
+    globalThis.socket.on('acceptBuddyRequestResponse', function (buddies, newBuddy) {
+
+        if (notifLifeTime != undefined && notifLifeTime.isAlive) {
+            notifBubbleLifeTime.stop();
+            notifLifeTime.stop();
+            notifBubble.destroy()
+            notifMessage.destroy();
+        }
+
+        notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
+        var notifMsgContent = notifMessage.getChildByID('message');
+        notifMsgContent.style.width = '150px';
+
+        notifMessage.getChildByID('message').innerHTML = "User " + newBuddy + " is now your buddy";
+        notifBubble = uiScene.add.image(645, 410, 'notification-2');
+
+        notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
+        notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
+            lifeTime: 4000,
+            destroy: true,
+            start: true
+        });
+
+        myPlayerInfo.buddies = buddies;
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
     }.bind(this));
 
     //#region Action Animations
@@ -2012,23 +2365,12 @@ function moveXY(newPosX, newPosY) {
 }
 
 inGame.update = function() {
-    // if (container)
-    //     console.log("Position x: " + container.x + ", y: " + container.y);
-
     // Camera can't pan if already panning
     this.cameras.main.on('camerapancomplete', function () {
         setTimeout(function () {
             isPanning = false;
         }, 0);
     });
-
-    // Change rooms test
-    // if (keySpace.isDown) {
-    //     console.log("hi, moving to new room...");
-    //     socket.emit('changeRoom', "beach");
-    //     bg.destroy();
-    //     bg = this.add.image(400, 260, 'beachBg');
-    // }
 
     let panDistance = 300;
 
@@ -2055,8 +2397,6 @@ inGame.update = function() {
             this.cameras.main.pan(camPosX, camPosY, 1500);
         }
 
-        // if (Phaser.Geom.Intersects.RectangleToRectangle(playerCollision, leftBound))
-        //     console.log('hit left bound');
         container.setDepth(container.y);
 
         if (!disableInput) {
@@ -2069,7 +2409,6 @@ inGame.update = function() {
             } else if (keyRight.isDown) {
                 container.body.setVelocity(0);
                 moveX(container.x, container.y, 1);
-                console.log(camPosX);
             }
 
             // Vertical movement
@@ -2124,9 +2463,6 @@ inGame.update = function() {
 
             // Actions
         if (key1.isDown) {
-
-            console.log(container.x, container.y);
-
             if (!container.getAt(cMap.player).anims.isPlaying && !container.getAt(cMap.eyes).anims.isPlaying) {
                 globalThis.socket.emit('playerWave');
                 container.getAt(cMap.player).play(myPlayerInfo.avatar.gender + '-body-' + container.getData('skinTone') + '-wave');
@@ -2249,7 +2585,7 @@ uiObjectScene.preload = function () {
 };
 
 uiObjectScene.create = function () {
-    console.log('test');
+    console.log('uiObjectScene created');
 };
 //#endregion
 
