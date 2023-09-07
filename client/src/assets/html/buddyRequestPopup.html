@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #black-screen {
+                position: absolute;
+                height: 520px;
+                width: 800px;
+                background-color: rgba(0,0,0,.4);
+                top: -260px;
+                left: -400px;
+                z-index: 0;
+            }
+            #panel {
+                position: fixed;
+                left: -80px;
+                top: -50px;
+                height: 120px;
+                width: 165px;
+                background-color: #0a4775;
+                border: 1px solid white;
+                border-radius: 10px;
+                z-index: 10;
+            }
+            #panel-header {
+                width: 100%;
+                height: 13px;
+                background-color: #5c81a7;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+            #accept-buddy-label {
+                position: absolute;
+                left: 25px;
+                top: 6px;
+                color: white;
+                font-family: imLabelFont;
+                text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+                font-size: 12px;
+            }
+            #request-user-label {
+                font-size: 15px;
+                color: white;
+                margin-top: 35px;
+            }
+            #button-container {
+                position: absolute;
+                height: 16px;
+                width: 165px;
+                left: 0px;
+                top: 90px;
+            }
+            #panel button {
+                color: white;
+                font-family: imLabelFont;
+                font-size: 11px;
+                width: 60px;
+                height: 22px;
+                border-radius: 5px;
+                margin-left: 3px;
+                text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+                box-shadow:
+                    inset 0 0 2px 0 rgba(255,255,255,.4),
+                    inset 0 0 3px 0 rgba(0,0,0,.2),
+                    inset 0 0 3px 5px rgba(0,0,0,.05),
+                    2px 2px 4px 0 rgba(0,0,0,.20);
+            }
+            #br-yes-button {
+                background-color: #09a903;
+            }
+            #br-no-button {
+                background-color: #d11501;
+            }
+            #panel button:before, #panel button:after {
+            content: '';
+            display: block;
+            left: 2px;
+            right: 2px;
+            height: 3px;
+        }
+        #panel button:before {
+            top: 0;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            background: rgba(255,255,255,.3);
+            box-shadow: 0 0px 2px 0 rgba(255,255,255,.3);
+        }
+        #panel button:after {
+            bottom: 0;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            background: rgba(0,0,0,.10);
+            box-shadow: 0 0px 2px 0 rgba(0,0,0,.10);
+        }
+        .selectDisable {
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -o-user-select: none;
+            user-select: none;
+        }
+        #panel button:hover {
+            cursor: pointer;
+        }
+
+        #br-yes-button:active{
+            background-color: #0c9707b6;
+        }
+        #br-no-button:active{
+            background-color: #bd1805af;
+        }
+
+        </style>
+    </head>
+    <body>
+        <div id="panel">
+            <div id="panel-header"></div>
+            <div id="accept-buddy-label" class="selectDisable">Accept Buddy?</div>
+            <div id="request-user-label" class="selectDisable">lotusrainxoxo</div>
+            <div id="button-container">
+                <button id="br-yes-button">Yes</button>
+                <button id="br-no-button">No</button>
+            </div>
+        </div>
+
+        <div id="black-screen"></div>
+    </body>
+</html>

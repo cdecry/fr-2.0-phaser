@@ -38,9 +38,17 @@ exports.registerUser =  async function (id, username, password, gender) {
     console.log('new user registered');
 }
 
+exports.getUser = async function (id) {
+    return new Promise((resolve, reject) => {
+        User.findOne({ 'id': id }, 'username', function (err, user) {
+            resolve(user.username);
+        });
+    });
+}
+
 exports.loginRequest = async function (username, password) {
     return new Promise((resolve, reject) => {
-        User.findOne({ 'username': username }, 'id username password inventory level isMember idfone stars ecoins', function (err, user) {
+        User.findOne({ 'username': username }, 'id username password inventory level isMember idfone stars ecoins buddies', function (err, user) {
             if (user != null && password === user.password)
                 resolve(user);
             else
@@ -82,6 +90,26 @@ exports.updateInventory = async function (id, inventory) {
     });
 }
 
+// exports.addBuddy = async function (userID, userIDToAdd, usernameToAdd) {
+//     return new Promise((resolve, reject) => {
+//         User.updateOne( { id: userID }, { $push: { buddies: { "id": userIDToAdd, "username": usernameToAdd } } }, function (err, count) {
+//             resolve();
+//         });
+//     });
+// }
+
+exports.addBuddy = async function (userID, userIDToAdd, usernameToAdd) {
+    try {
+      const updatedUser = await User.findOneAndUpdate(
+        { id: userID },
+        { $push: { buddies: { id: userIDToAdd, username: usernameToAdd } } },
+        { new: true }
+      ).select('buddies');
+      return updatedUser.buddies;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 // exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
 //     return new Promise((resolve, reject) => {
