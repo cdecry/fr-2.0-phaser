@@ -132,8 +132,6 @@ var globalPointer = {
 }
 
 var usernameLabelCenter = 0;
-// var clickOffsetX = 0;
-// var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 19;
 var chatBubbleOffsetY = -125;
@@ -143,6 +141,7 @@ var disableInput = false;
 var stopMoving = false;
 var container;
 var player = null;
+var otherPlayers;
 var rightBound;
 var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, startY: 5, endX: 205, endY: 105 } ]
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel, faceAcc, headAcc, bodyAcc, outfit;
@@ -310,6 +309,8 @@ uiScene.create = function() {
         avatarPreview.setData('skinTone', playerInfo.avatar['skinTone']);
         avatarPreview.setData('eyeType', playerInfo.avatar['eyeType']);
         avatarPreview.setData('gender', playerInfo.avatar['gender']);
+        avatarPreview.setData('playerInfo', playerInfo);
+
         var previewEquipped = [];
         for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
             previewEquipped[i] = playerInfo.avatar['equipped'][i]
@@ -492,28 +493,73 @@ uiScene.create = function() {
 
     function addBuddyMenuListener() {
         var buddyNames = document.getElementsByClassName("buddy-username");
-        for (var i = 0; i < buddyNames.length; i++) {
-            buddyNames[i].onmousedown = createBuddyMenuListener(buddyNames[i]);
-        }
+        instantMessenger.addListener('pointerdown');
+            instantMessenger.on('pointerdown', function (pointer) {
+                if (pointer.target.className == 'buddy-username') {
+                    uiScene.createBuddyMenuListener(pointer.target, pointer.x, pointer.y);
+                }
+            });
     }
 
-    function createBuddyMenuListener(buddyName) {
-        return function(event) {
-            $('#buddy-menu').css({
-                visibility: 'visible',
-                left: (event.pageX - 260).toString() + 'px',
-                top: (event.pageY - 175).toString() + 'px',
-            });
+    uiScene.createBuddyMenuListener = (buddyName, pointerX, pointerY) => {
+        var chatOption, idfoneOption, deleteOption;
 
-            var buddyMenu = document.getElementById('buddy-menu');
+        $('#buddy-menu').css({
+            visibility: 'visible',
+            left: (pointerX - 510).toString() + 'px',
+            top: (pointerY - 175).toString() + 'px',
+        });
 
-            document.onmousedown = (event) => {
-                var target = event.target;
-                if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
-                    buddyMenu.style.visibility = 'hidden';
-                }
-            };
+        if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
+            $('#buddy-menu').css('height', '68px');
+            $('#chat-with-buddy-option').css('display', 'flex');
+            chatOption = document.getElementById('chat-with-buddy-option');
+            chatOption.onmousedown = () => {
+                console.log("open chat");
+            }
+        }
+        else {
+            $('#buddy-menu').css('height', '50px');
+            $('#chat-with-buddy-option').css('display', 'none');
+        }
+
+        // remove buddy menu when clicking elsewhere
+        var buddyMenu = document.getElementById('buddy-menu');
+
+        document.onmousedown = (event) => {
+            var target = event.target;
+            if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
+                buddyMenu.style.visibility = 'hidden';
+            }
         };
+
+        // add listener for buddy menu options
+
+        idfoneOption = document.getElementById('view-idfone-option');
+        deleteOption = document.getElementById('delete-buddy-option');
+
+        idfoneOption.onmousedown = () => {
+            //if they not online, get the id from our buddies map
+            // request info for idfone
+            if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
+                for (let i = 0; i < otherPlayers.getLength(); i++) {
+
+                    
+                    var p = otherPlayers.getChildren()[i];
+                    if (p.getData('username') === buddyName.innerHTML) {
+                        console.log("opening idfone");
+                        isClickUI = false;
+                        uiScene.openIDFone(false, p.getData('playerInfo'));
+                        isClickUI = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        deleteOption.onmousedown = () => {
+            console.log("dlt buddy");
+        }
     }
 
     function sortTable() {
@@ -1258,6 +1304,7 @@ uiScene.create = function() {
         // })
     }
 
+    // Return true if not clicking ui and input is NOT disabled, false otherwise
     uiScene.checkInteractive = function() {
         return !(isClickUI || disableInput);
     }
@@ -1434,6 +1481,9 @@ var preloadGameAssets = (thisScene) => {
     thisScene.load.json('eyesAnims', 'anims/eyesAnims.json');
     thisScene.load.json('hairAnims', 'anims/hairAnims.json');
     thisScene.load.json('lipsAnims', 'anims/lipsAnims.json');
+
+    // load topModels UI
+    thisScene.load.image('tmPlayButton', 'scene/location/topModels/sprites/playIcon.png');
 }
 
 var preloadUIAssets = (thisScene) => {
@@ -1512,12 +1562,16 @@ inGame.create = function() {
 
     this.input.setTopOnly(true);
     bg.on('pointerdown', function (pointer) {
+        // console.log(pointer);
+        // if (pointer.target == 'buddy-username') {
+        //     createBuddyMenuListener(pointer.target, pointer.x, pointer.y);
+        // }
         clickMovement(pointer);
     });
     inGame.sound.pauseOnBlur = false;
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
-    var otherPlayers = this.add.group();
+    otherPlayers = this.add.group();
 
     let data = this.cache.json.get('bodyAnims');
     let dataFace = this.cache.json.get('bottomShoes');
@@ -1669,6 +1723,24 @@ inGame.create = function() {
                 chair.setDepth(20);
     
                 locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
+
+                var tmPlayButton = inGame.add.sprite(795, 35, 'tmPlayButton');
+                tmPlayButton.setDepth('1000');
+                tmPlayButton.setInteractive({
+                    pixelPerfect: true,
+                    useHandCursor: true,
+                });
+
+                tmPlayButton.on('pointerdown', () => {
+                    tmPlayButton.x  += 1;
+                    tmPlayButton.y  += 1;
+                });
+
+                tmPlayButton.on('pointerup', () => {
+                    tmPlayButton.x -=1;
+                    tmPlayButton.y -=1;
+                });
+
             }
             loadingScreen.destroy();
             inLoading.destroy();
@@ -1746,6 +1818,7 @@ inGame.create = function() {
         container.setData('eyeType', playerInfo.avatar['eyeType']);
         container.setData('gender', playerInfo.avatar['gender']);
         container.setData('equipped', playerInfo.avatar['equipped']);
+        container.setData('playerInfo', playerInfo);
 
         var children = container.getAll();
         for (let i = 0; i < children.length - 2; i ++) {
@@ -1819,6 +1892,7 @@ inGame.create = function() {
         otherContainer.setData('eyeType', playerInfo.avatar['eyeType']);
         otherContainer.setData('gender', playerInfo.avatar['gender']);
         otherContainer.setData('equipped', playerInfo.avatar['equipped']);
+        otherContainer.setData('playerInfo', playerInfo);
         otherContainer.setData('messageData', { hasMessage: false, otherChatBubble: null, otherChatMessage: null, otherBubbleLifeTime: null, otherMessageLifeTime: null });
         
         otherContainer.id = playerInfo.id;
@@ -2299,6 +2373,10 @@ inGame.create = function() {
     //#endregion
 
     function clickMovement(pointer) {
+
+        globalPointer.x = pointer.x + clickOffsetX;
+        globalPointer.y = pointer.y;
+
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
         globalInputChat.blur();
@@ -2308,8 +2386,6 @@ inGame.create = function() {
 
         if (!uiScene.checkInteractive()) return;
         
-        globalPointer.x = pointer.x + clickOffsetX;
-        globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
     }
 }
