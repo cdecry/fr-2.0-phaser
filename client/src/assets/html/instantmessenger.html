@@ -453,7 +453,7 @@
                 vertical-align: middle;
             }
 
-            .buddy_username:hover {
+            .buddy-username:hover {
                 cursor: pointer;
             }
 
@@ -471,7 +471,8 @@
                 padding-top: 2px;
                 padding-bottom: 2px;
                 width: 140px;
-                height: 68px;
+                /* height: 68px; */
+                height: 50px;
                 border-radius: 3px;
                 background-color: #016fff;
                 box-shadow: inset 1px 1px 1px 0 #55a9ff, inset -2px -2px 2px 0 rgba(0,82,195,255);
@@ -492,7 +493,13 @@
                 padding-top: 2px;
             }
 
+            #chat-with-buddy-option {
+                display: none;
+            }
+
             .buddy-menu-option {
+                align-items: flex-start;
+                width: calc(100% - 8px);
                 display: flex;
                 gap: 5px;
             }
