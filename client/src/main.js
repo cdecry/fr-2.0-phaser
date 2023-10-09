@@ -623,7 +623,7 @@ uiScene.create = function() {
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
         if (!uiScene.checkInteractive)
-                return;
+            return;
 
         if (event.target.id === 'inventoryButton') {
 
@@ -650,6 +650,8 @@ uiScene.create = function() {
             }, 700);
 
             function openInventory() {
+                if (!uiScene.checkInteractive())
+                        return;
                 isClickUI = true;
 
                 inventory.setTexture('inventoryHairTab');
@@ -1359,7 +1361,12 @@ var preloadGameAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets')
 
     thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-    
+    thisScene.load.scenePlugin({
+        key: 'rexuiplugin',
+        url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+        sceneKey: 'rexUI'
+    });
+
     thisScene.load.html('gameText', 'html/text.html');
     thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
 
@@ -1481,9 +1488,6 @@ var preloadGameAssets = (thisScene) => {
     thisScene.load.json('eyesAnims', 'anims/eyesAnims.json');
     thisScene.load.json('hairAnims', 'anims/hairAnims.json');
     thisScene.load.json('lipsAnims', 'anims/lipsAnims.json');
-
-    // load topModels UI
-    thisScene.load.image('tmPlayButton', 'scene/location/topModels/sprites/playIcon.png');
 }
 
 var preloadUIAssets = (thisScene) => {
@@ -1527,6 +1531,21 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
     thisScene.load.image('greyScreen', 'scene/ui/greyScreen.png');
     thisScene.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+
+    // load top models UI
+    thisScene.load.image('tmPlayButton', 'scene/location/topModels/sprites/playIcon.png');
+    thisScene.load.image('tmJoinHostPanel', 'scene/location/topModels/sprites/joinHostPanel.png');
+    thisScene.load.image('tmJoinHostPanelEx', 'scene/location/topModels/sprites/joinHostPanelEx.png');
+    thisScene.load.image('tmJoinGameItem', 'scene/location/topModels/sprites/joinGameItem.png');
+    thisScene.load.image('tmJoinGameItemEx', 'scene/location/topModels/sprites/joinGameItemEx.png');
+
+    thisScene.load.image('tmHostButton', 'scene/location/topModels/sprites/hostButton.png');
+    thisScene.load.image('tmJoinHostCloseButton', 'scene/location/topModels/sprites/joinHostCloseButton.png');
+
+    thisScene.load.image('tmGirlIcon', 'scene/location/topModels/sprites/girlIcon.png');
+    thisScene.load.image('tmBoyIcon', 'scene/location/topModels/sprites/boyIcon.png');
+
+    thisScene.load.html('tmJoinGameList', 'html/tmJoinGameList.html');
 }
 
 var locationConfig = {
@@ -1732,11 +1751,26 @@ inGame.create = function() {
                 });
 
                 tmPlayButton.on('pointerdown', () => {
+                    if (!uiScene.checkInteractive())
+                        return;
+                    disableInput = true;
+                    isClickUI = true;
+                    
                     tmPlayButton.x  += 1;
                     tmPlayButton.y  += 1;
+
+                    var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
+                    // greyScreen.setDepth(1010);
+
+                    var joinHostPanel = uiObjectScene.add.image(400, 260, 'tmJoinHostPanel');
+                    var joinGameList = uiObjectScene.add.dom(400, 260).createFromCache('tmJoinGameList');
+                    // var joinGameItem = uiObjectScene.add.image(400, 260, 'tmJoinGameItem');
+                    
                 });
 
                 tmPlayButton.on('pointerup', () => {
+                    if (!uiScene.checkInteractive())
+                        return;
                     tmPlayButton.x -=1;
                     tmPlayButton.y -=1;
                 });
