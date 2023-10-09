@@ -17,10 +17,10 @@
 
             #tm-join-game-list {
                 height: 280px;
-                width: 325px;
+                width: 340px;
                 /* border: 1px solid red; */
                 overflow-x: hidden;
-                overflow-y: hidden;
+                overflow-y: scroll;
             }
             .tm-join-game-item {
                 display: block;
@@ -57,15 +57,48 @@
             }
 
             .tm-join-players {
-                margin-top: 14px;
+                margin-top: 15.5px;
                 direction:rtl;
                 text-align:justify;
                 float: right;
                 height: 10px;
                 width: 10px;
-                margin-right: 105px;
+                margin-right: 104px;
                 font-family: sans-serif;
                 font-size: 13.5px;
+            }
+
+            #tm-join-game-list::-webkit-scrollbar {
+                width: 16px;
+                height: 83px;
+                background-color: #dcdcdc;
+                border: 1px solid #a2a2a2;
+            }
+
+            #tm-join-game-list::-webkit-scrollbar-thumb {
+                background: linear-gradient(to left, #15406d 50%, #2c537b 50%);
+                border: 1px solid white;
+                margin-top: 1px;
+                margin-bottom: 1px;
+            }
+
+            #tm-join-game-list::-webkit-scrollbar-button:vertical {
+                height: 15px;
+                width: 16px;
+                outline: 1px solid white;
+            }
+
+            #tm-join-game-list::-webkit-scrollbar-button:start:decrement,
+            #tm-join-game-list::-webkit-scrollbar-button:end:increment {
+                display: block;
+            }
+
+            #tm-join-game-list::-webkit-scrollbar-button:start:decrement {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-up.png);
+            }
+
+            #tm-join-game-list::-webkit-scrollbar-button:end:increment {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-down.png);
             }
         </style>
     </head>
@@ -93,6 +126,7 @@
                     <p class="tm-join-players">1</p>
                 </div>
             </div>
+
         </div>
     </body>
 </html>
