@@ -1,0 +1,98 @@
+<html>
+    <head>
+        <style>
+            @font-face {
+                font-family: VAG;
+                src: url("./src/assets/fonts/VAG Rounded Bold.ttf");
+            }
+
+            .selectDisable {
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -o-user-select: none;
+                user-select: none;
+                /* pointer-events: none; */
+            }
+
+            #tm-join-game-list {
+                height: 280px;
+                width: 325px;
+                /* border: 1px solid red; */
+                overflow-x: hidden;
+                overflow-y: hidden;
+            }
+            .tm-join-game-item {
+                display: block;
+                width: 315px;
+                height: 50px;
+                /* border: 1px solid black; */
+                margin-bottom: 5px;
+                background-image: url(/src/assets/scene/location/topModels/sprites/joinGameItem.png);
+            }
+
+            .tm-join-game-data {
+                height: 38px;
+                width: 100%;
+                text-align: left;
+                padding-top: 12px;
+            }
+
+            .tm-join-host-gender {
+                display: inline-block;
+                height: 16px;
+                width: 16px;
+                margin-left: 10px;
+                margin-top: 14px;
+                vertical-align:top;
+            }
+
+            .tm-join-host-username {
+                display: inline-block;
+                height: 10px;
+                width: 20px;
+                font-family: sans-serif;
+                font-size: 13.5px;
+                margin-top: 14px;
+            }
+
+            .tm-join-players {
+                margin-top: 14px;
+                direction:rtl;
+                text-align:justify;
+                float: right;
+                height: 10px;
+                width: 10px;
+                margin-right: 105px;
+                font-family: sans-serif;
+                font-size: 13.5px;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="tm-join-game-list" class="selectDisable">
+            <div class="tm-join-game-item">
+                <div class="tm-join-game-data">
+                    <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/girlIcon.png"/>
+                    <p class="tm-join-host-username">bob123</p>
+                    <p class="tm-join-players">7</p>
+                </div>
+            </div>
+            <div class="tm-join-game-item" class="selectDisable">
+                <div class="tm-join-game-data">
+                    <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/boyIcon.png"/>
+                    <p class="tm-join-host-username">Awesomehost117</p>
+                    <p class="tm-join-players">10</p>
+                </div>
+            </div>
+            <div class="tm-join-game-item" class="selectDisable">
+                <div class="tm-join-game-data">
+                    <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/boyIcon.png"/>
+                    <p class="tm-join-host-username">devon_is_cool1999</p>
+                    <p class="tm-join-players">1</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
