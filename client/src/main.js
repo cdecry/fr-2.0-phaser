@@ -649,12 +649,17 @@ uiScene.create = function() {
         arr[j] = temp;
     }
 
+    var inventoryOpen = false;
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
         if (!uiScene.checkInteractive)
             return;
 
         if (event.target.id === 'inventoryButton') {
+            if (inventoryOpen)
+                return;
+
+            inventoryOpen = true;
 
             var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
             var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
@@ -693,6 +698,7 @@ uiScene.create = function() {
                 inventoryUI.addListener('click');
                 inventoryUI.on('click', function (event) {
                     if (event.target.id === 'closeInventoryButton') {
+                        inventoryOpen = false;
                         isClickUI = false;
 
                         disableInput = false;
@@ -1417,7 +1423,7 @@ var preloadGameAssets = (thisScene) => {
     thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
     thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
 
-    thisScene.load.image('fashionShowBg', 'scene/location/downtown/top-models.png');
+    thisScene.load.image('fashionShowBg', 'scene/location/downtown/fashionShowBg.png');
 
     thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
     // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
@@ -1763,8 +1769,6 @@ inGame.create = function() {
                 //     console.log(tmObjects);
                 // }
                 sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
-                // plant.setInteractive();
-
 
                 sean.setDepth(220);
                 boa1.setDepth(330);
@@ -1788,10 +1792,13 @@ inGame.create = function() {
                     useHandCursor: true,
                 });
 
-                tmPlayButton.on('pointerdown', () => {
-                    if (!uiScene.checkInteractive())
-                        return;
+                var panelOpen = false;
 
+                var openJoinHostPanel = function() {
+                    if (!uiScene.checkInteractive() || panelOpen)
+                        return;
+                    
+                    panelOpen = true;
                     disableInput = true;
                     isClickUI = true;
                     
@@ -1843,11 +1850,20 @@ inGame.create = function() {
                         }
 
                     });
+                }
+
+                sean.on('pointerdown', () => {
+                    openJoinHostPanel();
+                });
+
+                tmPlayButton.on('pointerdown', () => {
+                    openJoinHostPanel();
                 });
 
                 tmPlayButton.on('pointerup', () => {
-                    if (!uiScene.checkInteractive())
+                    if (!panelOpen)
                         return;
+                    panelOpen = false;
                     tmPlayButton.x -=1;
                     tmPlayButton.y -=1;
                 });
