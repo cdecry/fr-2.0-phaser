@@ -1760,12 +1760,30 @@ inGame.create = function() {
                     tmPlayButton.y  += 1;
 
                     var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
-                    // greyScreen.setDepth(1010);
-
                     var joinHostPanel = uiObjectScene.add.image(400, 260, 'tmJoinHostPanel');
                     var joinGameList = uiObjectScene.add.dom(400, 260).createFromCache('tmJoinGameList');
-                    // var joinGameItem = uiObjectScene.add.image(400, 260, 'tmJoinGameItem');
-                    
+
+                    var joinHostWindow = [greyScreen, joinHostPanel, joinGameList];
+
+                    joinGameList.addListener('click');
+                    joinGameList.on('click', function (event) {
+                        if (event.target.id === 'tm-join-x-button' || event.target.id === 'tm-close-button') {
+                            disableInput = false;
+                            isClickUI = false;
+                            for (const obj of joinHostWindow) {
+                                obj.destroy();
+                            }
+                        }
+                        else if (event.target.id === 'tm-host-button') {
+                            // TODO: add host your own fashio nshow confirmation popup
+                            // for now, just jump straight to hosting
+                            // send socket message to host fashion show
+                            // server recieves socket and creates a new "fashion show" room
+                            // add to list of ongoing fashion show rooms
+                            // change location for client
+                        }
+
+                    });
                 });
 
                 tmPlayButton.on('pointerup', () => {
