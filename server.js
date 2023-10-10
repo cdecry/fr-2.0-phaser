@@ -8,6 +8,7 @@ var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
 const { loginRequest, getUserAvatar, changeEquipped, addBuddy } = require('./database/queries');
 const { Player } = require('./network/player');
+const { FashionShow } = require('./entity/fashionShow');
 
 // store clients (id: socketid)
 // const clients = new Object();
@@ -15,7 +16,15 @@ const { Player } = require('./network/player');
 const players = {};
 const usernameToId = {};
 const usernameToPID = {};
-const rooms = {};
+// const rooms = {};
+const fashionShows = {};
+
+// fashion show rooms structure
+/*
+{
+    'blueberry7': FashionShow obj
+}
+*/
 
 // connect to database
 main().catch(err => console.log(err));
@@ -64,10 +73,10 @@ io.on('connection', function (socket) {
             usernameToPID[username] = result.id;
 
             // add player to room list
-            if (rooms['downtown'] == null)
-                rooms['downtown'] = [player];
-            else
-                rooms['downtown'].push(player);
+            // if (rooms['downtown'] == null)
+            //     rooms['downtown'] = [player];
+            // else
+            //     rooms['downtown'].push(player);
 
             console.log('Sucessfully logged in! Players online: ' + JSON.stringify(players));
             // load game
@@ -140,7 +149,7 @@ io.on('connection', function (socket) {
         }
     })
 
-    socket.on('changeRoom', function(room) {
+    function handleRoomChange(room) {
         let currentRoom = players[socket.id].room;
 
         // for all the players in this player's room, remove this player
@@ -158,6 +167,10 @@ io.on('connection', function (socket) {
         players[socket.id].room = room;
         socket.leave(currentRoom);
         socket.join(room);
+    }
+
+    socket.on('changeRoom', function(room) {
+        handleRoomChange(room);
     })
 
     socket.on('changeClothes', async (equipped) => {
@@ -206,6 +219,19 @@ io.on('connection', function (socket) {
         // update player avatar database
         await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
 
+    })
+
+    socket.on('hostFashionShow', function() {
+
+        var player = players[socket.id];
+        var fashionShow = new FashionShow(player.username, player.avatar.gender);
+        fashionShows[player.username] = fashionShow;
+        // socket.to('topModels').emit('newFashionShow', fashionShow);
+        handleRoomChange('fashionShow-' + player.username)
+    })
+
+    socket.on('getFashionShows', function() {
+        io.to(socket.id).emit('getFashionShowsResponse', fashionShows);
     })
 });
 
