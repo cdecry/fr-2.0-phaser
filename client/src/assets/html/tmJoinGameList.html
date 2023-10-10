@@ -16,6 +16,9 @@
             }
 
             #tm-join-game-list {
+                position: absolute;
+                left: -170px;
+                top: -155px;
                 height: 280px;
                 width: 340px;
                 /* border: 1px solid red; */
@@ -68,6 +71,69 @@
                 font-size: 13.5px;
             }
 
+            .tm-join-button {
+                /* display: inline-block; */
+                margin-top: 10.5px;
+                float: right;
+                width: 72px;
+                height: 21px;
+                position: absolute;
+                margin-left: 187px;
+                border: 1px solid #54894c;
+                border-top-left-radius: 7px;
+                border-top-right-radius: 7px;
+                border-bottom-left-radius: 7px;
+                border-bottom-right-radius: 7px;
+                cursor: pointer;
+            }
+
+            .tm-join-button:active {
+                margin-left: 188px;
+                margin-top: 11.5px;
+            }
+
+            #tm-host-button {
+                position: absolute;
+                top: 151px;
+                left: -138px;
+                width: 276px;
+                height: 29px;
+                cursor: pointer;
+            }
+
+            #tm-host-button:active {
+                top: 152px;
+                left: -137px;
+            }
+
+            #tm-close-button {
+                position: absolute;
+                top: 193px;
+                left: -63px;
+                width: 126px;
+                height: 25px;
+                cursor: pointer;
+            }
+
+            #tm-close-button:active {
+                top: 194px;
+                left: -62px;
+            }
+
+            #tm-join-x-button {
+                position: absolute;
+                left: 165px;
+                top: -220px;
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+
+            #tm-join-x-button:active {
+                left: 166px;
+                top: -219px;
+            }
+
             #tm-join-game-list::-webkit-scrollbar {
                 width: 16px;
                 height: 83px;
@@ -103,6 +169,7 @@
         </style>
     </head>
     <body>
+        <img id="tm-join-x-button" src="./src/assets/scene/location/topModels/sprites/joinXButton.png">
 
         <div id="tm-join-game-list" class="selectDisable">
             <div class="tm-join-game-item">
@@ -110,6 +177,7 @@
                     <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/girlIcon.png"/>
                     <p class="tm-join-host-username">bob123</p>
                     <p class="tm-join-players">7</p>
+                    <img class="tm-join-button" src="./src/assets/scene/location/topModels/sprites/joinButton.png"></button>
                 </div>
             </div>
             <div class="tm-join-game-item" class="selectDisable">
@@ -117,6 +185,7 @@
                     <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/boyIcon.png"/>
                     <p class="tm-join-host-username">Awesomehost117</p>
                     <p class="tm-join-players">10</p>
+                    <img class="tm-join-button" src="./src/assets/scene/location/topModels/sprites/joinButton.png"></button>
                 </div>
             </div>
             <div class="tm-join-game-item" class="selectDisable">
@@ -124,9 +193,12 @@
                     <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/boyIcon.png"/>
                     <p class="tm-join-host-username">devon_is_cool1999</p>
                     <p class="tm-join-players">1</p>
+                    <img class="tm-join-button" src="./src/assets/scene/location/topModels/sprites/joinButton.png">
                 </div>
             </div>
-
         </div>
+
+        <img id="tm-host-button" src="./src/assets/scene/location/topModels/sprites/hostButton.png">
+        <img id="tm-close-button" src="./src/assets/scene/location/topModels/sprites/joinHostCloseButton.png">
     </body>
 </html>

@@ -1763,7 +1763,7 @@ inGame.create = function() {
                     // greyScreen.setDepth(1010);
 
                     var joinHostPanel = uiObjectScene.add.image(400, 260, 'tmJoinHostPanel');
-                    var joinGameList = uiObjectScene.add.dom(400, 255).createFromCache('tmJoinGameList');
+                    var joinGameList = uiObjectScene.add.dom(400, 260).createFromCache('tmJoinGameList');
                     // var joinGameItem = uiObjectScene.add.image(400, 260, 'tmJoinGameItem');
                     
                 });
