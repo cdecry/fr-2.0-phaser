@@ -491,6 +491,35 @@ uiScene.create = function() {
         addBuddyMenuListener();
     }
 
+    uiScene.loadJoinGameList = (fashionShows) => {
+        var gameList = [];
+
+        for (var host in fashionShows) {
+            
+            var gender = 'girl';
+            console.log(fashionShows);
+
+            if (fashionShows[host].hostGender == 'm')
+                gender = 'boy';
+
+            const item = `
+            <div class="tm-join-game-item">
+                <div class="tm-join-game-data">
+                    <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/${gender}Icon.png"/>
+                    <p class="tm-join-host-username">${host}</p>
+                    <p class="tm-join-players">${fashionShows[host].playerCount}</p>
+                    <img class="tm-join-button" src="./src/assets/scene/location/topModels/sprites/joinButton.png"></button>
+                </div>
+            </div>
+            `;
+            gameList.push(item);
+        };
+
+        var gameListHTML = gameList.join('');
+        var gameListContainer = document.getElementById("tm-join-game-list");
+        gameListContainer.innerHTML = gameListHTML;
+    }
+
     function addBuddyMenuListener() {
         var buddyNames = document.getElementsByClassName("buddy-username");
         instantMessenger.addListener('pointerdown');
@@ -650,8 +679,6 @@ uiScene.create = function() {
             }, 700);
 
             function openInventory() {
-                if (!uiScene.checkInteractive())
-                        return;
                 isClickUI = true;
 
                 inventory.setTexture('inventoryHairTab');
@@ -1390,12 +1417,15 @@ var preloadGameAssets = (thisScene) => {
     thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
     thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
 
+    thisScene.load.image('fashionShowBg', 'scene/location/downtown/top-models.png');
+
     thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
     // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
 
     // Load bgm
     thisScene.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
     thisScene.load.audio('downtownBGM', 'bgm/downtown.mp3');
+    thisScene.load.audio('fashionShowWaitingBGM', 'bgm/fashionShowWaiting.mp3');
 
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
@@ -1564,6 +1594,14 @@ var locationConfig = {
         playerSpawnX: 300,
         playerSpawnY: 300,
         boundsPolygon: 0    // load json polygon for space player can move around in
+    },
+    fashionShow: {
+        width: 800,
+        backgroundX: 0,
+        initialScroll: 0,
+        playerSpawnX: 300,
+        playerSpawnY: 300,
+        boundsPolygon: 0    // load json polygon for space player can move around in
     }
 }
 
@@ -1724,7 +1762,7 @@ inGame.create = function() {
                 // for (let i = 0; i < tmObjects.length; i++) {
                 //     console.log(tmObjects);
                 // }
-                // sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
+                sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
                 // plant.setInteractive();
 
 
@@ -1753,6 +1791,7 @@ inGame.create = function() {
                 tmPlayButton.on('pointerdown', () => {
                     if (!uiScene.checkInteractive())
                         return;
+
                     disableInput = true;
                     isClickUI = true;
                     
@@ -1763,16 +1802,22 @@ inGame.create = function() {
                     var joinHostPanel = uiObjectScene.add.image(400, 260, 'tmJoinHostPanel');
                     var joinGameList = uiObjectScene.add.dom(400, 260).createFromCache('tmJoinGameList');
 
+                    socket.emit('getFashionShows');
+
                     var joinHostWindow = [greyScreen, joinHostPanel, joinGameList];
+                    
+                    var closeJoinHostPanel = function() {
+                        disableInput = false;
+                        isClickUI = false;
+                        for (const obj of joinHostWindow) {
+                            obj.destroy();
+                        }
+                    }
 
                     joinGameList.addListener('click');
                     joinGameList.on('click', function (event) {
                         if (event.target.id === 'tm-join-x-button' || event.target.id === 'tm-close-button') {
-                            disableInput = false;
-                            isClickUI = false;
-                            for (const obj of joinHostWindow) {
-                                obj.destroy();
-                            }
+                            closeJoinHostPanel();
                         }
                         else if (event.target.id === 'tm-host-button') {
                             // TODO: add host your own fashio nshow confirmation popup
@@ -1781,6 +1826,20 @@ inGame.create = function() {
                             // server recieves socket and creates a new "fashion show" room
                             // add to list of ongoing fashion show rooms
                             // change location for client
+                            socket.emit('hostFashionShow');
+
+                            currentLocation = "fashionShow";
+                            
+                            closeJoinHostPanel();
+
+                            bg.destroy();
+                            bg = inGame.add.image(430, 260, 'fashionShowBg');
+                            bg.setDepth(-500);
+                            bg.setInteractive();
+                            bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+
+                            setCameraPosition(currentLocation);
+                            loadLocation('fashionShow');
                         }
 
                     });
@@ -1793,6 +1852,11 @@ inGame.create = function() {
                     tmPlayButton.y -=1;
                 });
 
+            }
+            else if (location == 'fashionShow') {
+                bgm = inGame.sound.add('fashionShowWaitingBGM');
+                bgm.play();
+                bgm.setLoop(true);
             }
             loadingScreen.destroy();
             inLoading.destroy();
@@ -2276,6 +2340,10 @@ inGame.create = function() {
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
+    }.bind(this));
+
+    globalThis.socket.on('getFashionShowsResponse', function (fashionShows) {
+        uiScene.loadJoinGameList(fashionShows);
     }.bind(this));
 
     //#region Action Animations
