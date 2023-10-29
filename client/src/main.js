@@ -1676,16 +1676,7 @@ inGame.create = function() {
                 if (!uiScene.checkInteractive())
                     return;
 
-                currentLocation = "topModels";
                 socket.emit('changeRoom', "topModels");
-
-                bg.destroy();
-                bg = inGame.add.image(430, 260, 'topModelsBg');
-                bg.setDepth(-500);
-                bg.setInteractive();
-                bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-
-                setCameraPosition(currentLocation);
                 loadLocation('topModels');
             });
             topModelsObject.on('pointerup', () => {
@@ -1696,6 +1687,17 @@ inGame.create = function() {
     }
 
     function loadLocation(location) {
+        
+        currentLocation = location;
+
+        bg.destroy();
+        bg = inGame.add.image(430, 260, location + 'Bg');
+        bg.setDepth(-500);
+        bg.setInteractive();
+        bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+
+        setCameraPosition(currentLocation);
+
         if (bgm)
                 bgm.destroy();
 
@@ -1726,16 +1728,7 @@ inGame.create = function() {
                 // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
     
                 topModelsObject.on('pointerdown', () => {
-                    currentLocation = "topModels";
                     socket.emit('changeRoom', "topModels");
-    
-                    bg.destroy();
-                    bg = inGame.add.image(430, 260, 'topModelsBg');
-                    bg.setDepth(-500);
-                    bg.setInteractive();
-                    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-    
-                    setCameraPosition(currentLocation);
                     loadLocation('topModels');
                 });
                 topModelsObject.on('pointerup', () => {
@@ -1835,36 +1828,12 @@ inGame.create = function() {
                             // add to list of ongoing fashion show rooms
                             // change location for client
                             socket.emit('hostFashionShow');
-
-                            currentLocation = "fashionShow";
-                            
                             closeJoinHostPanel();
-                            
-
-                            bg.destroy();
-                            bg = inGame.add.image(430, 260, 'fashionShowBg');
-                            bg.setDepth(-500);
-                            bg.setInteractive();
-                            bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-
-                            setCameraPosition(currentLocation);
                             loadLocation('fashionShow');
                         }
                         else if (event.target.classList.contains('tm-join-button')) {
-                            // console.log(event.target.id);
-                            // change room
-
                             socket.emit('changeRoom', event.target.id);
-
-                            currentLocation = "fashionShow";
                             closeJoinHostPanel();
-                            bg.destroy();
-                            bg = inGame.add.image(430, 260, 'fashionShowBg');
-                            bg.setDepth(-500);
-                            bg.setInteractive();
-                            bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-
-                            setCameraPosition(currentLocation);
                             loadLocation('fashionShow');
                         }
 
