@@ -6,7 +6,7 @@
 @font-face {
     font-family: "fashionHelvetica";
     src: url("./src/assets/fonts/Helvetica75.ttf") format("truetype");
-    letter-spacing: 2px;
+    /* letter-spacing: 2px; */
 }
 
 @font-face {

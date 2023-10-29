@@ -1873,23 +1873,28 @@ inGame.create = function() {
                 
                 uiScene.loadUIBarFashion(true);
 
-                var boardLabel = inGame.add.text(400, 20, "Top   Models   Inc   Fashion   Show", { fontFamily: 'fashionHelvetica', fontSize: '21px', fill: 'white' }).setOrigin(0.5);;
+                var midPoint = (inGame.cameras.main.worldView.x + inGame.cameras.main.width / 2);
+
+                var boardLabel = inGame.add.text(midPoint-2, 32, "Top Models Inc Fashion Show".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '21px', fill: 'white' }).setOrigin(0.5);;
 
                 boardLabel.setStroke('#333333', 1);
                 boardLabel.setShadow(2, 2, '#333333', 2, true, true);
-                boardLabel.setPosition(400, 22);
                 // board display
                 
                 var boardPlayerCount = inGame.add.text(582, 162, `${fashionShows[fashionShowHost].playerCount}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
                 boardPlayerCount.setStroke('#000000', 1);
                 boardPlayerCount.setShadow(2, 2, '#000000', 2, true, true);
 
-                var boardStartDetails = inGame.add.text(400, 170, 'Waiting For More Users To Join', {
+                var boardStartDetails = inGame.add.text(midPoint-2, 105, 'Waiting For More Users To Join', {
                     fontFamily: 'fashionBoardFont', fontSize: '12px', fill: 'white'
-                }).setOrigin(0.5);;
+                }).setOrigin(0.5);
                 
-                var startBtn = inGame.add.image(400, 200, 'fashionStartGrey').setOrigin(0.5);;
-                // startBtn.setInteractive();
+                var startBtn = inGame.add.image(midPoint-2, 135, 'fashionStartGrey').setOrigin(0.5);
+                startBtn.setInteractive();
+
+                // boardLabel.setDepth(-200);
+                var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, startBtn];
+                displayObjects.forEach((obj) => obj.setDepth(-200));
 
                 // startBtn.on('pointerdown', function (pointer) {
                 //     startBtn.setPosition(startBtn.x+1, startBtn.y+1);
@@ -2662,6 +2667,7 @@ inGame.update = function() {
         }
 
         container.setDepth(container.y);
+        console.log(container.y);
 
         if (!disableInput) {
         //#region Arrow Key Movement
@@ -2832,7 +2838,7 @@ var config = {
         createContainer: true
         },
     pixelArt: true,
-    scene: [login, loading, inGame, uiScene]
+    scene: [login, inGame, uiScene]
 };
 
 var game = new Phaser.Game(config);
