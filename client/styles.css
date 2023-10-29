@@ -1,0 +1,25 @@
+@font-face {
+    font-family: "usernameFont";
+    src: url("./src/assets/fonts/Cedora-RegularStd.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "fashionHelvetica";
+    src: url("./src/assets/fonts/Helvetica75.ttf") format("truetype");
+    letter-spacing: 2px;
+}
+
+@font-face {
+    font-family: "fashionBoardBold";
+    src: url("./src/assets/fonts/Arial_Black.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "fantageFont";
+    src: url("./src/assets/fonts/FantageRE/FantageRE.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "fashionBoardFont";
+    src: url("./src/assets/fonts/Lucida_Sans_Roman.otf") format("opentype");
+}
