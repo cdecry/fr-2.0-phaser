@@ -242,6 +242,23 @@ io.on('connection', function (socket) {
 
         socket.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
 
+        console.log(io.sockets.adapter.rooms);
+
+        for (const [roomName, sockets] of io.sockets.adapter.rooms) {
+            console.log(roomName);
+            if (roomName.startsWith("fashionShow-")) {
+                io.to(roomName).emit("addFashionShowPlayer", fashionShows[hostUser], playerUser);
+            }
+        }
+
+        // Object.keys(io.sockets.adapter.rooms).forEach(roomName => {
+        //     console.log(roomName);
+        //     if (roomName.startsWith('fashionShow-')) {
+        //         console.log('begins with fashionshow-');
+        //         io.to(roomName).emit('addFashionShowPlayer', fashionShows[hostUser], playerUser);
+        //     }
+        // });
+
         handleRoomChange(fashionShowRoom);
     })
 

@@ -96,7 +96,6 @@ login.create = function () {
         });
 
         globalThis.socket.on('login fail', () => {
-            console.log('received login fail');
             setTimeout(() => {
                 globalThis.socket.disconnect();
                 inLoading.setVisible(false);
@@ -151,6 +150,8 @@ var iHeadAcc = [];
 var iBodyAcc = [];
 
 var instantMessenger;
+var boardPlayerCount;
+var boardStartDetails;
 
 function createSpeechBubble (x, y, username, quote)
 {
@@ -233,6 +234,16 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 } 
+
+function addFashionShowPlayer(playerCount, playerJoined) {
+    boardPlayerCount.text = `${playerCount}/10`;
+    var oldBoardDetails = boardStartDetails.text;
+
+    boardStartDetails.text = `User ${playerJoined} Has Joined.`;
+    setTimeout(() => {
+        boardStartDetails.text = oldBoardDetails;
+      }, "3000");
+}
 
 var uiScene = new Phaser.Scene('UIScene');
 
@@ -1872,29 +1883,43 @@ inGame.create = function() {
                 bgm.setLoop(true);
                 
                 uiScene.loadUIBarFashion(true);
+                
+                
 
                 var midPoint = (inGame.cameras.main.worldView.x + inGame.cameras.main.width / 2);
 
+                //#region initBoardDisplay
                 var boardLabel = inGame.add.text(midPoint-2, 32, "Top Models Inc Fashion Show".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '21px', fill: 'white' }).setOrigin(0.5);;
-
                 boardLabel.setStroke('#333333', 1);
                 boardLabel.setShadow(2, 2, '#333333', 2, true, true);
-                // board display
-                
-                var boardPlayerCount = inGame.add.text(582, 162, `${fashionShows[fashionShowHost].playerCount}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
+
+                boardPlayerCount = inGame.add.text(582, 162, `${fashionShows[fashionShowHost].playerCount+1}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
                 boardPlayerCount.setStroke('#000000', 1);
                 boardPlayerCount.setShadow(2, 2, '#000000', 2, true, true);
 
-                var boardStartDetails = inGame.add.text(midPoint-2, 105, 'Waiting For More Users To Join', {
-                    fontFamily: 'fashionBoardFont', fontSize: '12px', fill: 'white'
+                boardStartDetails = inGame.add.text(midPoint-2, 105, 'Waiting For More Users To Join', {
+                    fontFamily: 'Arial', fontSize: '14px', fill: 'white'
                 }).setOrigin(0.5);
+                boardStartDetails.setShadow(2, 2, '#333333', 2, true, true);
+
+                var boardHostDetails = inGame.add.text(midPoint-2, 160, `Hosted By ${fashionShowHost}`, {
+                    fontFamily: 'Arial', fontSize: '12px', fill: 'white'
+                }).setOrigin(0.5);
+                boardHostDetails.setShadow(2, 2, '#333333', 2, true, true);
                 
                 var startBtn = inGame.add.image(midPoint-2, 135, 'fashionStartGrey').setOrigin(0.5);
                 startBtn.setInteractive();
 
-                // boardLabel.setDepth(-200);
                 var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, startBtn];
                 displayObjects.forEach((obj) => obj.setDepth(-200));
+
+                //#endregion
+
+                if (fashionShowHost != myPlayerInfo.username) {
+                    boardStartDetails.text = "Host Is Waiting For More Users To Join";
+                    startBtn.setVisible(false);
+                }
+
 
                 // startBtn.on('pointerdown', function (pointer) {
                 //     startBtn.setPosition(startBtn.x+1, startBtn.y+1);
@@ -2415,6 +2440,12 @@ inGame.create = function() {
             uiScene.loadJoinGameList(fashionShows);
     }.bind(this));
 
+    globalThis.socket.on('addFashionShowPlayer', function (fashionShow, playerJoined) {
+        fashionShows[fashionShow.hostUser] = fashionShow;
+
+        addFashionShowPlayer(fashionShow.playerCount, playerJoined);
+    }.bind(this));
+
     globalThis.socket.on('getFashionShowsResponse', function (allFashionShows) {
         fashionShows = allFashionShows;
     }.bind(this));
@@ -2667,7 +2698,6 @@ inGame.update = function() {
         }
 
         container.setDepth(container.y);
-        console.log(container.y);
 
         if (!disableInput) {
         //#region Arrow Key Movement
