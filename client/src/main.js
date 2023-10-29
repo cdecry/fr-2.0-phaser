@@ -43,10 +43,19 @@ login.preload = function () {
 
     this.load.image('loginBg', 'scene/temp-login.png');
     this.load.html('loginForm', 'html/loginform.html');
+    this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
+    this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
   
 };
   
 login.create = function () {
+    this.anims.create({
+        key: 'inLoad',
+        frames: this.anims.generateFrameNumbers('inLoading'),
+        frameRate: 40,
+        repeat: -1
+    });
+
     this.add.image(400, 260, 'loginBg');
     const loginForm = this.add.dom(392, 173).createFromCache('loginForm');
 
@@ -60,7 +69,7 @@ login.create = function () {
 
             if (inputUsername.value !== '' && inputPassword.value!= '')
             {
-                loginForm.removeListener('click');
+                loginForm.setVisible(false);
                 globalThis.socket = io();
                 globalThis.socket.emit('login request', inputUsername.value, inputPassword.value);
                 load();
@@ -72,55 +81,31 @@ login.create = function () {
     });
 
     const load = () => {
-        this.scene.transition( {
-            target: 'LoadingScene',
-            moveBelow: true
+        var loadingScreen = login.add.image(400, 260, 'loadingScreen');
+        var inLoading = login.add.sprite(400, 260, 'inLoading').play('inLoad');
+
+        globalThis.socket.on('login success', (inventory, onlinePlayers) => {
+            onlineUsers = onlinePlayers;
+            myInventory = inventory;
+            setTimeout(() => {
+                this.scene.transition( {
+                    target: 'GameScene',
+                    moveBelow: true,
+                });
+            }, 1000);
+        });
+
+        globalThis.socket.on('login fail', () => {
+            console.log('received login fail');
+            setTimeout(() => {
+                globalThis.socket.disconnect();
+                inLoading.setVisible(false);
+                loadingScreen.setVisible(false);
+                loginForm.setVisible(true);
+            }, 1000);
         });
     }
 };
-//#endregion
-
-//#region LoadingScene
-var loading = new Phaser.Scene('LoadingScene');
-
-loading.preload = function() {
-    this.load.setBaseURL('/src/assets')
-    this.load.atlas('outLoading', 'scene/outLoading.png', 'scene/loading.json');
-}
-
-loading.create = function() {
-    const sprite = this.add.sprite(400, 260, 'outLoading', 'loading-0');
-    const animConfig = {
-        key: 'outLoad',
-        frames: 'outLoading',
-        frameRate: 12,
-        repeat: -1,
-    };
-    
-    this.anims.create(animConfig);
-    sprite.play('outLoad');
-
-    globalThis.socket.on('login success', (inventory, onlinePlayers) => {
-        onlineUsers = onlinePlayers;
-        myInventory = inventory;
-        setTimeout(() => {
-            this.scene.transition( {
-                target: 'GameScene',
-                moveBelow: true,
-            });
-        }, 1000);
-    });
-
-    globalThis.socket.on('login fail', () => {
-        setTimeout(() => {
-            globalThis.socket.disconnect();
-            this.scene.transition( {
-                target: 'LoginScene',
-                moveBelow: true
-            });
-        }, 1000);
-    });
-}
 //#endregion
 
 //#region GameScene
@@ -317,15 +302,10 @@ uiScene.create = function() {
         avatarPreview.setData('equipped', previewEquipped);
     }
 
-    WebFont.load({
-        custom: {
-            families: [ 'usernameFont', 'titleFont', 'titleFontOutline' ]
-        }
-    });
-
     var uiBar = this.add.image(400, 490, 'uiBar');
     var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
     uiBar.setInteractive({ pixelPerfect: true});
+    uiBar.setDepth(1000);
 
     var inventory = uiObjectScene.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = uiObjectScene.add.dom(400,260).createFromCache('inventoryUI');
@@ -351,8 +331,6 @@ uiScene.create = function() {
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
     inputChat.value = defaultChatBarMessage;
-
-    uiBar.setDepth(1000);
 
     inGame.input.keyboard.on('keydown-ENTER', function (event) {
         if (disableInput || document.activeElement.id == 'chat-input') return;
@@ -517,6 +495,31 @@ uiScene.create = function() {
         var gameListHTML = gameList.join('');
         var gameListContainer = document.getElementById("tm-join-game-list");
         gameListContainer.innerHTML = gameListHTML;
+    }
+
+    uiScene.loadUIBarFashion = (disabled) => {
+        var disabledPostfix = "";
+        if (disabled) disabledPostfix = "Disabled"
+
+        uiBar.destroy();
+        uiBar = this.add.image(400, 490, `uiBarFashion${disabledPostfix}`);
+        uiBar.setInteractive({ pixelPerfect: true});
+        uiBar.setDepth(1000);
+
+        disableButton('inventoryButton');
+        hideElement('homeButton');
+        hideElement('worldMapButton');
+        hideElement('partyInvitesButton');
+        hideElement('settingsButton');
+    }
+
+    function disableButton(buttonID) {
+        var btn = document.getElementById(buttonID);
+        btn.style['pointer-events'] = 'none';
+    }
+    function hideElement(elementID) {
+        var ele = document.getElementById(elementID);
+        ele.style.visibility = 'hidden';
     }
 
     function addBuddyMenuListener() {
@@ -1353,19 +1356,6 @@ uiScene.create = function() {
 
 var inGame = new Phaser.Scene('GameScene');
 
-
-inGame.init = function()
-{
-    //  inject css
-    var element = document.createElement('style');
-    document.head.appendChild(element);
-
-    var sheet = element.sheet;
-    var styles = '@font-face { font-family: "usernameFont"; src: url("src/assets/fonts/Cedora-RegularStd.otf") format("opentype"); }\n';
-
-    sheet.insertRule(styles, 0);
-}
-
 inGame.preload = function() {
     preloadGameAssets(this);
 }
@@ -1389,6 +1379,7 @@ var chatTabs = {
 }
 var onlineUsers = [];
 var fashionShows = {};
+var fashionShowHost = "";
 
 var preloadGameAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets')
@@ -1539,6 +1530,8 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.html('transparentHTML', 'html/transparent.html');
     thisScene.load.html('buddyRequestPopup', 'html/buddyRequestPopup.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
+    thisScene.load.image('uiBarFashionDisabled', 'scene/chat/ui-bar-fashion-disabled.png');
+    thisScene.load.image('uiBarFashion', 'scene/chat/ui-bar-fashion.png');
     
     // Load inventory ui
     thisScene.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
@@ -1582,6 +1575,10 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('tmBoyIcon', 'scene/location/topModels/sprites/boyIcon.png');
 
     thisScene.load.html('tmJoinGameList', 'html/tmJoinGameList.html');
+
+    thisScene.load.image('tmGirlIcon', 'scene/location/topModels/sprites/girlIcon.png');
+    thisScene.load.image('fashionStartGrey', 'scene/location/topModels/sprites/fashionStartGrey.png');
+    thisScene.load.image('fashionStart', 'scene/location/topModels/sprites/fashionStart.png');
 }
 
 var locationConfig = {
@@ -1833,11 +1830,18 @@ inGame.create = function() {
                             // add to list of ongoing fashion show rooms
                             // change location for client
                             socket.emit('hostFashionShow');
+                            
+                            fashionShowHost = myPlayerInfo.username;
+                            var fashionShow = {};
+                            fashionShow.playerCount = 0;
+                            fashionShows[myPlayerInfo.username] = fashionShow;
+
                             closeJoinHostPanel();
                             loadLocation('fashionShow');
                         }
                         else if (event.target.classList.contains('tm-join-button')) {
-                            socket.emit('changeRoom', event.target.id);
+                            fashionShowHost = event.target.id.split('-')[1];
+                            socket.emit('joinFashionShow', event.target.id)
                             closeJoinHostPanel();
                             loadLocation('fashionShow');
                         }
@@ -1866,6 +1870,54 @@ inGame.create = function() {
                 bgm = inGame.sound.add('fashionShowWaitingBGM');
                 bgm.play();
                 bgm.setLoop(true);
+                
+                uiScene.loadUIBarFashion(true);
+
+                var boardLabel = inGame.add.text(400, 20, "Top   Models   Inc   Fashion   Show", { fontFamily: 'fashionHelvetica', fontSize: '21px', fill: 'white' }).setOrigin(0.5);;
+
+                boardLabel.setStroke('#333333', 1);
+                boardLabel.setShadow(2, 2, '#333333', 2, true, true);
+                boardLabel.setPosition(400, 22);
+                // board display
+                
+                var boardPlayerCount = inGame.add.text(582, 162, `${fashionShows[fashionShowHost].playerCount}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
+                boardPlayerCount.setStroke('#000000', 1);
+                boardPlayerCount.setShadow(2, 2, '#000000', 2, true, true);
+
+                var boardStartDetails = inGame.add.text(400, 170, 'Waiting For More Users To Join', {
+                    fontFamily: 'fashionBoardFont', fontSize: '12px', fill: 'white'
+                }).setOrigin(0.5);;
+                
+                var startBtn = inGame.add.image(400, 200, 'fashionStartGrey').setOrigin(0.5);;
+                // startBtn.setInteractive();
+
+                // startBtn.on('pointerdown', function (pointer) {
+                //     startBtn.setPosition(startBtn.x+1, startBtn.y+1);
+                // });
+
+                // exit button, volume button
+
+                // fashion show game
+                // -----------------
+                // start game button for our host
+                //      greyed out until 5 people in game
+                // waiting + player count for our players
+                //      update wheneer someone joins or leaves game room
+
+                // when 5th person joins, server side sends msg enable start button for host
+                
+                // when host clicks start button, send msg to server to start game
+                // server sends msg to remove game from join game list
+                
+                // start game:
+                // host chooses a theme
+                // board changes for users sayign host is selecting a theme + round 1
+                // everythign darkens except for board and curtains, and host
+
+                // after host chooses, board changes for uses saying host selected __
+                // users given 60 seconds to open inventory and change
+                // theme + timer appears on theirr screen (tick from server side)
+
             }
             loadingScreen.destroy();
             inLoading.destroy();
@@ -2351,7 +2403,7 @@ inGame.create = function() {
             uiScene.loadBuddyList();
     }.bind(this));
 
-    globalThis.socket.on('newFashionShow', function (fashionShow) {
+    globalThis.socket.on('updateFashionShowList', function (fashionShow) {
         fashionShows[fashionShow.hostUser] = fashionShow;
 
         if (document.getElementById("tm-join-game-list") != null)

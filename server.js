@@ -51,6 +51,8 @@ io.on('connection', function (socket) {
             socket.to(players[socket.id].room).emit('removePlayer', socket.id);
             io.emit("playerOffline", players[socket.id].username);
 
+            // update if they were in a game room
+
             delete usernameToId[players[socket.id].username];
             delete usernameToPID[players[socket.id].username];
             delete players[socket.id];
@@ -226,8 +228,21 @@ io.on('connection', function (socket) {
         var player = players[socket.id];
         var fashionShow = new FashionShow(player.username, player.avatar.gender);
         fashionShows[player.username] = fashionShow;
-        socket.to('topModels').emit('newFashionShow', fashionShow);
+        socket.to('topModels').emit('updateFashionShowList', fashionShow);
         handleRoomChange('fashionShow-' + player.username)
+    })
+
+    socket.on('joinFashionShow', function(fashionShowRoom) {
+
+        var playerUser = players[socket.id].username;
+        var hostUser = fashionShowRoom.split('-')[1];
+
+        fashionShows[hostUser].players.push(playerUser);
+        fashionShows[hostUser].playerCount++;
+
+        socket.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
+
+        handleRoomChange(fashionShowRoom);
     })
 
     socket.on('getFashionShows', function() {
