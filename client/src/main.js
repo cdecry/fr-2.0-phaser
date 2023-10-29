@@ -497,7 +497,6 @@ uiScene.create = function() {
         for (var host in fashionShows) {
             
             var gender = 'girl';
-            console.log(fashionShows);
 
             if (fashionShows[host].hostGender == 'm')
                 gender = 'boy';
@@ -508,7 +507,7 @@ uiScene.create = function() {
                     <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/${gender}Icon.png"/>
                     <p class="tm-join-host-username">${host}</p>
                     <p class="tm-join-players">${fashionShows[host].playerCount}</p>
-                    <img class="tm-join-button" src="./src/assets/scene/location/topModels/sprites/joinButton.png"></button>
+                    <img class="tm-join-button" id="fashionShow-${host}" src="./src/assets/scene/location/topModels/sprites/joinButton.png"></button>
                 </div>
             </div>
             `;
@@ -1792,6 +1791,8 @@ inGame.create = function() {
                     useHandCursor: true,
                 });
 
+                locationObjects.push(tmPlayButton);
+
                 var panelOpen = false;
 
                 var openJoinHostPanel = function() {
@@ -1838,7 +1839,25 @@ inGame.create = function() {
                             currentLocation = "fashionShow";
                             
                             closeJoinHostPanel();
+                            
 
+                            bg.destroy();
+                            bg = inGame.add.image(430, 260, 'fashionShowBg');
+                            bg.setDepth(-500);
+                            bg.setInteractive();
+                            bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
+
+                            setCameraPosition(currentLocation);
+                            loadLocation('fashionShow');
+                        }
+                        else if (event.target.classList.contains('tm-join-button')) {
+                            // console.log(event.target.id);
+                            // change room
+
+                            socket.emit('changeRoom', event.target.id);
+
+                            currentLocation = "fashionShow";
+                            closeJoinHostPanel();
                             bg.destroy();
                             bg = inGame.add.image(430, 260, 'fashionShowBg');
                             bg.setDepth(-500);
