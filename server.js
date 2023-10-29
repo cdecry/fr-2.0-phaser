@@ -226,7 +226,7 @@ io.on('connection', function (socket) {
         var player = players[socket.id];
         var fashionShow = new FashionShow(player.username, player.avatar.gender);
         fashionShows[player.username] = fashionShow;
-        // socket.to('topModels').emit('newFashionShow', fashionShow);
+        socket.to('topModels').emit('newFashionShow', fashionShow);
         handleRoomChange('fashionShow-' + player.username)
     })
 

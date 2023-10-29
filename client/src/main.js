@@ -1388,6 +1388,7 @@ var chatTabs = {
     "Current Room": ""
 }
 var onlineUsers = [];
+var fashionShows = {};
 
 var preloadGameAssets = (thisScene) => {
     thisScene.load.setBaseURL('/src/assets')
@@ -1737,6 +1738,10 @@ inGame.create = function() {
                 locationObjects.push(topModelsObject);
             }
             else if (location == 'topModels') {
+
+                // load all open fashion shows
+                socket.emit('getFashionShows');
+
                 bgm = inGame.sound.add('topModelsLobbyBGM');
                 bgm.play();
                 bgm.setLoop(true);
@@ -1803,7 +1808,7 @@ inGame.create = function() {
                     var joinHostPanel = uiObjectScene.add.image(400, 260, 'tmJoinHostPanel');
                     var joinGameList = uiObjectScene.add.dom(400, 260).createFromCache('tmJoinGameList');
 
-                    socket.emit('getFashionShows');
+                    uiScene.loadJoinGameList(fashionShows);
 
                     var joinHostWindow = [greyScreen, joinHostPanel, joinGameList];
                     
@@ -2346,8 +2351,15 @@ inGame.create = function() {
             uiScene.loadBuddyList();
     }.bind(this));
 
-    globalThis.socket.on('getFashionShowsResponse', function (fashionShows) {
-        uiScene.loadJoinGameList(fashionShows);
+    globalThis.socket.on('newFashionShow', function (fashionShow) {
+        fashionShows[fashionShow.hostUser] = fashionShow;
+
+        if (document.getElementById("tm-join-game-list") != null)
+            uiScene.loadJoinGameList(fashionShows);
+    }.bind(this));
+
+    globalThis.socket.on('getFashionShowsResponse', function (allFashionShows) {
+        fashionShows = allFashionShows;
     }.bind(this));
 
     //#region Action Animations
