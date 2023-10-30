@@ -3,7 +3,7 @@ module.exports.FashionShow =  class FashionShow {
         this.hostUser = hostUser, // username
         this.hostGender = hostGender,
         this.started = false,
-        this.playerCount = 0,
+        this.playerCount = 5,
         this.players = []
     }
     start() {

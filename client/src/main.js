@@ -246,8 +246,8 @@ function addFashionShowPlayer(playerCount, playerJoined) {
             fashionStartBtn.setTexture('fashionStart');
             fashionStartBtn.on('pointerdown', function (pointer) {
                 // fashionStartBtn.setPosition(fashionStartBtn.x+1, fashionStartBtn.y+1);
-                socket.emit('startFashionShow', fashionShowHost);
                 fashionStartBtn.destroy();
+                socket.emit('startFashionShowRequest', fashionShowHost);
             });
         }
     }
@@ -1898,14 +1898,18 @@ inGame.create = function() {
                 bgm.setLoop(true);
                 
                 uiScene.loadUIBarFashion(true);
-                var midPoint = 400;
-
+                var midPoint = 430;
+                
                 //#region initBoardDisplay
+                function setBoardLabel(text) {
+                    boardLabel.text = text.replace(/\s/g, '   ');
+                }
+
                 var boardLabel = inGame.add.text(midPoint-2, 32, "Top Models Inc Fashion Show".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '21px', fill: 'white' }).setOrigin(0.5);;
                 boardLabel.setStroke('#333333', 1);
                 boardLabel.setShadow(2, 2, '#333333', 2, true, true);
 
-                boardPlayerCount = inGame.add.text(552, 162, `${fashionShows[fashionShowHost].playerCount}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
+                boardPlayerCount = inGame.add.text(582, 162, `${fashionShows[fashionShowHost].playerCount}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
                 boardPlayerCount.setStroke('#000000', 1);
                 boardPlayerCount.setShadow(2, 2, '#000000', 2, true, true);
 
@@ -1932,9 +1936,50 @@ inGame.create = function() {
 
                 if (fashionShows[fashionShowHost].playerCount >= 5)
                     boardStartDetails.text = "Ready To Start";
+
+                boardTheme = inGame.add.text(midPoint-2, 65, `theme`, { fontFamily: 'fashionBoardBold', fontSize: '22px', fill: 'white'}).setOrigin(0.5);
+                boardTheme.setStroke('#0e1863', 4);
+                boardTheme.setShadow(2, 2, '#000000', 2, true, true);
+                boardTheme.setVisible(false);
+
+                boardDifficulty = inGame.add.text(midPoint-2, 100, `Easy`, { fontFamily: 'fashionHelvetica', fontSize: '18px', fill: 'white'}).setOrigin(0.5);
+                boardDifficulty.setStroke('#3cac25', 6);
+                boardDifficulty.setShadow(2, 2, '#000000', 2, true, true);
+                boardDifficulty.setVisible(false);
+
+                boardDescription = inGame.add.text(midPoint-2, 120, `description`, { fontFamily: 'Arial', fontSize: '11px', fill: 'white'}).setOrigin(0.5);
+                boardDescription.setShadow(2, 2, '#333333', 2, true, true);
+                boardDescription.setVisible(false);
                 //#endregion
 
-                
+                var fashionShowRound = 1;
+                socket.on('startFashionShow', function(idk) {
+                    boardStartDetails.setVisible(false);
+                    boardPlayerCount.destroy();
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        // alert("hey host choose ur theme");
+                        selectedTheme = 'blue'
+                        socket.emit('selectFashionShowTheme', fashionShowHost, selectedTheme);
+                    }
+                    else {
+                        // update board for host selecting a theme
+                        setBoardLabel('Host Is Selecting a Theme');
+                    }
+                });
+
+                socket.on('selectedFashionShowTheme', function(theme) {
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        console.log('idk wait');
+                    }
+                    else {
+                        setBoardLabel('The Theme Selected Is:');
+                        boardTheme.text = theme.toUpperCase();
+                        boardTheme.setVisible(true);
+                        boardDifficulty.setVisible(true);
+                        boardDescription.text = '(Anything with the color blue in it)'
+                        boardDescription.setVisible(true);
+                    }
+                });
 
                 // exit button, volume button
 
@@ -2445,7 +2490,10 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('updateFashionShowList', function (fashionShow) {
-        fashionShows[fashionShow.hostUser] = fashionShow;
+        if (fashionShow.started)
+            delete fashionShows[fashionShow.hostUser];
+        else
+            fashionShows[fashionShow.hostUser] = fashionShow;
 
         if (document.getElementById("tm-join-game-list") != null)
             uiScene.loadJoinGameList(fashionShows);

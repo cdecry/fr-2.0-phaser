@@ -169,6 +169,7 @@ io.on('connection', function (socket) {
         players[socket.id].room = room;
         socket.leave(currentRoom);
         socket.join(room);
+        console.log(`${players[socket.id].username} is in ${room}`);
     }
 
     socket.on('changeRoom', function(room) {
@@ -229,7 +230,7 @@ io.on('connection', function (socket) {
         var fashionShow = new FashionShow(player.username, player.avatar.gender);
         fashionShows[player.username] = fashionShow;
         socket.to('topModels').emit('updateFashionShowList', fashionShow);
-        handleRoomChange('fashionShow-' + player.username)
+        handleRoomChange('fashionShow-' + player.username);
     })
 
     socket.on('joinFashionShow', function(fashionShowRoom) {
@@ -241,8 +242,6 @@ io.on('connection', function (socket) {
         fashionShows[hostUser].playerCount++;
 
         socket.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
-
-        console.log(io.sockets.adapter.rooms);
 
         for (const [roomName, sockets] of io.sockets.adapter.rooms) {
             console.log(roomName);
@@ -258,11 +257,14 @@ io.on('connection', function (socket) {
         io.to(socket.id).emit('getFashionShowsResponse', fashionShows);
     })
 
-    socket.on('startFashionShow', function(hostUser) {
+    socket.on('startFashionShowRequest', function(hostUser) {
         fashionShows[hostUser].started = true;
-        // remove fashionshow from game list on client side
-        // tell players in corres. fashion show room to change display, dim lights, change music
-         
+        socket.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
+        io.to(`fashionShow-${hostUser}`).emit('startFashionShow',  fashionShows[hostUser]);
+    })
+
+    socket.on('selectFashionShowTheme', function(hostUser, theme) {
+        io.to(`fashionShow-${hostUser}`).emit('selectedFashionShowTheme', theme);
     })
 });
 
