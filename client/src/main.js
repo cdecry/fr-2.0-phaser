@@ -245,8 +245,9 @@ function addFashionShowPlayer(playerCount, playerJoined) {
         if (fashionShowHost == myPlayerInfo.username) {
             fashionStartBtn.setTexture('fashionStart');
             fashionStartBtn.on('pointerdown', function (pointer) {
-                console.log('start fashion show');
-                fashionStartBtn.setPosition(fashionStartBtn.x+1, fashionStartBtn.y+1);
+                // fashionStartBtn.setPosition(fashionStartBtn.x+1, fashionStartBtn.y+1);
+                socket.emit('startFashionShow', fashionShowHost);
+                fashionStartBtn.destroy();
             });
         }
     }
@@ -1710,7 +1711,11 @@ inGame.create = function() {
     function loadLocation(location) {
         
         currentLocation = location;
-        bg.setTexture(location + 'Bg');
+        bg.destroy();
+        bg = inGame.add.image(430, 260, location + 'Bg');
+        bg.setDepth(-500);
+        bg.setInteractive();
+        bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
 
         setCameraPosition(currentLocation);
 
@@ -1893,9 +1898,6 @@ inGame.create = function() {
                 bgm.setLoop(true);
                 
                 uiScene.loadUIBarFashion(true);
-                
-                
-
                 var midPoint = 400;
 
                 //#region initBoardDisplay
@@ -1923,8 +1925,6 @@ inGame.create = function() {
                 var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, fashionStartBtn];
                 displayObjects.forEach((obj) => obj.setDepth(-200));
 
-                //#endregion
-
                 if (fashionShowHost != myPlayerInfo.username) {
                     boardStartDetails.text = "Host Is Waiting For More Users To Join";
                     fashionStartBtn.setVisible(false);
@@ -1932,6 +1932,9 @@ inGame.create = function() {
 
                 if (fashionShows[fashionShowHost].playerCount >= 5)
                     boardStartDetails.text = "Ready To Start";
+                //#endregion
+
+                
 
                 // exit button, volume button
 

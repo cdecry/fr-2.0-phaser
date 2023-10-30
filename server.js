@@ -251,19 +251,18 @@ io.on('connection', function (socket) {
             }
         }
 
-        // Object.keys(io.sockets.adapter.rooms).forEach(roomName => {
-        //     console.log(roomName);
-        //     if (roomName.startsWith('fashionShow-')) {
-        //         console.log('begins with fashionshow-');
-        //         io.to(roomName).emit('addFashionShowPlayer', fashionShows[hostUser], playerUser);
-        //     }
-        // });
-
         handleRoomChange(fashionShowRoom);
     })
 
     socket.on('getFashionShows', function() {
         io.to(socket.id).emit('getFashionShowsResponse', fashionShows);
+    })
+
+    socket.on('startFashionShow', function(hostUser) {
+        fashionShows[hostUser].started = true;
+        // remove fashionshow from game list on client side
+        // tell players in corres. fashion show room to change display, dim lights, change music
+         
     })
 });
 
