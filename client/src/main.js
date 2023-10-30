@@ -1600,9 +1600,9 @@ var preloadUIAssets = (thisScene) => {
 
     thisScene.load.html('tmJoinGameList', 'html/tmJoinGameList.html');
 
-    thisScene.load.image('tmGirlIcon', 'scene/location/topModels/sprites/girlIcon.png');
     thisScene.load.image('fashionStartGrey', 'scene/location/topModels/sprites/fashionStartGrey.png');
     thisScene.load.image('fashionStart', 'scene/location/topModels/sprites/fashionStart.png');
+    thisScene.load.image('fashionExit', 'scene/location/topModels/sprites/fashionExitButton.png');
 }
 
 var locationConfig = {
@@ -1725,9 +1725,10 @@ inGame.create = function() {
         var loadingScreen = uiObjectScene.add.image(400, 260, 'loadingScreen');
         var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
-        for (let i = 0; i < locationObjects.length; i++) {
-            locationObjects[i].destroy();
-        }
+        locationObjects.forEach(function(obj) { if (obj) obj.destroy(); });
+        // for (let i = 0; i < locationObjects.length; i++) {
+        //     locationObjects[i].destroy();
+        // }
         locationObjects = [];
 
         setTimeout(function () {
@@ -1899,7 +1900,7 @@ inGame.create = function() {
                 
                 uiScene.loadUIBarFashion(true);
                 var midPoint = 430;
-                
+
                 //#region initBoardDisplay
                 function setBoardLabel(text) {
                     boardLabel.text = text.replace(/\s/g, '   ');
@@ -1924,10 +1925,7 @@ inGame.create = function() {
                 boardHostDetails.setShadow(2, 2, '#333333', 2, true, true);
                 
                 fashionStartBtn = inGame.add.image(midPoint-2, 135, 'fashionStartGrey').setOrigin(0.5);
-                fashionStartBtn.setInteractive();
-
-                var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, fashionStartBtn];
-                displayObjects.forEach((obj) => obj.setDepth(-200));
+                fashionStartBtn.setInteractive({useHandCursor: true});
 
                 if (fashionShowHost != myPlayerInfo.username) {
                     boardStartDetails.text = "Host Is Waiting For More Users To Join";
@@ -1951,6 +1949,17 @@ inGame.create = function() {
                 boardDescription.setShadow(2, 2, '#333333', 2, true, true);
                 boardDescription.setVisible(false);
                 //#endregion
+
+                var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, boardHostDetails, boardTheme, boardDifficulty, boardDescription, fashionStartBtn];
+                displayObjects.forEach((obj) => obj.setDepth(-200));
+
+                var exitBtn = uiScene.add.image(765, 25, 'fashionExit');
+                exitBtn.setInteractive({useHandCursor: true});
+                exitBtn.on('pointerdown', () => {
+                    socket.emit('changeRoom', "topModels");
+                    locationObjects = displayObjects.concat([exitBtn]);
+                    loadLocation('topModels');
+                })
 
                 var fashionShowRound = 1;
                 socket.on('startFashionShow', function(idk) {
