@@ -756,7 +756,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(0);
                         createInventoryItems(0);
                     }
@@ -768,7 +768,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(1);
                         createInventoryItems(1);
                     }
@@ -777,7 +777,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(2);
                         createInventoryItems(2);
                     }
@@ -787,7 +787,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(3);
                         createInventoryItems(3);
                     }
@@ -798,7 +798,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(1);
                         createInventoryItems(1);
                     }
@@ -808,7 +808,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(4);
                         createInventoryItems(4);
                     }
@@ -819,7 +819,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 124;
                         cellHeight = 110;
-                        gridX = 100;
+                        gridX = 80;
                         createNavigationButtons(5);
                         createInventoryItems(5);
                     }
@@ -830,7 +830,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(7);
                         createInventoryItems(7)
                     }
@@ -1094,8 +1094,10 @@ uiScene.create = function() {
     var gridHeight = 3;
     var cellWidth = 62;
     var cellHeight = 110;
-    var gridX = 70;
-    var gridY = 220;
+    // var gridX = 50;
+    // var gridY = 220;
+    var gridX = 50;
+    var gridY = 160;
 
     // Define variables for the inventory items and navigation buttons
     let prevButton = null;
@@ -1159,18 +1161,18 @@ uiScene.create = function() {
             nextButton.destroy();
 
         // Create the "previous page" button
-        prevButton = uiScene.add.sprite(550, 160, 'inventoryArrowUp');
+        prevButton = uiObjectScene.add.sprite(550, 160, 'inventoryArrowUp');
         prevButton.setDepth(1001);
-        prevButton.setInteractive();
+        prevButton.setInteractive({useHandCursor: true});
         prevButton.on('pointerdown', () => {
             currentPage--;
             createInventoryItems(typeId);
         });
 
         // Create the "next page" button
-        nextButton = uiScene.add.sprite(550, 460, 'inventoryArrowDown');
+        nextButton = uiObjectScene.add.sprite(550, 460, 'inventoryArrowDown');
         nextButton.setDepth(1001);
-        nextButton.setInteractive();
+        nextButton.setInteractive({useHandCursor: true});
         nextButton.on('pointerdown', () => {
             currentPage++;
             createInventoryItems(typeId);
@@ -1221,7 +1223,7 @@ uiScene.create = function() {
         gridHeight = 3;
         cellWidth = 62;
         cellHeight = 110;
-        gridX = 70;
+        gridX = 50;
         createNavigationButtons(0);
         createInventoryItems(0);
         createAvatarPreview(myPlayerInfo);
@@ -1987,6 +1989,7 @@ inGame.create = function() {
                         boardDifficulty.setVisible(true);
                         boardDescription.text = '(Anything with the color blue in it)'
                         boardDescription.setVisible(true);
+                        uiScene.loadUIBarFashion(false);
                     }
                 });
 
