@@ -259,7 +259,7 @@ io.on('connection', function (socket) {
 
     socket.on('startFashionShowRequest', function(hostUser) {
         fashionShows[hostUser].started = true;
-        socket.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
+        io.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
         io.to(`fashionShow-${hostUser}`).emit('startFashionShow',  fashionShows[hostUser]);
     })
 

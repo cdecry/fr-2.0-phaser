@@ -497,7 +497,9 @@ uiScene.create = function() {
         var gameList = [];
 
         for (var host in fashionShows) {
-            
+            if (fashionShows[host].started)
+                continue;
+
             var gender = 'girl';
 
             if (fashionShows[host].hostGender == 'm')
@@ -521,29 +523,45 @@ uiScene.create = function() {
         gameListContainer.innerHTML = gameListHTML;
     }
 
+    uiScene.loadUIBar = () => {
+        uiBar.setTexture(`uiBar`);
+        disableEnableButton('inventoryButton', false);
+
+        hideShowElement('homeButton', false);
+        hideShowElement('worldMapButton', false);
+        hideShowElement('partyInvitesButton'), true;
+        hideShowElement('settingsButton', true);
+    }
+
     uiScene.loadUIBarFashion = (disabled) => {
         var disabledPostfix = "";
         if (disabled) disabledPostfix = "Disabled"
 
-        uiBar.destroy();
-        uiBar = this.add.image(400, 490, `uiBarFashion${disabledPostfix}`);
-        uiBar.setInteractive({ pixelPerfect: true});
-        uiBar.setDepth(1000);
+        uiBar.setTexture(`uiBarFashion${disabledPostfix}`);
 
-        disableButton('inventoryButton');
-        hideElement('homeButton');
-        hideElement('worldMapButton');
-        hideElement('partyInvitesButton');
-        hideElement('settingsButton');
+        disableEnableButton('inventoryButton', disabled);
+            
+        hideShowElement('homeButton', true);
+        hideShowElement('worldMapButton', true);
+        hideShowElement('partyInvitesButton'), true;
+        hideShowElement('settingsButton', true);
     }
 
-    function disableButton(buttonID) {
+    function disableEnableButton(buttonID, disable) {
         var btn = document.getElementById(buttonID);
-        btn.style['pointer-events'] = 'none';
+        
+        if (disable)
+            btn.style['pointer-events'] = 'none';
+        else
+            btn.style['pointer-events'] = null;
     }
-    function hideElement(elementID) {
+    function hideShowElement(elementID, hide) {
         var ele = document.getElementById(elementID);
-        ele.style.visibility = 'hidden';
+        
+        if (hide)
+            ele.style.visibility = 'hidden';
+        else
+            ele.style.visibility = 'visible';
     }
 
     function addBuddyMenuListener() {
@@ -678,7 +696,7 @@ uiScene.create = function() {
     var inventoryOpen = false;
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
-        if (!uiScene.checkInteractive)
+        if (uiScene.blockInteractive())
             return;
 
         if (event.target.id === 'inventoryButton') {
@@ -1234,7 +1252,7 @@ uiScene.create = function() {
     }
 
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
-        if (!uiScene.checkInteractive())
+        if (uiScene.blockInteractive())
             return;
 
         var tempDomBlocker;
@@ -1365,9 +1383,8 @@ uiScene.create = function() {
         // })
     }
 
-    // Return true if not clicking ui and input is NOT disabled, false otherwise
-    uiScene.checkInteractive = function() {
-        return !(isClickUI || disableInput);
+    uiScene.blockInteractive = function() {
+        return (isClickUI || disableInput);
     }
     uiObjectScene.anims.create({
         key: 'inLoad',
@@ -1695,7 +1712,7 @@ inGame.create = function() {
             });
 
             topModelsObject.on('pointerdown', () => {
-                if (!uiScene.checkInteractive())
+                if (uiScene.blockInteractive())
                     return;
 
                 socket.emit('changeRoom', "topModels");
@@ -1814,7 +1831,7 @@ inGame.create = function() {
                 var panelOpen = false;
 
                 var openJoinHostPanel = function() {
-                    if (!uiScene.checkInteractive() || panelOpen)
+                    if (uiScene.blockInteractive() || panelOpen)
                         return;
                     
                     panelOpen = true;
@@ -1846,12 +1863,6 @@ inGame.create = function() {
                             closeJoinHostPanel();
                         }
                         else if (event.target.id === 'tm-host-button') {
-                            // TODO: add host your own fashio nshow confirmation popup
-                            // for now, just jump straight to hosting
-                            // send socket message to host fashion show
-                            // server recieves socket and creates a new "fashion show" room
-                            // add to list of ongoing fashion show rooms
-                            // change location for client
                             socket.emit('hostFashionShow');
                             
                             fashionShowHost = myPlayerInfo.username;
@@ -1955,10 +1966,14 @@ inGame.create = function() {
 
                 var exitBtn = uiScene.add.image(765, 25, 'fashionExit');
                 exitBtn.setInteractive({useHandCursor: true});
+
                 exitBtn.on('pointerdown', () => {
+                    if (uiScene.blockInteractive()) return;
+
                     socket.emit('changeRoom', "topModels");
                     locationObjects = displayObjects.concat([exitBtn]);
                     loadLocation('topModels');
+                    uiScene.loadUIBar();
                 })
 
                 var fashionShowRound = 1;
@@ -2676,7 +2691,7 @@ inGame.create = function() {
         if (instantMessenger)
             instantMessenger.getChildByID('chat-input').blur();
 
-        if (!uiScene.checkInteractive()) return;
+        if (uiScene.blockInteractive()) return;
         
         inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
     }
