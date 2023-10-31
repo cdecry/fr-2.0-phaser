@@ -547,6 +547,11 @@ uiScene.create = function() {
         hideShowElement('settingsButton', true);
     }
 
+    uiScene.fashionCloseInventory = () => {
+        if (inventoryOpen)
+            closeInventory();
+    }
+
     function disableEnableButton(buttonID, disable) {
         var btn = document.getElementById(buttonID);
         
@@ -693,6 +698,32 @@ uiScene.create = function() {
         arr[j] = temp;
     }
 
+    function closeInventory() {
+        inventoryOpen = false;
+        isClickUI = false;
+
+        disableInput = false;
+        uiButtons.setVisible(true);
+        chatBar.setVisible(true);
+        uiBar.setVisible(true);
+
+        inventory.setVisible(false);
+        inventoryUI.setVisible(false);
+
+        // hide loaded clothes, avatar preview
+        inventoryItems.forEach(item => item.destroy());
+        if (prevButton != null)
+            prevButton.destroy();
+        if (nextButton != null)
+            nextButton.destroy();
+
+        // Send request to equip all items on avatar preview:
+        if (avatarPreview.getData('equipped') != null)
+            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
+        
+        avatarPreview.destroy();
+    }
+
     var inventoryOpen = false;
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
@@ -742,29 +773,7 @@ uiScene.create = function() {
                 inventoryUI.addListener('click');
                 inventoryUI.on('click', function (event) {
                     if (event.target.id === 'closeInventoryButton') {
-                        inventoryOpen = false;
-                        isClickUI = false;
-
-                        disableInput = false;
-                        uiButtons.setVisible(true);
-                        chatBar.setVisible(true);
-                        uiBar.setVisible(true);
-
-                        inventory.setVisible(false);
-                        inventoryUI.setVisible(false);
-
-                        // hide loaded clothes, avatar preview
-                        inventoryItems.forEach(item => item.destroy());
-                        if (prevButton != null)
-                            prevButton.destroy();
-                        if (nextButton != null)
-                            nextButton.destroy();
-
-                        // Send request to equip all items on avatar preview:
-                        if (avatarPreview.getData('equipped') != null)
-                            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
-                        
-                        avatarPreview.destroy();
+                        closeInventory();
                     }
                     else if (event.target.id === 'hairButton') {
                         inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
@@ -1399,6 +1408,8 @@ var inGame = new Phaser.Scene('GameScene');
 
 inGame.preload = function() {
     preloadGameAssets(this);
+
+    preloadUIAssets(this);
 }
 
 var camPosX = 0;
@@ -1622,6 +1633,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('fashionExit', 'scene/location/topModels/sprites/fashionExitButton.png');
 
     thisScene.load.html('fashionCountdown', 'html/fashionCountdown.html');
+    thisScene.load.image('fashionPlayerScoreBackground', 'scene/location/topModels/sprites/playerScoreBackground.png');
 }
 
 var locationConfig = {
@@ -1672,6 +1684,34 @@ inGame.create = function() {
         clickMovement(pointer);
     });
     inGame.sound.pauseOnBlur = false;
+    // var midPoint = 430;
+    // bg.setTexture('fashionShowBg');
+    // var boardScoreListLabel = inGame.add.text(midPoint-2, 20, "Theme Score List".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '14px', fill: 'white' }).setOrigin(0.5);;
+    // boardScoreListLabel.setStroke('#333333', 1);
+    // boardScoreListLabel.setShadow(2, 2, '#333333', 2, true, true);
+    // // boardScoreListLabel.setVisible(false);
+
+    // var boardPosingLabel = inGame.add.text(midPoint-2, 38, "Posing Will Start In 10 Seconds", { fontFamily: 'Arial', fontSize: '11px', fill: '#f8fb40' }).setOrigin(0.5);;
+    // boardPosingLabel.setStroke('#333333', 1);
+    // boardPosingLabel.setShadow(2, 2, '#333333', 2, true, true);
+    // // boardPosingLabel.setVisible(false);
+
+    // var playerScores = [];
+
+    // for (let i = 0; i < 10; i++) {
+    //     var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+    //     playerScores.push(item);
+    // }
+
+    // Phaser.Actions.GridAlign(playerScores, {
+    //     width: 2,
+    //     height: 5,
+    //     cellWidth: 205,
+    //     cellHeight: 27,
+    //     x: 200,
+    //     y: 50
+    // });
+
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
     otherPlayers = this.add.group();
@@ -1961,6 +2001,16 @@ inGame.create = function() {
                 boardDescription = inGame.add.text(midPoint-2, 120, `description`, { fontFamily: 'Arial', fontSize: '11px', fill: 'white'}).setOrigin(0.5);
                 boardDescription.setShadow(2, 2, '#333333', 2, true, true);
                 boardDescription.setVisible(false);
+
+                var boardScoreListLabel = inGame.add.text(midPoint-2, 20, "Theme Score List".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '14px', fill: 'white' }).setOrigin(0.5);;
+                boardScoreListLabel.setStroke('#333333', 1);
+                boardScoreListLabel.setShadow(2, 2, '#333333', 2, true, true);
+                boardScoreListLabel.setVisible(false);
+            
+                var boardPosingLabel = inGame.add.text(midPoint-2, 38, "Posing Will Start In 10 Seconds", { fontFamily: 'Arial', fontSize: '11px', fill: '#f8fb40' }).setOrigin(0.5);;
+                boardPosingLabel.setStroke('#333333', 1);
+                boardPosingLabel.setShadow(2, 2, '#333333', 2, true, true);
+                boardPosingLabel.setVisible(false);
                 //#endregion
 
                 var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, boardHostDetails, boardTheme, boardDifficulty, boardDescription, fashionStartBtn];
@@ -1979,6 +2029,7 @@ inGame.create = function() {
                 })
 
                 var fashionShowRound = 1;
+                var fashionCountdown;
                 socket.on('startFashionShow', function(idk) {
                     boardStartDetails.setVisible(false);
                     boardPlayerCount.destroy();
@@ -1995,7 +2046,7 @@ inGame.create = function() {
 
                 socket.on('selectedFashionShowTheme', function(theme) {
                     if (fashionShowHost == myPlayerInfo.username) {
-                        console.log('idk wait');
+                        console.log('you selected the theme now wait');
                     }
                     else {
                         setBoardLabel('The Theme Selected Is:');
@@ -2009,25 +2060,66 @@ inGame.create = function() {
                         // on receiving msg, start timer
                         fashionCountdown = uiObjectScene.add.dom(400, -32).createFromCache('fashionCountdown');
                         document.getElementById("fashionThemeLabel").innerHTML = "Theme: " + theme.toUpperCase();
-                        createCountdown(65);
-                        // instantMessenger.setDepth(2000);
+                        // display so the playeri s aware of how much time they have left
+                        createCountdown(10);
                     }
                 });
 
-                function createCountdown(sec) {
-                    var cd = new Date();
-                    var countDownDate = cd.setSeconds(cd.getSeconds() + sec);
+                socket.on('FashionShowThemeScoreList', function(theme) {
+                    
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        console.log('score intermission');
+                    }
+                    else {
+                        fashionCountdown.destroy();
+                        uiScene.fashionCloseInventory();
+                        btn = document.getElementById('inventoryButton');
+                        btn.style['pointer-events'] = 'none';
 
+                        boardTheme.setVisible(false);
+                        boardDifficulty.setVisible(false);
+                        boardDescription.setVisible(false);
+                    }
+
+                    boardLabel.setVisible(false);
+                    boardHostDetails.setVisible(false);
+                    boardScoreListLabel.setVisible(true);
+                    boardPosingLabel.setVisible(true);
+
+                    var playerScores = [];
+                    
+                    for (let i = 0; i < 10; i++) {
+                        var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                        playerScores.push(item);
+                    }
+                
+                    Phaser.Actions.GridAlign(playerScores, {
+                        width: 2,
+                        height: 5,
+                        cellWidth: 205,
+                        cellHeight: 27,
+                        x: 226,
+                        y: 50
+                    });
+
+                    var sec = 10;
                     var x = setInterval(function() {
-
-                        var now = new Date().getTime();
-                        var distance = countDownDate - now;
+                        sec-=1;
+                        boardPosingLabel.text = `Posing Will Start In ${sec} Seconds`;
                         
-                        var seconds = Math.floor((distance % (1000 * 60 * 60)) / (1000));
-                        document.getElementById("fashionTimeLabel").innerHTML = "Time Left: " + seconds;
-                            
-                        // If the count down is over, write some text 
-                        if (distance < 0) {
+                        if (sec == 0) {
+                            clearInterval(x);
+                            boardPosingLabel.text = "Time Left: 36";
+                        }
+                    }, 1000);
+                });
+
+                function createCountdown(sec) {
+                    var x = setInterval(function() {
+                        sec-=1;
+                        document.getElementById("fashionTimeLabel").innerHTML = "Time Left: " + sec;
+                        
+                        if (sec < 0) {
                             clearInterval(x);
                             document.getElementById("fashionTimeLabel").innerHTML = "TIMES UP";
                         }
