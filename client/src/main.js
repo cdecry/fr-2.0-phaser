@@ -1620,6 +1620,8 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('fashionStartGrey', 'scene/location/topModels/sprites/fashionStartGrey.png');
     thisScene.load.image('fashionStart', 'scene/location/topModels/sprites/fashionStart.png');
     thisScene.load.image('fashionExit', 'scene/location/topModels/sprites/fashionExitButton.png');
+
+    thisScene.load.html('fashionCountdown', 'html/fashionCountdown.html');
 }
 
 var locationConfig = {
@@ -2003,8 +2005,34 @@ inGame.create = function() {
                         boardDescription.text = '(Anything with the color blue in it)'
                         boardDescription.setVisible(true);
                         uiScene.loadUIBarFashion(false);
+
+                        // on receiving msg, start timer
+                        fashionCountdown = uiObjectScene.add.dom(400, -32).createFromCache('fashionCountdown');
+                        document.getElementById("fashionThemeLabel").innerHTML = "Theme: " + theme.toUpperCase();
+                        createCountdown(65);
+                        // instantMessenger.setDepth(2000);
                     }
                 });
+
+                function createCountdown(sec) {
+                    var cd = new Date();
+                    var countDownDate = cd.setSeconds(cd.getSeconds() + sec);
+
+                    var x = setInterval(function() {
+
+                        var now = new Date().getTime();
+                        var distance = countDownDate - now;
+                        
+                        var seconds = Math.floor((distance % (1000 * 60 * 60)) / (1000));
+                        document.getElementById("fashionTimeLabel").innerHTML = "Time Left: " + seconds;
+                            
+                        // If the count down is over, write some text 
+                        if (distance < 0) {
+                            clearInterval(x);
+                            document.getElementById("fashionTimeLabel").innerHTML = "TIMES UP";
+                        }
+                    }, 1000);
+                }
 
                 // exit button, volume button
 
