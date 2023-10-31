@@ -265,6 +265,15 @@ io.on('connection', function (socket) {
 
     socket.on('selectFashionShowTheme', function(hostUser, theme) {
         io.to(`fashionShow-${hostUser}`).emit('selectedFashionShowTheme', theme);
+        var timer = 10;
+
+        var x = setInterval(function() {
+            timer-=1;
+            if (timer < 0) {
+                clearInterval(x);
+                io.to(`fashionShow-${hostUser}`).emit('FashionShowThemeScoreList');
+            }
+        }, 1000);
     })
 });
 
