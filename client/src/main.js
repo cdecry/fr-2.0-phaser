@@ -819,7 +819,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 124;
                         cellHeight = 110;
-                        gridX = 80;
+                        gridX = 50;
                         createNavigationButtons(5);
                         createInventoryItems(5);
                     }
@@ -1094,8 +1094,6 @@ uiScene.create = function() {
     var gridHeight = 3;
     var cellWidth = 62;
     var cellHeight = 110;
-    // var gridX = 50;
-    // var gridY = 220;
     var gridX = 50;
     var gridY = 160;
 
@@ -2316,7 +2314,7 @@ inGame.create = function() {
         var prefix = "n"
 
         if (typeId != 5)
-            prefix = myPlayerInfo.avatar['gender'];
+            prefix = cont.getData('gender');
 
         if (typeId == 0 && isLocalPlayer) {
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
