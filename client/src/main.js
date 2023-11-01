@@ -1677,6 +1677,7 @@ inGame.create = function() {
 
     // Load background
     bg = this.add.image(400, 260, 'downtownBg');
+
     bg.setInteractive();
     bg.setDepth(-500);
 
@@ -2011,11 +2012,12 @@ inGame.create = function() {
                 socket.on('startFashionShow', function(fashionShow) {
                     
                     fashionShows[fashionShowHost] = fashionShow;
+                    console.log('start fashion show');
+                    dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                    dimLights.setDepth(-499);
 
-                    // dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
-                    // dimLights.setDepth(-499);
-
-                    otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost).forEach(function (p) {
+                    otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost && !darkMasks.hasOwnProperty(player.getData('username'))).forEach(function (p) {
+            
                         var darkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
                         darkMask.setDepth(p.y);
                         darkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, p);
@@ -2030,9 +2032,12 @@ inGame.create = function() {
                         socket.emit('selectFashionShowTheme', fashionShowHost, selectedTheme);
                     }
                     else {
-                        myDarkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
-                        myDarkMask.setDepth(container.y);
-                        myDarkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, container);
+                        if (myDarkMask == null) {
+                            myDarkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                            myDarkMask.setDepth(container.y);
+                            myDarkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, container);
+                        }
+
                         // update board for host selecting a theme
                         setBoardLabel('Host Is Selecting a Theme');
                     }
