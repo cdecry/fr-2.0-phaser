@@ -2012,10 +2012,8 @@ inGame.create = function() {
                     
                     fashionShows[fashionShowHost] = fashionShow;
 
-                    dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
-                    dimLights.setDepth(-499);
-
-
+                    // dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                    // dimLights.setDepth(-499);
 
                     otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost).forEach(function (p) {
                         var darkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
@@ -2065,7 +2063,7 @@ inGame.create = function() {
 
                     fashionShows[fashionShowHost].currentScores = currScores;
                     if (playerUpdated == myPlayerInfo.username) {
-                        // show calculation process
+                        myDarkMask.setVisible(false);
 
                         var fashionAvatarPreview = uiScene.createAvatarPreview(myPlayerInfo, inGame);
                         fashionAvatarPreview.setPosition(350, 50);
@@ -2074,12 +2072,14 @@ inGame.create = function() {
                         boardLabel.setVisible(false);
                         boardHostDetails.setVisible(false);
                         
-
                         alert(`theme: ${scoring.theme}, originality: ${scoring.originality}`);
                         
                         // setTimeout(function () {
                         //     // pretend the scoring is showing up here
                         // }, 3000);
+                    }
+                    else {
+                        darkMasks[playerUpdated].setVisible(false);
                     }
                 });
 
@@ -2262,17 +2262,16 @@ inGame.create = function() {
     }
 
     function addOtherPlayers(playerInfo) {
-        
-        const otherEyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
-        const otherLips = inGame.add.sprite(0, 0, 'lips-0');
+        var otherEyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
+        var otherLips = inGame.add.sprite(0, 0, 'lips-0');
         var otherFaceAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-        const otherBoardLower = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        const otherHairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        const otherHairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
+        var otherBoardLower = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        var otherHairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        var otherHairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        var otherBrow = inGame.add.sprite(0, 0, 'brow-0');
         var otherHeadAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-        const otherPlayer = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-body-' + playerInfo.avatar['skinTone']);
-        const otherShoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-4-' + playerInfo.avatar['equipped'][4]);
+        var otherPlayer = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-body-' + playerInfo.avatar['skinTone']);
+        var otherShoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-4-' + playerInfo.avatar['equipped'][4]);
         var otherBottomItem, otherTopItem;
         otherBottomItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
         otherTopItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
@@ -2280,10 +2279,10 @@ inGame.create = function() {
         var otherOutfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         var otherCostume = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         var otherBodyAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-        const otherBoardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        var otherBoardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         var otherUsernameTag = inGame.add.sprite(0, 0, 'username-tag');
         var otherUsernameLabel = inGame.add.text(0, 0 + 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
-        const otherHead = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' + playerInfo.avatar['skinTone']);
+        var otherHead = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' + playerInfo.avatar['skinTone']);
         otherUsernameLabel.originX = 0.5;
         var tempCenter = otherUsernameLabel.getCenter().x;
         otherUsernameLabel.x = tempCenter;
@@ -2306,7 +2305,7 @@ inGame.create = function() {
 
         var orderItems = [otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel];
 
-        const otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
+        var otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
 
         otherContainer.add([otherHairLower, otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherCostume, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel]);
 
@@ -2396,7 +2395,7 @@ inGame.create = function() {
                 p.removeAll(true);
                 otherPlayers.remove(p);
                 p.destroy();
-                
+                break;
             }
         }
     });
@@ -2404,20 +2403,19 @@ inGame.create = function() {
     // Sent only to one person, who removes everyone else
     globalThis.socket.on('removePlayers', function () {
 
-        for (let i = 0; i < otherPlayers.getLength(); i++) {
+        for (let i = otherPlayers.getLength()-1; i >= 0; i--) {
             var p = otherPlayers.getChildren()[i];
+            var msgData = p.getData('messageData');
+            if (msgData['hasMessage']) {
+                msgData['otherBubbleLifeTime'].stop();
+                msgData['otherMessageLifeTime'].stop();
+                msgData['otherChatBubble'].destroy();
+                msgData['otherChatMessage'].destroy();
+            }
 
-                var msgData = p.getData('messageData');
-                if (msgData['hasMessage']) {
-                    msgData['otherBubbleLifeTime'].stop();
-                    msgData['otherMessageLifeTime'].stop();
-                    msgData['otherChatBubble'].destroy();
-                    msgData['otherChatMessage'].destroy();
-                }
-
-                p.removeAll(true);
-                p.destroy();
-                otherPlayers.remove(p);
+            p.removeAll(true);
+            p.destroy();
+            otherPlayers.remove(p);
         }
     });
 
@@ -2436,8 +2434,10 @@ inGame.create = function() {
                 p.setPosition(playerInfo.x, playerInfo.y);
                 p.setDepth(playerInfo.y);
                 
-                if (darkMasks.hasOwnProperty(playerInfo.username))
+                if (darkMasks.hasOwnProperty(playerInfo.username)) {
                     darkMasks[playerInfo.username].setDepth(playerInfo.y);
+                    console.log(`player ${playerInfo.username} mask depth ${playerInfo.y}`);
+                }
                 p.flipX = playerInfo.flipX;
                 
                 for (let i = 0; i < 15; i++)
@@ -2932,7 +2932,10 @@ inGame.update = function() {
         }
 
         container.setDepth(container.y);
-        if (myDarkMask) myDarkMask.setDepth(container.y);
+        if (myDarkMask) { 
+            myDarkMask.setDepth(container.y);
+            // console.log(`local player mask depth: ${container.y}`);
+        }
 
         if (!disableInput) {
         //#region Arrow Key Movement
