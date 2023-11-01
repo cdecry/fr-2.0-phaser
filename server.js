@@ -294,11 +294,14 @@ io.on('connection', function (socket) {
         io.to(`fashionShow-${hostUser}`).emit('selectedFashionShowTheme', theme);
         var timer = 10;
 
+
+        
         var x = setInterval(function() {
             timer-=1;
             if (timer < 0) {
                 clearInterval(x);
-                io.to(`fashionShow-${hostUser}`).emit('FashionShowThemeScoreList');
+                // force close inventories for those not done, then they wil send a message for server to calc score
+                io.to(`fashionShow-${hostUser}`).emit('fashionShowForceClose');
             }
         }, 1000);
     })

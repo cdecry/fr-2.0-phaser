@@ -552,9 +552,14 @@ uiScene.create = function() {
         hideShowElement('settingsButton', true);
     }
 
-    uiScene.fashionCloseInventory = () => {
-        if (inventoryOpen)
+    uiScene.fashionCloseInventory = (fashionCountdown) => {
+        if (inventoryOpen) {
             closeInventory();
+            if (fashionCountdown)
+                fashionCountdown.destroy();
+            return true;
+        }
+        return false;
     }
 
     function disableEnableButton(buttonID, disable) {
@@ -1992,6 +1997,8 @@ inGame.create = function() {
                 boardPosingLabel.setVisible(false);
                 //#endregion
 
+                var playerScores = [];
+
                 var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, boardHostDetails, boardTheme, boardDifficulty, boardDescription, fashionStartBtn];
                 displayObjects.forEach((obj) => obj.setDepth(-200));
 
@@ -2013,12 +2020,12 @@ inGame.create = function() {
                 socket.on('startFashionShow', function(fashionShow) {
                     
                     fashionShows[fashionShowHost] = fashionShow;
-                    dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                    dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
                     dimLights.setDepth(-499);
 
                     otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost && !darkMasks.hasOwnProperty(player.getData('username'))).forEach(function (p) {
             
-                        var darkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                        var darkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
                         darkMask.setDepth(p.y);
                         darkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, p);
                         darkMasks[p.getData('username')] = darkMask;
@@ -2033,7 +2040,7 @@ inGame.create = function() {
                     }
                     else {
                         if (myDarkMask == null) {
-                            myDarkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                            myDarkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
                             myDarkMask.setDepth(container.y);
                             myDarkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, container);
                         }
@@ -2064,49 +2071,69 @@ inGame.create = function() {
                     }
                 });
 
+                function showScoring(scoring) {
+                    boardLabel.setVisible(false);
+                    boardHostDetails.setVisible(false);
+                    boardTheme.setVisible(false);
+                    boardDifficulty.setVisible(false);
+                    boardDescription.setVisible(false);
+                    boardScoreListLabel.setVisible(true);
+                    boardPosingLabel.setVisible(true);
+
+                    var fashionAvatarPreview = uiScene.createAvatarPreview(myPlayerInfo, inGame);
+                    fashionAvatarPreview.setPosition(350, 50);
+                    fashionAvatarPreview.setDepth(0);
+
+                    console.log(`theme: ${scoring.theme}, originality: ${scoring.originality}`);
+                    
+                    setTimeout(function () {
+
+                        for (let i = 0; i < 10; i++) {
+                            var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                            playerScores.push(item);
+                        }
+                    
+                        Phaser.Actions.GridAlign(playerScores, {
+                            width: 2,
+                            height: 5,
+                            cellWidth: 205,
+                            cellHeight: 27,
+                            x: 226,
+                            y: 50
+                        });
+                    }, 3000);
+                }
+
                 socket.on('fashionShowUpdateScores', function(currScores, playerUpdated, scoring) {
 
                     fashionShows[fashionShowHost].currentScores = currScores;
                     if (playerUpdated == myPlayerInfo.username) {
                         myDarkMask.setVisible(false);
 
-                        var fashionAvatarPreview = uiScene.createAvatarPreview(myPlayerInfo, inGame);
-                        fashionAvatarPreview.setPosition(350, 50);
-                        fashionAvatarPreview.setDepth(0);
-
-                        boardLabel.setVisible(false);
-                        boardHostDetails.setVisible(false);
-                        
-                        alert(`theme: ${scoring.theme}, originality: ${scoring.originality}`);
-                        
-                        // setTimeout(function () {
-                        //     // pretend the scoring is showing up here
-                        // }, 3000);
+                        showScoring(scoring);
                     }
                     else {
                         darkMasks[playerUpdated].setVisible(false);
                     }
                 });
 
-                socket.on('FashionShowThemeScoreList', function(theme) {
+                socket.on('fashionShowForceClose', function(scoring) {
                     
                     if (fashionShowHost == myPlayerInfo.username) {
-                        console.log('score intermission');
+                        console.log('force clsing peoples invnet');
                     }
                     else {
-                        console.log('times up');
-                        // fashionCountdown.destroy();
-                        // uiScene.fashionCloseInventory();
-                        // btn = document.getElementById('inventoryButton');
-                        // btn.style['pointer-events'] = 'none';
+                        console.log('times up, we will calc ur score');
+                        var forced = uiScene.fashionCloseInventory(fashionCountdown);
 
-                        // boardTheme.setVisible(false);
-                        // boardDifficulty.setVisible(false);
-                        // boardDescription.setVisible(false);
+                        // if (forced) {
+                        //     btn = document.getElementById('inventoryButton');
+                        //     btn.style['pointer-events'] = 'none';
+                        // }
+                        
                     }
 
-                    // boardLabel.setVisible(false);
-                    // boardHostDetails.setVisible(false);
+                    
                     // boardScoreListLabel.setVisible(true);
                     // boardPosingLabel.setVisible(true);
 
