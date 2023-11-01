@@ -246,6 +246,7 @@ function addFashionShowPlayer(playerCount, playerJoined) {
         oldBoardDetails = "Ready To Start";
         if (fashionShowHost == myPlayerInfo.username) {
             fashionStartBtn.setTexture('fashionStart');
+            fashionStartBtn.off('pointerdown');
             fashionStartBtn.on('pointerdown', function (pointer) {
                 // fashionStartBtn.setPosition(fashionStartBtn.x+1, fashionStartBtn.y+1);
                 fashionStartBtn.destroy();
@@ -2012,7 +2013,6 @@ inGame.create = function() {
                 socket.on('startFashionShow', function(fashionShow) {
                     
                     fashionShows[fashionShowHost] = fashionShow;
-                    console.log('start fashion show');
                     dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
                     dimLights.setDepth(-499);
 
