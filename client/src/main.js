@@ -136,6 +136,8 @@ var myPlayerInfo;
 var avatarPreview = null;
 var locationObjects = [];
 var bgm;
+var myDarkMask = null;
+var darkMasks = {};
 
 // Inventory Load:
 var myInventory;
@@ -282,48 +284,50 @@ uiScene.preload = function() {
 uiScene.create = function() {
 
     this.input.setTopOnly(true);
-    function createAvatarPreview(playerInfo) {
-        bodyPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
-        headPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
-        eyesPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
-        lipsPreview = uiObjectScene.add.sprite(0, 0, 'lips-0');
-        faceAccPreview = uiObjectScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-        boardLowerPreview = uiObjectScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        hairLowerPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        hairUpperPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        headAccPreview = uiObjectScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-        shoesPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+    uiScene.createAvatarPreview = (playerInfo, scene) => {
+        bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+        headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+        eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+        lipsPreview = scene.add.sprite(0, 0, 'lips-0');
+        faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+        boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
-        bottomItemPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
-        topItemPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
-        outfitPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
-        costumePreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
-        bodyAccPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-        browPreview = uiObjectScene.add.sprite(0, 0, 'brow-0');
-        boardUpperPreview = uiObjectScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
-        usernameTagPreview = uiObjectScene.add.sprite(0, 0, 'username-tag');
-        usernameLabelPreview = uiObjectScene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+        outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+        bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        browPreview = scene.add.sprite(0, 0, 'brow-0');
+        boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
+        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
         usernameLabelPreview.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
         var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
-        avatarPreview = uiObjectScene.add.container(0, 0);
-        avatarPreview.add(children);
-        avatarPreview.setDepth(1001);
+        avPreview = scene.add.container(0, 0);
+        avPreview.add(children);
+        avPreview.setDepth(1001);
 
-        avatarPreview.setDataEnabled();
-        avatarPreview.setData('username', playerInfo.username);
-        avatarPreview.setData('skinTone', playerInfo.avatar['skinTone']);
-        avatarPreview.setData('eyeType', playerInfo.avatar['eyeType']);
-        avatarPreview.setData('gender', playerInfo.avatar['gender']);
-        avatarPreview.setData('playerInfo', playerInfo);
+        avPreview.setDataEnabled();
+        avPreview.setData('username', playerInfo.username);
+        avPreview.setData('skinTone', playerInfo.avatar['skinTone']);
+        avPreview.setData('eyeType', playerInfo.avatar['eyeType']);
+        avPreview.setData('gender', playerInfo.avatar['gender']);
+        avPreview.setData('playerInfo', playerInfo);
 
         var previewEquipped = [];
         for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
             previewEquipped[i] = playerInfo.avatar['equipped'][i]
-        avatarPreview.setData('equipped', previewEquipped);
+        avPreview.setData('equipped', previewEquipped);
+
+        return avPreview;
     }
 
     var uiBar = this.add.image(400, 490, 'uiBar');
@@ -718,8 +722,9 @@ uiScene.create = function() {
             nextButton.destroy();
 
         // Send request to equip all items on avatar preview:
-        if (avatarPreview.getData('equipped') != null)
-            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
+        if (avatarPreview.getData('equipped') != null || fashionShowHost != "") {
+            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'), fashionShowHost);
+        }
         
         avatarPreview.destroy();
     }
@@ -1251,7 +1256,7 @@ uiScene.create = function() {
         gridX = 50;
         createNavigationButtons(0);
         createInventoryItems(0);
-        createAvatarPreview(myPlayerInfo);
+        avatarPreview = uiScene.createAvatarPreview(myPlayerInfo, uiObjectScene);
         avatarPreview.setPosition(675, 250);
     }
 
@@ -1311,7 +1316,7 @@ uiScene.create = function() {
                 }
             }
 
-            createAvatarPreview(playerInfo);
+            avatarPreview = uiScene.createAvatarPreview(playerInfo, uiObjectScene);
             avatarPreview.setPosition(460, 190);
 
             idfoneBlueStar = uiObjectScene.add.image(180, 141, 'idfoneBlueStar');
@@ -1684,34 +1689,6 @@ inGame.create = function() {
         clickMovement(pointer);
     });
     inGame.sound.pauseOnBlur = false;
-    // var midPoint = 430;
-    // bg.setTexture('fashionShowBg');
-    // var boardScoreListLabel = inGame.add.text(midPoint-2, 20, "Theme Score List".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '14px', fill: 'white' }).setOrigin(0.5);;
-    // boardScoreListLabel.setStroke('#333333', 1);
-    // boardScoreListLabel.setShadow(2, 2, '#333333', 2, true, true);
-    // // boardScoreListLabel.setVisible(false);
-
-    // var boardPosingLabel = inGame.add.text(midPoint-2, 38, "Posing Will Start In 10 Seconds", { fontFamily: 'Arial', fontSize: '11px', fill: '#f8fb40' }).setOrigin(0.5);;
-    // boardPosingLabel.setStroke('#333333', 1);
-    // boardPosingLabel.setShadow(2, 2, '#333333', 2, true, true);
-    // // boardPosingLabel.setVisible(false);
-
-    // var playerScores = [];
-
-    // for (let i = 0; i < 10; i++) {
-    //     var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
-    //     playerScores.push(item);
-    // }
-
-    // Phaser.Actions.GridAlign(playerScores, {
-    //     width: 2,
-    //     height: 5,
-    //     cellWidth: 205,
-    //     cellHeight: 27,
-    //     x: 200,
-    //     y: 50
-    // });
-
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
     otherPlayers = this.add.group();
@@ -2030,7 +2007,23 @@ inGame.create = function() {
 
                 var fashionShowRound = 1;
                 var fashionCountdown;
-                socket.on('startFashionShow', function(idk) {
+                var dimLights;
+                socket.on('startFashionShow', function(fashionShow) {
+                    
+                    fashionShows[fashionShowHost] = fashionShow;
+
+                    dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                    dimLights.setDepth(-499);
+
+
+
+                    otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost).forEach(function (p) {
+                        var darkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                        darkMask.setDepth(p.y);
+                        darkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, p);
+                        darkMasks[p.getData('username')] = darkMask;
+                    });
+
                     boardStartDetails.setVisible(false);
                     boardPlayerCount.destroy();
                     if (fashionShowHost == myPlayerInfo.username) {
@@ -2039,6 +2032,9 @@ inGame.create = function() {
                         socket.emit('selectFashionShowTheme', fashionShowHost, selectedTheme);
                     }
                     else {
+                        myDarkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.4);
+                        myDarkMask.setDepth(container.y);
+                        myDarkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, container);
                         // update board for host selecting a theme
                         setBoardLabel('Host Is Selecting a Theme');
                     }
@@ -2065,53 +2061,76 @@ inGame.create = function() {
                     }
                 });
 
+                socket.on('fashionShowUpdateScores', function(currScores, playerUpdated, scoring) {
+
+                    fashionShows[fashionShowHost].currentScores = currScores;
+                    if (playerUpdated == myPlayerInfo.username) {
+                        // show calculation process
+
+                        var fashionAvatarPreview = uiScene.createAvatarPreview(myPlayerInfo, inGame);
+                        fashionAvatarPreview.setPosition(350, 50);
+                        fashionAvatarPreview.setDepth(0);
+
+                        boardLabel.setVisible(false);
+                        boardHostDetails.setVisible(false);
+                        
+
+                        alert(`theme: ${scoring.theme}, originality: ${scoring.originality}`);
+                        
+                        // setTimeout(function () {
+                        //     // pretend the scoring is showing up here
+                        // }, 3000);
+                    }
+                });
+
                 socket.on('FashionShowThemeScoreList', function(theme) {
                     
                     if (fashionShowHost == myPlayerInfo.username) {
                         console.log('score intermission');
                     }
                     else {
-                        fashionCountdown.destroy();
-                        uiScene.fashionCloseInventory();
-                        btn = document.getElementById('inventoryButton');
-                        btn.style['pointer-events'] = 'none';
+                        console.log('times up');
+                        // fashionCountdown.destroy();
+                        // uiScene.fashionCloseInventory();
+                        // btn = document.getElementById('inventoryButton');
+                        // btn.style['pointer-events'] = 'none';
 
-                        boardTheme.setVisible(false);
-                        boardDifficulty.setVisible(false);
-                        boardDescription.setVisible(false);
+                        // boardTheme.setVisible(false);
+                        // boardDifficulty.setVisible(false);
+                        // boardDescription.setVisible(false);
                     }
 
-                    boardLabel.setVisible(false);
-                    boardHostDetails.setVisible(false);
-                    boardScoreListLabel.setVisible(true);
-                    boardPosingLabel.setVisible(true);
+                    // boardLabel.setVisible(false);
+                    // boardHostDetails.setVisible(false);
+                    // boardScoreListLabel.setVisible(true);
+                    // boardPosingLabel.setVisible(true);
 
-                    var playerScores = [];
+                    // var playerScores = [];
                     
-                    for (let i = 0; i < 10; i++) {
-                        var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
-                        playerScores.push(item);
-                    }
+                    // for (let i = 0; i < 10; i++) {
+                    //     var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                    //     playerScores.push(item);
+                    // }
                 
-                    Phaser.Actions.GridAlign(playerScores, {
-                        width: 2,
-                        height: 5,
-                        cellWidth: 205,
-                        cellHeight: 27,
-                        x: 226,
-                        y: 50
-                    });
+                    // Phaser.Actions.GridAlign(playerScores, {
+                    //     width: 2,
+                    //     height: 5,
+                    //     cellWidth: 205,
+                    //     cellHeight: 27,
+                    //     x: 226,
+                    //     y: 50
+                    // });
 
-                    var sec = 10;
-                    var x = setInterval(function() {
-                        sec-=1;
-                        boardPosingLabel.text = `Posing Will Start In ${sec} Seconds`;
+                    // var sec = 10;
+                    // var x = setInterval(function() {
+                    //     sec-=1;
+                    //     boardPosingLabel.text = `Posing Will Start In ${sec} Seconds`;
                         
-                        if (sec == 0) {
-                            clearInterval(x);
-                            boardPosingLabel.text = "Time Left: 36";
-                        }
-                    }, 1000);
+                    //     if (sec == 0) {
+                    //         clearInterval(x);
+                    //         boardPosingLabel.text = "Time Left: 36";
+                    //     }
+                    // }, 1000);
                 });
 
                 function createCountdown(sec) {
@@ -2318,6 +2337,15 @@ inGame.create = function() {
                 uiScene.openIDFone(false, playerInfo);
             });
         }
+
+        // mask test
+        // otherPlayers.getChildren().forEach(function (p) {
+        //     var darkMask = inGame.add.rectangle(0, 0, 800, 520, 0x00000000, 0.4).setOrigin(0);
+        //     darkMask.setDepth(p.y);
+        //     darkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, p);
+        //     console.log(p.getData('username'));
+        //     darkMasks[p.getData('username')] = darkMask;
+        // });
       }
 
     globalThis.socket.emit('game loaded');
@@ -2407,6 +2435,9 @@ inGame.create = function() {
 
                 p.setPosition(playerInfo.x, playerInfo.y);
                 p.setDepth(playerInfo.y);
+                
+                if (darkMasks.hasOwnProperty(playerInfo.username))
+                    darkMasks[playerInfo.username].setDepth(playerInfo.y);
                 p.flipX = playerInfo.flipX;
                 
                 for (let i = 0; i < 15; i++)
@@ -2901,6 +2932,7 @@ inGame.update = function() {
         }
 
         container.setDepth(container.y);
+        if (myDarkMask) myDarkMask.setDepth(container.y);
 
         if (!disableInput) {
         //#region Arrow Key Movement

@@ -176,51 +176,68 @@ io.on('connection', function (socket) {
         handleRoomChange(room);
     })
 
-    socket.on('changeClothes', async (equipped) => {
+    socket.on('changeClothes', async (equipped, fashionShowHost) => {
         // similar to invent, but of changed clothes
         var changed = {"0":[], "1":[], "2":[], "3":[], "4":[], "5": [], "6":[], "7":[], "8":[], "9":[]};
         var numChanged = 0;
         // check that the player has these clothes
-        for (let i = 0; i < equipped.length; i++) {
 
-            var itemId = equipped[i];
+        if (equipped != null) {
+            for (let i = 0; i < equipped.length; i++) {
 
-            if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
+                var itemId = equipped[i];
 
-            if (itemId == -1) { // nothing of this type is equipped
-                players[socket.id].avatar.equipped[i] = itemId;
-                changed[i].push(-1)
-                numChanged++;
-            }
+                if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
 
-            var itemExistsInInventory = false;
-
-            // Check if the item exists in the inventory
-            var itemArray = players[socket.id].inventory[i];
-            
-            for (let j = 0; j < itemArray.length; j++) {
-                const item = itemArray[j];
-                if (item.id === itemId) {
-                    itemExistsInInventory = true;
-                    changed[i].push(item);
+                if (itemId == -1) { // nothing of this type is equipped
                     players[socket.id].avatar.equipped[i] = itemId;
+                    changed[i].push(-1)
                     numChanged++;
-                    break;
+                }
+
+                var itemExistsInInventory = false;
+
+                // Check if the item exists in the inventory
+                var itemArray = players[socket.id].inventory[i];
+                
+                for (let j = 0; j < itemArray.length; j++) {
+                    const item = itemArray[j];
+                    if (item.id === itemId) {
+                        itemExistsInInventory = true;
+                        changed[i].push(item);
+                        players[socket.id].avatar.equipped[i] = itemId;
+                        numChanged++;
+                        break;
+                    }
+                }
+
+                if (!itemExistsInInventory) {
+                    console.log(`Item ${itemId} is not in the inventory.`);
                 }
             }
 
-            if (!itemExistsInInventory) {
-                console.log(`Item ${itemId} is not in the inventory.`);
-            }
+            if (numChanged == 0) return;
+
+            socket.to(players[socket.id].room).emit("changeClothesResponse", changed);
+            io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
+
+            // update player avatar database
+            await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
         }
 
-        if (numChanged == 0) return;
-
-        socket.to(players[socket.id].room).emit("changeClothesResponse", changed);
-        io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
-
-        // update player avatar database
-        await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
+        if (fashionShowHost != "") {
+            // call funciton to calculate fasion show score based on theme and items equipped
+            // for now, set score to 5.
+            console.log('player changed in fashion show, sending score');
+            var scoring = {
+                theme: 1,
+                originality: 3,
+                rare: 0,
+                pet: 0
+            }
+            fashionShows[fashionShowHost].currentScores[players[socket.id].username] = 5;
+            io.to('fashionShow-' + fashionShowHost).emit('fashionShowUpdateScores', fashionShows[fashionShowHost].currentScores, players[socket.id].username, scoring);
+        }
 
     })
 
@@ -258,7 +275,17 @@ io.on('connection', function (socket) {
     })
 
     socket.on('startFashionShowRequest', function(hostUser) {
-        fashionShows[hostUser].started = true;
+        var thisFS = fashionShows[hostUser];
+
+        thisFS.started = true;
+        thisFS.currentRound = 1;
+        
+        thisFS.players.forEach(player => {
+            thisFS.currentScores[player] = 0;
+        });
+
+        fashionShows[hostUser] = thisFS;
+
         io.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
         io.to(`fashionShow-${hostUser}`).emit('startFashionShow',  fashionShows[hostUser]);
     })

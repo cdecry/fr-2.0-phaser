@@ -4,7 +4,11 @@ module.exports.FashionShow =  class FashionShow {
         this.hostGender = hostGender,
         this.started = false,
         this.playerCount = 5,
-        this.players = []
+        this.players = [],
+
+        this.currentRound = 0,
+        this.currentScores = {},
+        this.totalScores = {}
     }
     start() {
         this.started = true;
@@ -14,4 +18,4 @@ module.exports.FashionShow =  class FashionShow {
         this.playerCount++;
     }
     
-  }
+}
