@@ -579,16 +579,7 @@ uiScene.create = function() {
 
     function addBuddyMenuListener() {
         var buddyNames = document.getElementsByClassName("buddy-username");
-        $('.buddy-username').on('click', function(event) {
-            var $buddy = $(this);
 
-            $('#buddy-menu').css({
-                visibility: 'visible',
-                // left: '-30px',
-                left: ($buddy.offset().left - 100).toString() + 'px',
-                top: ($buddy.offset().top - 160).toString() + 'px'
-            });
-        });
         instantMessenger.addListener('pointerdown');
             instantMessenger.on('pointerdown', function (pointer) {
                 if (pointer.target.className == 'buddy-username') {
@@ -599,6 +590,13 @@ uiScene.create = function() {
 
     uiScene.createBuddyMenuListener = (buddyName, pointerX, pointerY) => {
         var chatOption, idfoneOption, deleteOption;
+        let canvasRect = document.getElementsByTagName('canvas')[0].getBoundingClientRect();
+
+        $('#buddy-menu').css({
+            visibility: 'visible',
+            left: pointerX - canvasRect.left - 210 + 'px',
+            top: pointerY - canvasRect.top - 120 + 'px',
+        });
 
         if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
             $('#buddy-menu').css('height', '68px');
