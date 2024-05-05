@@ -305,7 +305,7 @@ uiScene.create = function() {
         browPreview = scene.add.sprite(0, 0, 'brow-0');
         boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
-        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
         usernameLabelPreview.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabelPreview.x = usernameLabelCenter;
@@ -555,8 +555,6 @@ uiScene.create = function() {
     uiScene.fashionCloseInventory = (fashionCountdown) => {
         if (inventoryOpen) {
             closeInventory();
-            if (fashionCountdown)
-                fashionCountdown.destroy();
             return true;
         }
         return false;
@@ -581,6 +579,15 @@ uiScene.create = function() {
 
     function addBuddyMenuListener() {
         var buddyNames = document.getElementsByClassName("buddy-username");
+        $('.buddy-username').on('click', function(event) {
+            var $buddy = $(this);
+
+            $('#buddy-menu').css({
+                visibility: 'visible',
+                left: '-30px',
+                top: ($buddy.offset().top - 160).toString() + 'px'
+            });
+        });
         instantMessenger.addListener('pointerdown');
             instantMessenger.on('pointerdown', function (pointer) {
                 if (pointer.target.className == 'buddy-username') {
@@ -592,18 +599,12 @@ uiScene.create = function() {
     uiScene.createBuddyMenuListener = (buddyName, pointerX, pointerY) => {
         var chatOption, idfoneOption, deleteOption;
 
-        $('#buddy-menu').css({
-            visibility: 'visible',
-            left: (pointerX - 510).toString() + 'px',
-            top: (pointerY - 175).toString() + 'px',
-        });
-
         if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
             $('#buddy-menu').css('height', '68px');
             $('#chat-with-buddy-option').css('display', 'flex');
             chatOption = document.getElementById('chat-with-buddy-option');
             chatOption.onmousedown = () => {
-                console.log("open chat");
+                console.log("open chat with " + buddyName.innerHTML);
             }
         }
         else {
@@ -1999,17 +2000,18 @@ inGame.create = function() {
 
                 var playerScores = [];
 
-                var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, boardHostDetails, boardTheme, boardDifficulty, boardDescription, fashionStartBtn];
+                var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, boardHostDetails, boardTheme, boardDifficulty, boardDescription, fashionStartBtn, boardScoreListLabel, boardPosingLabel];
                 displayObjects.forEach((obj) => obj.setDepth(-200));
 
                 var exitBtn = uiScene.add.image(765, 25, 'fashionExit');
                 exitBtn.setInteractive({useHandCursor: true});
+                locationObjects.push(exitBtn);
 
                 exitBtn.on('pointerdown', () => {
                     if (uiScene.blockInteractive()) return;
 
                     socket.emit('changeRoom', "topModels");
-                    locationObjects = displayObjects.concat([exitBtn]);
+                    locationObjects = locationObjects.concat(displayObjects);
                     loadLocation('topModels');
                     uiScene.loadUIBar();
                 })
@@ -2022,6 +2024,7 @@ inGame.create = function() {
                     fashionShows[fashionShowHost] = fashionShow;
                     dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
                     dimLights.setDepth(-499);
+                    locationObjects.push(dimLights);
 
                     otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost && !darkMasks.hasOwnProperty(player.getData('username'))).forEach(function (p) {
             
@@ -2051,6 +2054,18 @@ inGame.create = function() {
                 });
 
                 socket.on('selectedFashionShowTheme', function(theme) {
+                    
+                    var changeTimer = 20;
+                    var changeInterval = setInterval(function() {
+                        changeTimer-=1;
+                        boardPosingLabel.text = "Time Left: " + changeTimer;
+                        
+                        if (changeTimer < 0) {
+                            clearInterval(changeInterval);
+                            boardPosingLabel.text = "Posing Will Start In 10 Seconds";
+                        }
+                    }, 1000);
+
                     if (fashionShowHost == myPlayerInfo.username) {
                         console.log('you selected the theme now wait');
                     }
@@ -2067,29 +2082,35 @@ inGame.create = function() {
                         fashionCountdown = uiObjectScene.add.dom(400, -32).createFromCache('fashionCountdown');
                         document.getElementById("fashionThemeLabel").innerHTML = "Theme: " + theme.toUpperCase();
                         // display so the playeri s aware of how much time they have left
-                        createCountdown(10);
+                        createCountdown(20);
                     }
                 });
 
                 function showScoring(scoring) {
+                    if (fashionCountdown)
+                        fashionCountdown.destroy();
+
                     boardLabel.setVisible(false);
                     boardHostDetails.setVisible(false);
                     boardTheme.setVisible(false);
                     boardDifficulty.setVisible(false);
                     boardDescription.setVisible(false);
-                    boardScoreListLabel.setVisible(true);
-                    boardPosingLabel.setVisible(true);
 
                     var fashionAvatarPreview = uiScene.createAvatarPreview(myPlayerInfo, inGame);
                     fashionAvatarPreview.setPosition(350, 50);
-                    fashionAvatarPreview.setDepth(0);
+                    fashionAvatarPreview.setDepth(-200);
 
                     console.log(`theme: ${scoring.theme}, originality: ${scoring.originality}`);
                     
                     setTimeout(function () {
+                        fashionAvatarPreview.destroy();
+
+                        boardScoreListLabel.setVisible(true);
+                        boardPosingLabel.setVisible(true);
 
                         for (let i = 0; i < 10; i++) {
                             var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                            item.setDepth(-200);
                             playerScores.push(item);
                         }
                     
@@ -2115,6 +2136,30 @@ inGame.create = function() {
                     else {
                         darkMasks[playerUpdated].setVisible(false);
                     }
+
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        boardLabel.setVisible(false);
+                        boardHostDetails.setVisible(false);
+                        boardScoreListLabel.setVisible(true);
+
+                        boardPosingLabel.setVisible(true);
+
+                        for (let i = 0; i < 10; i++) {
+                            var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                            item.setDepth(-200);
+                            playerScores.push(item);
+                        }
+                    
+                        Phaser.Actions.GridAlign(playerScores, {
+                            width: 2,
+                            height: 5,
+                            cellWidth: 205,
+                            cellHeight: 27,
+                            x: 226,
+                            y: 50
+                        });
+                        
+                    }
                 });
 
                 socket.on('fashionShowForceClose', function(scoring) {
@@ -2133,37 +2178,21 @@ inGame.create = function() {
                         
                     }
 
-                    
-                    // boardScoreListLabel.setVisible(true);
-                    // boardPosingLabel.setVisible(true);
-
-                    // var playerScores = [];
-                    
-                    // for (let i = 0; i < 10; i++) {
-                    //     var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
-                    //     playerScores.push(item);
-                    // }
-                
-                    // Phaser.Actions.GridAlign(playerScores, {
-                    //     width: 2,
-                    //     height: 5,
-                    //     cellWidth: 205,
-                    //     cellHeight: 27,
-                    //     x: 226,
-                    //     y: 50
-                    // });
-
-                    // var sec = 10;
-                    // var x = setInterval(function() {
-                    //     sec-=1;
-                    //     boardPosingLabel.text = `Posing Will Start In ${sec} Seconds`;
+                    var sec = 10;
+                    var x = setInterval(function() {
+                        sec-=1;
+                        boardPosingLabel.text = `Posing Will Start In ${sec} Seconds`;
                         
-                    //     if (sec == 0) {
-                    //         clearInterval(x);
-                    //         boardPosingLabel.text = "Time Left: 36";
-                    //     }
-                    // }, 1000);
+                        if (sec == 0) {
+                            clearInterval(x);
+                            boardPosingLabel.text = "Time Left: 36";
+                        }
+                    }, 1000);
                 });
+
+                socket.on('fashionShowStartPosing', function() {
+                    alert('POSING TIME');
+                })
 
                 function createCountdown(sec) {
                     var x = setInterval(function() {
@@ -2251,7 +2280,7 @@ inGame.create = function() {
         boardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
 
-        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '14px', fill: "#000000" });
+        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
         usernameLabel.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabel.x = usernameLabelCenter;
@@ -2313,7 +2342,7 @@ inGame.create = function() {
         var otherBodyAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
         var otherBoardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         var otherUsernameTag = inGame.add.sprite(0, 0, 'username-tag');
-        var otherUsernameLabel = inGame.add.text(0, 0 + 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        var otherUsernameLabel = inGame.add.text(0, 0 + 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
         var otherHead = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' + playerInfo.avatar['skinTone']);
         otherUsernameLabel.originX = 0.5;
         var tempCenter = otherUsernameLabel.getCenter().x;
