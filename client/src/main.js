@@ -584,7 +584,8 @@ uiScene.create = function() {
 
             $('#buddy-menu').css({
                 visibility: 'visible',
-                left: '-30px',
+                // left: '-30px',
+                left: ($buddy.offset().left - 100).toString() + 'px',
                 top: ($buddy.offset().top - 160).toString() + 'px'
             });
         });
@@ -636,13 +637,16 @@ uiScene.create = function() {
                     
                     var p = otherPlayers.getChildren()[i];
                     if (p.getData('username') === buddyName.innerHTML) {
-                        console.log("opening idfone");
                         isClickUI = false;
                         uiScene.openIDFone(false, p.getData('playerInfo'));
                         isClickUI = true;
                         break;
                     }
                 }
+            }
+            else {
+                let buddyID = myPlayerInfo.buddies.find(buddy => buddy.username === buddyName.innerHTML).id;
+                socket.emit('getOfflineIdfone', buddyID);
             }
         }
 
@@ -2724,6 +2728,12 @@ inGame.create = function() {
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
+    }.bind(this));
+
+    globalThis.socket.on('getOfflineIdfoneResponse', function (idfone) {
+        isClickUI = false;
+        uiScene.openIDFone(false, idfone);
+        isClickUI = true;
     }.bind(this));
 
     globalThis.socket.on('updateFashionShowList', function (fashionShow) {
