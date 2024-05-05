@@ -6,7 +6,7 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar, changeEquipped, addBuddy } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped, addBuddy, getIdfoneData } = require('./database/queries');
 const { Player } = require('./network/player');
 const { FashionShow } = require('./entity/fashionShow');
 
@@ -149,6 +149,13 @@ io.on('connection', function (socket) {
             players[usernameToId[username]].buddies = updatedBuddies;
             io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies, players[socket.id].username);
         }
+    })
+
+    socket.on('getOfflineIdfone', async (userId) => {
+        let result = await getIdfoneData(userId)
+        let avatar = await getUserAvatar(userId);
+        let player = new Player(-1, userId, result.username, '', avatar, false, -1, -1, null, result.level, result.isMember, result.idfone, null, null, null);
+        io.to(socket.id).emit('getOfflineIdfoneResponse', player);
     })
 
     function handleRoomChange(room) {

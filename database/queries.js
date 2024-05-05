@@ -46,6 +46,14 @@ exports.getUser = async function (id) {
     });
 }
 
+exports.getIdfoneData = async function (userId) {
+    return new Promise((resolve, reject) => {
+        User.findOne({ 'id': userId }, 'username level isMember idfone', function (err, user) {
+            resolve(user);
+        });
+    });
+}
+
 exports.loginRequest = async function (username, password) {
     return new Promise((resolve, reject) => {
         User.findOne({ 'username': username }, 'id username password inventory level isMember idfone stars ecoins buddies', function (err, user) {
