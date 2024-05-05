@@ -1314,7 +1314,15 @@ uiScene.create = function() {
                 });
 
                 idfoneButtonsHTML.visible = true;
-                idfoneButtonsHTML.getChildByID('addButton').onmousedown = () => {
+
+                let addButton = idfoneButtonsHTML.getChildByID('addButton');
+
+                if (myPlayerInfo.buddies.some(buddy => buddy.username === playerInfo.username)) {
+                    addButton.disabled = true;
+                    addButton.style.cursor = 'default';
+                }
+
+                addButton.onclick = () => {
                     socket.emit('buddyRequest', playerInfo.username);
                 }
             }
