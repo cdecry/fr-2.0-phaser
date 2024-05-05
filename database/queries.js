@@ -46,6 +46,14 @@ exports.getUser = async function (id) {
     });
 }
 
+exports.getIdFromUsername = async function (username) {
+    return new Promise((resolve, reject) => {
+        User.findOne({ 'username': username }, 'id', function (err, user) {
+            resolve(user.id);
+        });
+    });
+}
+
 exports.getIdfoneData = async function (userId) {
     return new Promise((resolve, reject) => {
         User.findOne({ 'id': userId }, 'username level isMember idfone', function (err, user) {
@@ -118,6 +126,19 @@ exports.addBuddy = async function (userID, userIDToAdd, usernameToAdd) {
       throw error;
     }
   };
+
+exports.deleteBuddy = async function (userID, buddyIDToDelete) {
+    try {
+        const updatedUser = await User.findOneAndUpdate(
+            { id: userID },
+            { $pull: { buddies: { id: buddyIDToDelete } } },
+            { new: true }
+        ).select('buddies');
+        return updatedUser.buddies;
+    } catch (error) {
+        throw error;
+    }
+};
 
 // exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
 //     return new Promise((resolve, reject) => {

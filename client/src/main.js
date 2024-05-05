@@ -645,7 +645,8 @@ uiScene.create = function() {
         }
 
         deleteOption.onmousedown = () => {
-            console.log("dlt buddy");
+            socket.emit('deleteBuddy', buddyName.innerHTML);
+            buddyMenu.style.visibility = 'hidden';
         }
     }
 
@@ -2720,6 +2721,12 @@ inGame.create = function() {
             start: true
         });
 
+        myPlayerInfo.buddies = buddies;
+        if (document.getElementById("buddy-window") != null)
+            uiScene.loadBuddyList();
+    }.bind(this));
+
+    globalThis.socket.on('deleteBuddyResponse', function (buddies) {
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();

@@ -6,7 +6,9 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar, changeEquipped, addBuddy, getIdfoneData } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped, addBuddy, deleteBuddy, 
+        getIdfoneData, getIdFromUsername
+        } = require('./database/queries');
 const { Player } = require('./network/player');
 const { FashionShow } = require('./entity/fashionShow');
 
@@ -148,6 +150,19 @@ io.on('connection', function (socket) {
         if (usernameToId.hasOwnProperty(username)) {
             players[usernameToId[username]].buddies = updatedBuddies;
             io.to(usernameToId[username]).emit('acceptBuddyRequestResponse', players[usernameToId[username]].buddies, players[socket.id].username);
+        }
+    })
+
+    socket.on('deleteBuddy', async function(username) {
+        let buddyID = await getIdFromUsername(username);
+
+        players[socket.id].buddies =  await deleteBuddy(players[socket.id].pid, buddyID);
+        io.to(socket.id).emit('deleteBuddyResponse', players[socket.id].buddies);
+
+        let updatedBuddies = await deleteBuddy(buddyID, players[socket.id].pid);
+        if (usernameToId.hasOwnProperty(username)) {
+            players[usernameToId[username]].buddies = updatedBuddies;
+            io.to(usernameToId[username]).emit('deleteBuddyResponse', players[usernameToId[username]].buddies);
         }
     })
 
