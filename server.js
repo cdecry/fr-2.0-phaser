@@ -152,7 +152,7 @@ io.on('connection', function (socket) {
     })
 
     socket.on('getOfflineIdfone', async (userId) => {
-        let result = await getIdfoneData(userId)
+        let result = await getIdfoneData(userId);
         let avatar = await getUserAvatar(userId);
         let player = new Player(-1, userId, result.username, '', avatar, false, -1, -1, null, result.level, result.isMember, result.idfone, null, null, null);
         io.to(socket.id).emit('getOfflineIdfoneResponse', player);
