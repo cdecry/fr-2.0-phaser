@@ -631,13 +631,9 @@ uiScene.create = function() {
             // request info for idfone
             if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
                 for (let i = 0; i < otherPlayers.getLength(); i++) {
-
-                    
                     var p = otherPlayers.getChildren()[i];
                     if (p.getData('username') === buddyName.innerHTML) {
-                        isClickUI = false;
                         uiScene.openIDFone(false, p.getData('playerInfo'));
-                        isClickUI = true;
                         break;
                     }
                 }
@@ -1275,9 +1271,6 @@ uiScene.create = function() {
     }
 
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
-        if (uiScene.blockInteractive())
-            return;
-
         var tempDomBlocker;
         // var tempDomBlocker = uiScene.add.dom(0,0).createFromCache('transparentHTML');
         // tempDomBlocker.getChildByID('screen').style.backgroundColor = 'rgba(0, 0, 0, 0.1);';
@@ -2319,7 +2312,9 @@ inGame.create = function() {
 
             children[i].on('pointerdown', () => {
                 inGame.input.stopPropagation();
-                uiScene.openIDFone(true, playerInfo);
+                if (!uiScene.blockInteractive()) {
+                    uiScene.openIDFone(true, playerInfo);
+                }
             });
         }
     }
@@ -2396,7 +2391,9 @@ inGame.create = function() {
             });
 
             children[i].on('pointerdown', () => {
-                uiScene.openIDFone(false, playerInfo);
+                if (!uiScene.blockInteractive()) {
+                    uiScene.openIDFone(false, playerInfo);
+                }
             });
         }
 
@@ -2729,9 +2726,7 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('getOfflineIdfoneResponse', function (idfone) {
-        isClickUI = false;
         uiScene.openIDFone(false, idfone);
-        isClickUI = true;
     }.bind(this));
 
     globalThis.socket.on('updateFashionShowList', function (fashionShow) {
