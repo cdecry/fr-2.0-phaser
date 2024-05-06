@@ -416,20 +416,26 @@ uiScene.create = function() {
 
     uiScene.addChatTabListener = () => {
         for (var chatTabName in chatTabs) {
-            var tab = instantMessenger.getChildByID(chatTabName);
-            tab.onmousedown = createTabClickListener(tab);
+            // convert name to id
+            let chatTabId = chatTabName.replace(', ', '-');
+            console.log(chatTabId);
+            var tab = instantMessenger.getChildByID(chatTabId);
+            if (tab)
+                tab.onmousedown = createTabClickListener(tab);
         }
     }
     
     function createTabClickListener(tab) {
         return function() {
-            for (var otherTabName in chatTabs) {
-                var otherTab = instantMessenger.getChildByID(otherTabName);
+            for (let otherTabName in chatTabs) {
+                let otherTabId = otherTabName.replace(', ', '-');
+                let otherTab = instantMessenger.getChildByID(otherTabId);
                 otherTab.style.background = 'white';
             }
             tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
             openChatTab = tab.id;
-            chatNameText.innerHTML = openChatTab;
+            let openChatTabName = openChatTab.replace('-', ', ');
+            chatNameText.innerHTML = openChatTabName;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
         };
@@ -963,6 +969,38 @@ uiScene.create = function() {
                     });
 
                     console.log(checkedLabels);
+                    // load chat tab
+                    var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+                    
+                    let tabId = checkedLabels.join('-');
+                    let tabName = checkedLabels.join(', ');
+                    console.log('id: ');
+                    console.log(tabId);
+                    console.log('name :');
+                    console.log(tabName);
+
+                    let html = `
+                        <div class="chat-tab" id="${tabId}">
+                            <div id="tabName">${tabName}</div>
+                        </div>
+                                `
+                    tabsFlexbox.innerHTML += html;
+
+                    tab = instantMessenger.getChildByID(tabId);
+                    for (let otherTabName in chatTabs) {
+                        let otherTabId = otherTabName.replace(', ', '-');
+                        otherTab = instantMessenger.getChildByID(otherTabId);
+                        otherTab.style.background = 'white';
+                    };
+                    openChatTab = tabId;
+                    tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                    
+                    chatTabs[tabId] = "";
+                    chatHistory.innerHTML = "";
+                    chatNameText.innerHTML = tabName;
+
+                    uiScene.addChatTabListener();
+
                     // socket.emit('acceptBuddyRequest', Number(id), username);
                     closePopup();
                 });
@@ -976,25 +1014,6 @@ uiScene.create = function() {
                 buddySelectPopup.getChildByID('buddy-close-button').onclick = () => {
                     closePopup();
                 }
-                // var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
-                // var html = `<div class="chat-tab" id="jake">
-                //                 <div id="tabName">jake</div>
-                //             </div> `
-                // tabsFlexbox.innerHTML += html;
-
-                // tab = instantMessenger.getChildByID('jake');
-                // for (var otherTabName in chatTabs) {
-                //     otherTab = instantMessenger.getChildByID(otherTabName);
-                //     otherTab.style.background = 'white';
-                // };
-                // openChatTab = 'jake';
-                // tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                
-                // chatTabs['jake'] = "";
-                // chatHistory.innerHTML = "";
-                // chatNameText.innerHTML = 'jake';
-
-                // uiScene.addChatTabListener();
 
                 instantMessenger.getChildByID('new-chat-button').onclick = () => {
                     // Test${Object.keys(chatTabs).length.toString()}
