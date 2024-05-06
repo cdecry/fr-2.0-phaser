@@ -153,6 +153,7 @@ var iHeadAcc = [];
 var iBodyAcc = [];
 
 var instantMessenger;
+var buddySelectPopup = null;
 var boardPlayerCount;
 var boardStartDetails;
 var fashionStartBtn;
@@ -470,15 +471,17 @@ uiScene.create = function() {
     }
 
     uiScene.loadBuddyList = () => {
-        var buddyRows = [];
+        let buddyRows = [];
+        let selectBuddyRows = [];
 
         myPlayerInfo.buddies.forEach(buddyObj => {
             
             var buddyStatus = 'offline';
-            if (onlineUsers.hasOwnProperty(buddyObj.username))
+            if (onlineUsers.hasOwnProperty(buddyObj.username)) {
                 buddyStatus = 'online';
+            }
 
-            const row = `
+            let row = `
             <tr class="buddy-table-row">
                 <td class="buddy-table-data">
                 <img src="./src/assets/scene/chat/${buddyStatus}-icon.png"/>
@@ -487,12 +490,36 @@ uiScene.create = function() {
                 </td>
             </tr>
             `;
+            
             buddyRows.push(row);
+
+            if (buddyStatus == 'online') {
+                console.log('add online buddy');
+                let row = `
+                    <tr class="select-buddy-table-row">
+                        <td class="select-buddy-table-data">
+                            <label class="checkbox-container">${buddyObj.username}
+                                <input type="checkbox">
+                                <span class="checkmark"></span>
+                            </label>
+                        </td>
+                    </tr>
+                `;
+                selectBuddyRows.push(row);
+            }
         });
 
-        var buddyRowsHtml = buddyRows.join('');
-        var table = document.getElementById("buddy-table");
+        let buddyRowsHtml = buddyRows.join('');
+        let table = document.getElementById("buddy-table");
         table.innerHTML = buddyRowsHtml;
+
+        let selectTable = document.getElementById("select-buddy-table");
+        if (buddySelectPopup) {
+            console.log('select popup open');
+            let selectBuddyRowsHtml = selectBuddyRows.join('');
+            selectTable.innerHTML = selectBuddyRowsHtml;
+        }
+        
         // Sort buddies
         sortTable();
         addBuddyMenuListener();
@@ -921,6 +948,13 @@ uiScene.create = function() {
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
+            buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
+            buddySelectPopup.setDepth(3000);
+            let selectWindow = buddySelectPopup.getChildByID('select-buddy-list');
+            let selectBlackScreen = buddySelectPopup.getChildByID('select-black-screen');            
+            selectWindow.style.visibility = 'hidden';
+            selectBlackScreen.style.visibility = 'hidden';
+
             // Load buddy list and requests
             uiScene.loadBuddyList();
             instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
@@ -970,8 +1004,9 @@ uiScene.create = function() {
                 // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
                 
                 // list
-                buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
-                buddySelectPopup.setDepth(3000);
+                selectWindow.style.visibility = 'visible';
+                selectBlackScreen.style.visibility = 'visible';
+
                 isClickUI = true;
                 disableInput = true;
 
@@ -980,7 +1015,8 @@ uiScene.create = function() {
                         isClickUI = false;
                         disableInput = false;
                     }, 50);
-                    buddySelectPopup.destroy();
+                    selectWindow.style.visibility = 'hidden';
+                    selectBlackScreen.style.visibility = 'hidden';
                 }
 
                 $('#buddy-invite-button').on('click', function() {
