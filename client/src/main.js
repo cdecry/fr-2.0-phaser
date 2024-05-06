@@ -514,12 +514,13 @@ uiScene.create = function() {
         table.innerHTML = buddyRowsHtml;
 
         let selectTable = document.getElementById("select-buddy-table");
-        if (buddySelectPopup) {
+        if (selectTable) {
             console.log('select popup open');
             let selectBuddyRowsHtml = selectBuddyRows.join('');
             selectTable.innerHTML = selectBuddyRowsHtml;
+            console.log(selectBuddyRows);
         }
-        
+
         // Sort buddies
         sortTable();
         addBuddyMenuListener();
@@ -930,11 +931,13 @@ uiScene.create = function() {
                 buddyWindow = instantMessenger.getChildByID('buddy-window');
                 buddyHeader = instantMessenger.getChildByID('buddy-header');
                 
-                
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
 
                 enableIMDrag(instantMessenger, imHeader, imWindow);
                 enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
+
+                buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
+                buddySelectPopup.setDepth(3000);
             }
 
             // Set IM visible (open)
@@ -947,13 +950,6 @@ uiScene.create = function() {
             chatNameText.innerHTML = openChatTab;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
-            buddySelectPopup.setDepth(3000);
-            let selectWindow = buddySelectPopup.getChildByID('select-buddy-list');
-            let selectBlackScreen = buddySelectPopup.getChildByID('select-black-screen');            
-            selectWindow.style.visibility = 'hidden';
-            selectBlackScreen.style.visibility = 'hidden';
 
             // Load buddy list and requests
             uiScene.loadBuddyList();
@@ -1004,6 +1000,8 @@ uiScene.create = function() {
                 // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
                 
                 // list
+                let selectWindow = buddySelectPopup.getChildByID('select-buddy-list');
+                let selectBlackScreen = buddySelectPopup.getChildByID('select-black-screen');
                 selectWindow.style.visibility = 'visible';
                 selectBlackScreen.style.visibility = 'visible';
 
@@ -2807,8 +2805,10 @@ inGame.create = function() {
         });
 
         myPlayerInfo.buddies = buddies;
-        if (document.getElementById("buddy-window") != null)
+        if (document.getElementById("buddy-window")) {
             uiScene.loadBuddyList();
+            console.log('refresh buddy list');
+        }
     }.bind(this));
 
     globalThis.socket.on('rejectBuddyRequestResponse', function (rejectedBy) {
