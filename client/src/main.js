@@ -965,28 +965,31 @@ uiScene.create = function() {
                 }, 50);
             }
 
-            instantMessenger.getChildByID('new-chat-button').onmousedown = () => {
+            instantMessenger.getChildByID('new-chat-button').onclick = () => {
                 // Test${Object.keys(chatTabs).length.toString()}
                 // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
-                var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
-                var html = `<div class="chat-tab" id="jake">
-                                <div id="tabName">jake</div>
-                            </div> `
-                tabsFlexbox.innerHTML += html;
-
-                tab = instantMessenger.getChildByID('jake');
-                for (var otherTabName in chatTabs) {
-                    otherTab = instantMessenger.getChildByID(otherTabName);
-                    otherTab.style.background = 'white';
-                };
-                openChatTab = 'jake';
-                tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
                 
-                chatTabs['jake'] = "";
-                chatHistory.innerHTML = "";
-                chatNameText.innerHTML = 'jake';
+                // list
+                
+                // var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+                // var html = `<div class="chat-tab" id="jake">
+                //                 <div id="tabName">jake</div>
+                //             </div> `
+                // tabsFlexbox.innerHTML += html;
 
-                uiScene.addChatTabListener();
+                // tab = instantMessenger.getChildByID('jake');
+                // for (var otherTabName in chatTabs) {
+                //     otherTab = instantMessenger.getChildByID(otherTabName);
+                //     otherTab.style.background = 'white';
+                // };
+                // openChatTab = 'jake';
+                // tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                
+                // chatTabs['jake'] = "";
+                // chatHistory.innerHTML = "";
+                // chatNameText.innerHTML = 'jake';
+
+                // uiScene.addChatTabListener();
             }
             
             // Add listener: click to switch to chat tab
@@ -1318,7 +1321,7 @@ uiScene.create = function() {
                 let addButton = idfoneButtonsHTML.getChildByID('addButton');
                 addButton.disabled = false;
                 addButton.style.cursor = 'pointer';
-                
+
                 if (myPlayerInfo.buddies.some(buddy => buddy.username === playerInfo.username) ||
                     outgoingBuddyRequests.includes(playerInfo.username)) {
                     addButton.disabled = true;
