@@ -661,13 +661,7 @@ uiScene.create = function() {
             //if they not online, get the id from our buddies map
             // request info for idfone
             if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
-                for (let i = 0; i < otherPlayers.getLength(); i++) {
-                    var p = otherPlayers.getChildren()[i];
-                    if (p.getData('username') === buddyName.innerHTML) {
-                        uiScene.openIDFone(false, p.getData('playerInfo'));
-                        break;
-                    }
-                }
+                uiScene.openIDFone(false, onlineUsers[buddyName.innerHTML])
             }
             else {
                 let buddyID = myPlayerInfo.buddies.find(buddy => buddy.username === buddyName.innerHTML).id;
@@ -2534,7 +2528,7 @@ inGame.create = function() {
     });
 
     globalThis.socket.on('playerOnline', function (p) {
-        onlineUsers[p.username] = p.pid;
+        onlineUsers[p.username] = p;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
     });
