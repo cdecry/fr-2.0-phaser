@@ -972,7 +972,32 @@ uiScene.create = function() {
                 // list
                 buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
                 buddySelectPopup.setDepth(3000);
+                isClickUI = true;
+                disableInput = true;
 
+                let closePopup = () => {
+                    setTimeout(function () {
+                        isClickUI = false;
+                        disableInput = false;
+                    }, 50);
+                    buddySelectPopup.destroy();
+                }
+
+                $('#buddy-invite-button').on('click', function() {
+                    // socket.emit('acceptBuddyRequest', Number(id), username);
+                    closePopup();
+                    console.log('invited');
+                });
+    
+                $('#buddy-cancel-button').on('click', function() {
+                    // socket.emit('rejectBuddyRequest', username);
+                    closePopup();
+                    console.log('cancel');
+                });
+
+                buddySelectPopup.getChildByID('buddy-close-button').onclick = () => {
+                    closePopup();
+                }
                 // var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
                 // var html = `<div class="chat-tab" id="jake">
                 //                 <div id="tabName">jake</div>
