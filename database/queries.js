@@ -47,11 +47,15 @@ exports.getUser = async function (id) {
 }
 
 exports.getIdFromUsername = async function (username) {
-    return new Promise((resolve, reject) => {
-        User.findOne({ 'username': username }, 'id', function (err, user) {
-            resolve(user.id);
+    try {
+        return new Promise((resolve, reject) => {
+            User.findOne({ 'username': username }, 'id', function (err, user) {
+                resolve(user.id);
+            });
         });
-    });
+    } catch (error) {
+        throw error
+    }
 }
 
 exports.getIdfoneData = async function (userId) {

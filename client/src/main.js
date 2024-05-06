@@ -494,7 +494,6 @@ uiScene.create = function() {
             buddyRows.push(row);
 
             if (buddyStatus == 'online') {
-                console.log('add online buddy');
                 let row = `
                     <tr class="select-buddy-table-row">
                         <td class="select-buddy-table-data">
@@ -515,10 +514,8 @@ uiScene.create = function() {
 
         let selectTable = document.getElementById("select-buddy-table");
         if (selectTable) {
-            console.log('select popup open');
             let selectBuddyRowsHtml = selectBuddyRows.join('');
             selectTable.innerHTML = selectBuddyRowsHtml;
-            console.log(selectBuddyRows);
         }
 
         // Sort buddies
@@ -938,6 +935,75 @@ uiScene.create = function() {
 
                 buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
                 buddySelectPopup.setDepth(3000);
+                let selectWindow = buddySelectPopup.getChildByID('select-buddy-list');
+                let selectBlackScreen = buddySelectPopup.getChildByID('select-black-screen');
+
+                let closePopup = () => {
+                    setTimeout(function () {
+                        isClickUI = false;
+                        disableInput = false;
+                    }, 50);
+                    let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    selectWindow.style.visibility = 'hidden';
+                    selectBlackScreen.style.visibility = 'hidden';
+                }
+
+                $('#buddy-invite-button').on('click', function() {
+                    let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                    let checkedLabels = [];
+
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            let label = checkbox.parentElement.textContent.trim();
+                            checkedLabels.push(label);
+                        }
+                    });
+
+                    console.log(checkedLabels);
+                    // socket.emit('acceptBuddyRequest', Number(id), username);
+                    closePopup();
+                });
+    
+                $('#buddy-cancel-button').on('click', function() {
+                    // socket.emit('rejectBuddyRequest', username);
+                    closePopup();
+                    console.log('cancel');
+                });
+
+                buddySelectPopup.getChildByID('buddy-close-button').onclick = () => {
+                    closePopup();
+                }
+                // var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+                // var html = `<div class="chat-tab" id="jake">
+                //                 <div id="tabName">jake</div>
+                //             </div> `
+                // tabsFlexbox.innerHTML += html;
+
+                // tab = instantMessenger.getChildByID('jake');
+                // for (var otherTabName in chatTabs) {
+                //     otherTab = instantMessenger.getChildByID(otherTabName);
+                //     otherTab.style.background = 'white';
+                // };
+                // openChatTab = 'jake';
+                // tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+                
+                // chatTabs['jake'] = "";
+                // chatHistory.innerHTML = "";
+                // chatNameText.innerHTML = 'jake';
+
+                // uiScene.addChatTabListener();
+
+                instantMessenger.getChildByID('new-chat-button').onclick = () => {
+                    // Test${Object.keys(chatTabs).length.toString()}
+                    // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
+                    selectWindow.style.visibility = 'visible';
+                    selectBlackScreen.style.visibility = 'visible';
+                    isClickUI = true;
+                    disableInput = true;
+                }
             }
 
             // Set IM visible (open)
@@ -993,64 +1059,6 @@ uiScene.create = function() {
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
-            }
-
-            instantMessenger.getChildByID('new-chat-button').onclick = () => {
-                // Test${Object.keys(chatTabs).length.toString()}
-                // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
-                
-                // list
-                let selectWindow = buddySelectPopup.getChildByID('select-buddy-list');
-                let selectBlackScreen = buddySelectPopup.getChildByID('select-black-screen');
-                selectWindow.style.visibility = 'visible';
-                selectBlackScreen.style.visibility = 'visible';
-
-                isClickUI = true;
-                disableInput = true;
-
-                let closePopup = () => {
-                    setTimeout(function () {
-                        isClickUI = false;
-                        disableInput = false;
-                    }, 50);
-                    selectWindow.style.visibility = 'hidden';
-                    selectBlackScreen.style.visibility = 'hidden';
-                }
-
-                $('#buddy-invite-button').on('click', function() {
-                    // socket.emit('acceptBuddyRequest', Number(id), username);
-                    closePopup();
-                    console.log('invited');
-                });
-    
-                $('#buddy-cancel-button').on('click', function() {
-                    // socket.emit('rejectBuddyRequest', username);
-                    closePopup();
-                    console.log('cancel');
-                });
-
-                buddySelectPopup.getChildByID('buddy-close-button').onclick = () => {
-                    closePopup();
-                }
-                // var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
-                // var html = `<div class="chat-tab" id="jake">
-                //                 <div id="tabName">jake</div>
-                //             </div> `
-                // tabsFlexbox.innerHTML += html;
-
-                // tab = instantMessenger.getChildByID('jake');
-                // for (var otherTabName in chatTabs) {
-                //     otherTab = instantMessenger.getChildByID(otherTabName);
-                //     otherTab.style.background = 'white';
-                // };
-                // openChatTab = 'jake';
-                // tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                
-                // chatTabs['jake'] = "";
-                // chatHistory.innerHTML = "";
-                // chatNameText.innerHTML = 'jake';
-
-                // uiScene.addChatTabListener();
             }
             
             // Add listener: click to switch to chat tab
