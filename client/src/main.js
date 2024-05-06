@@ -970,7 +970,9 @@ uiScene.create = function() {
                 // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
                 
                 // list
-                
+                buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
+                buddySelectPopup.setDepth(3000);
+
                 // var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
                 // var html = `<div class="chat-tab" id="jake">
                 //                 <div id="tabName">jake</div>
@@ -1606,6 +1608,7 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     thisScene.load.html('transparentHTML', 'html/transparent.html');
     thisScene.load.html('buddyRequestPopup', 'html/buddyRequestPopup.html');
+    thisScene.load.html('buddySelectPopup', 'html/buddySelectPopup.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
     thisScene.load.image('uiBarFashionDisabled', 'scene/chat/ui-bar-fashion-disabled.png');
     thisScene.load.image('uiBarFashion', 'scene/chat/ui-bar-fashion.png');

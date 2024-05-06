@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #black-screen {
+                position: absolute;
+                height: 520px;
+                width: 800px;
+                background-color: rgba(0,0,0,.4);
+                top: -260px;
+                left: -400px;
+                z-index: 0;
+            }
+
+            #select-buddy-list {
+                /* visibility: hidden; */
+                border: 1px solid white;
+                position: fixed;
+                left: -80px;
+                top: -200px;
+                width: 180px;
+                height: 202px;
+                border-radius: 10px;
+                background: linear-gradient(to bottom, #597898 0px, #597898 12.5px, #15406d 12.5px, #15406d 100%);
+                overflow: hidden;
+                z-index: 10;
+            }
+
+            #select-buddy-table {
+                font-size: 13px;
+                font-family: Arial;
+            }
+
+            #buddy-header {
+                position: absolute;
+                width: 100%;
+                height: 34px;
+                background-color: transparent;
+            }
+
+            #buddy-title {
+                position: absolute;
+                left: 20px;
+                top: 6.5px;
+            }
+
+            #buddy-close-button {
+                position: absolute;
+                top: 4px;
+                right: 5px;
+                border-radius: 100%;
+            }
+
+            #buddy-close-button:hover {
+                cursor: pointer;
+            }
+
+            #select-buddy-container{
+                position: absolute;
+                top: 34px;
+                left: 4px;
+                width: calc(100% - 8px);
+                height: 135px;
+                border-radius: 5px;
+                background-color: white;
+            }
+
+            #select-buddies-container {
+                height: calc(100% - 8px);
+                top: 5px;
+            }
+
+            .checkbox-container {
+                display: block;
+                position: relative;
+                padding-left: 20px;
+                margin-bottom: 2px;
+                cursor: pointer;
+                font-size: 12px;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+            .checkbox-container input {
+                position: absolute;
+                opacity: 0;
+                cursor: pointer;
+                height: 0;
+                width: 0;
+            }
+
+            .checkmark {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 14px;
+                width: 14px;
+                border-radius: 2px;
+                background-color: #00b6fc;
+                overflow: hidden;
+            }
+
+            .checkmark:after {
+                content: "";
+                position: absolute;
+                display: none;
+            }
+
+            .checkbox-container input:checked ~ .checkmark:after {
+                display: block;
+            }
+
+            .checkbox-container .checkmark:after {
+            left: 3px;
+            top: 0px;
+            width: 5px;
+            height: 9px;
+            border: solid #014e7e;
+            border-width: 0 3px 3px 0;
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+            }
+
+            .select-buddy-table-data {
+                vertical-align: top;
+                padding-top: 1px;
+                padding-left: 2px;
+                text-align: left;
+            }
+
+            .select-buddy-table-data div {
+                display: inline-block;
+                vertical-align: middle;
+            }
+
+            #select-button-container {
+                position: absolute;
+                bottom: 6px;
+                left: 2px;
+            }
+
+            .buddy-select-buttons {
+                color: white;
+                font-family: imLabelFont;
+                font-size: 11px;
+                width: 68px;
+                height: 20px;
+                border-radius: 5px;
+                margin-left: 12px;
+                border: 1px solid #06205a;
+                text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000, 0 0 1px #000, 0 0 1px #000, 0 0 1px #000, 0 0 1px #000;
+                box-shadow:
+                    inset 0 0 2px 0 rgba(255,255,255,.4),
+                    inset 0 0 3px 0 rgba(0,0,0,.2),
+                    inset 0 0 3px 5px rgba(0,0,0,.05),
+                    2px 2px 4px 0 rgba(0,0,0,.20);
+                background: linear-gradient(to bottom, #29b8f8 20%, #15a2f4 20%);
+            }
+
+            .buddy-select-buttons:active {
+                transform: translateX(1px) translateY(1px);
+            }
+        </style>
+    </head>
+    <body>
+        <!-- <div id="panel">
+            <div id="panel-header"></div>
+            <div id="accept-buddy-label" class="selectDisable">Accept Buddy?</div>
+            <div id="request-user-label" class="selectDisable">lotusrainxoxo</div>
+            <div id="button-container">
+                <button id="br-yes-button">Yes</button>
+                <button id="br-no-button">No</button>
+            </div>
+        </div> -->
+        <div id="select-buddy-list">
+            <div id="buddy-header"></div>
+                <div id="myBuddiesLabel" class="selectDisable">Select Buddy</div>
+                <div id="buddy-close-button">
+                <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
+            </div>
+
+            <div id="select-buddy-container">
+                <div id="select-buddies-container" class="buddies-container">
+                    <table id="select-buddy-table" class="selectDisable">
+                        <tr class="select-buddy-table-row">
+                            <td class="select-buddy-table-data">
+                                <label class="checkbox-container">admin
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr class="select-buddy-table-row">
+                            <td class="select-buddy-table-data">
+                                <label class="checkbox-container">admin2
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="select-button-container">
+                <button id="buddy-invite-button" class="buddy-select-buttons">Invite</button>
+                <button id="buddy-cancel-button" class="buddy-select-buttons">Cancel</button>
+            </div>
+        </div>
+
+        <div id="black-screen"></div>
+    </body>
+</html>
