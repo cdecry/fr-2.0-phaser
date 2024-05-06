@@ -417,7 +417,7 @@ uiScene.create = function() {
     uiScene.addChatTabListener = () => {
         for (var chatTabName in chatTabs) {
             // convert name to id
-            let chatTabId = chatTabName.replace(', ', '-');
+            let chatTabId = chatTabName.replace(/, /g, '-');;
             console.log(chatTabId);
             var tab = instantMessenger.getChildByID(chatTabId);
             if (tab)
@@ -428,14 +428,13 @@ uiScene.create = function() {
     function createTabClickListener(tab) {
         return function() {
             for (let otherTabName in chatTabs) {
-                let otherTabId = otherTabName.replace(', ', '-');
+                let otherTabId = otherTabName.replace(/, /g, '-');;
                 let otherTab = instantMessenger.getChildByID(otherTabId);
                 otherTab.style.background = 'white';
             }
             tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
             openChatTab = tab.id;
-            let openChatTabName = openChatTab.replace('-', ', ');
-            chatNameText.innerHTML = openChatTabName;
+            chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
         };
@@ -525,7 +524,8 @@ uiScene.create = function() {
         }
 
         // Sort buddies
-        sortTable();
+        sortTable('buddy-table');
+        sortTable('select-buddy-table');
         addBuddyMenuListener();
     }
 
@@ -681,8 +681,8 @@ uiScene.create = function() {
         }
     }
 
-    function sortTable() {
-        var table = document.getElementById("buddy-table");
+    function sortTable(tableId) {
+        var table = document.getElementById(tableId);
         var rows = Array.from(table.rows);
 
         var rowsOnline = [];
@@ -988,7 +988,7 @@ uiScene.create = function() {
 
                     tab = instantMessenger.getChildByID(tabId);
                     for (let otherTabName in chatTabs) {
-                        let otherTabId = otherTabName.replace(', ', '-');
+                        let otherTabId = otherTabName.replace(/, /g, '-');;
                         otherTab = instantMessenger.getChildByID(otherTabId);
                         otherTab.style.background = 'white';
                     };
@@ -1032,7 +1032,7 @@ uiScene.create = function() {
             // Load chat name & history for open tab, auto-scroll to bottom
             chatNameText = instantMessenger.getChildByID('chatName');
             chatHistory = document.getElementById('chat-history');
-            chatNameText.innerHTML = openChatTab;
+            chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
