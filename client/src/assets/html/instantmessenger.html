@@ -63,7 +63,6 @@
                 position: absolute;
                 top: 34px;
                 left: 4px;
-                /* border: 1px solid green; */
                 width: calc(100% - 8px);
                 height: calc(100% - 37px);
                 border-radius: 5px;
@@ -135,33 +134,68 @@
                 bottom: 3px;
             }
 
-            #chat-content-container {
+
+            #chat-sections {
                 position: absolute;
-                height: calc(100% - 121px);
+                display: flex;
+                height: calc(100% - 56px);
                 width: calc(100% - 2px);
                 top: 56px;
-                left: 2px;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+
+            #chat-section {
+                /* position: absolute;
+                width: 50%;
+                height: 100%;
+                border: 1px solid green; */
+                flex: 1;
+
+                /* chat settings */
+                max-width: calc(100% - 2px);
+
+                /* avatar settings: */
+                /* max-width: calc(100% - 126px); */
+            }
+
+            #chat-avatar-section {
+                /* position: absolute;
+
+                /* chat settings */
+                flex: 0;
+                margin-right: 0px;
+                
+                /* avatar settings: */
+                /* margin-right: 4px; */
+                /* flex: 0 0 121px; */
+                height: 150px;
+                background-image: url(/src/assets/scene/chat/im-avatar-section.png);
+            }
+
+            #chat-content-container {
+                height: calc(100% - 65px);
+                width: calc(100% - 4px);
+                top: 0px;
             }
             
             #chat-input-top {
-                margin: 3px;
-                bottom: 40px;
-                position: absolute;
-                width: calc(100% - 6px);
+                margin-bottom: 1px;
+                bottom: 42px;
+                width: calc(100% - 4px);
                 height: 21px;
-                border-radius: 5px;
+                border-radius: 4px;
                 border-bottom-left-radius: 0%;
                 border-bottom-right-radius: 0%;
                 background-color: #42d0f0;
             }
 
             #chat-input-container {
-                margin: 3px;
-                bottom: 0px;
-                position: absolute;
-                width: calc(100% - 6px);
+                position: relative;
+                bottom: 4px;
+                width: calc(100% - 4px);
                 height: 39px;
-                border-radius: 5px;
+                border-radius: 4px;
                 border-top-left-radius: 0%;
                 border-top-right-radius: 0%;
                 background-color: #a0e0e0;
@@ -169,11 +203,9 @@
             }
 
             #chat-input {
-                position: absolute;
                 font-size: 12px;
-                padding:3px;
                 vertical-align: top;
-                width: 100%;
+                width: calc(100% - 6px);
                 height: 100%;
                 left: 0px;
                 top: 0px;
@@ -235,10 +267,10 @@
 
             #chat-history {
                 margin-top: 2px;
-                margin-bottom: 2px;
+                margin-bottom: 1px;
                 text-align: left;
                 width: calc(100% - 7px);
-                height: calc(100% - 4px);
+                height: calc(100% - 3px);
                 overflow-y: auto;
                 overflow-wrap: break-word;
             }
@@ -536,12 +568,17 @@
                     <div id="chatName" class="selectDisable">Current Room</div>
                 </div>
 
-                <div id="chat-content-container">
-                    <div id="chat-history"></div>
-                </div>
-                <div id="chat-input-top"></div>
-                <div id="chat-input-container">
-                    <textarea id="chat-input" spellcheck="false"></textarea>
+                <div id="chat-sections">
+                    <div id="chat-section">
+                        <div id="chat-content-container">
+                            <div id="chat-history"></div>
+                        </div>
+                        <div id="chat-input-top"></div>
+                        <div id="chat-input-container">
+                            <textarea id="chat-input" spellcheck="false"></textarea>
+                        </div>
+                    </div>
+                    <div id="chat-avatar-section"></div>
                 </div>
             </div>
         </div>
