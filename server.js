@@ -86,7 +86,15 @@ io.on('connection', function (socket) {
             // load game
             socket.join('downtown');
             // load local player
-            io.to(socket.id).emit('login success', result.inventory, players);
+            let usernameToPlayerMap = {};
+
+            for (let sid in players) {
+                if (players.hasOwnProperty(sid)) {
+                    let player = players[sid];
+                    usernameToPlayerMap[player.username] = player;
+                }
+            }
+            io.to(socket.id).emit('login success', result.inventory, usernameToPlayerMap);
         }
         else {
             console.log('Invalid username/password. Please try again.');
