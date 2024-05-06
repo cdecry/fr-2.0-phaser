@@ -85,6 +85,8 @@ login.create = function () {
         var inLoading = login.add.sprite(400, 260, 'inLoading').play('inLoad');
 
         globalThis.socket.on('login success', (inventory, onlinePlayers) => {
+            console.log("ONLINE");
+            console.log(onlinePlayers);
             onlineUsers = onlinePlayers;
             myInventory = inventory;
             setTimeout(() => {
@@ -951,19 +953,7 @@ uiScene.create = function() {
                     selectBlackScreen.style.visibility = 'hidden';
                 }
 
-                $('#buddy-invite-button').on('click', function() {
-                    let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
-                    let checkedLabels = [];
-
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.checked) {
-                            let label = checkbox.parentElement.textContent.trim();
-                            checkedLabels.push(label);
-                        }
-                    });
-
-                    console.log(checkedLabels);
-                    // load chat tab
+                let createChatTab = (checkedLabels) => {
                     var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
                     
                     let tabId = checkedLabels.join('-');
@@ -994,6 +984,21 @@ uiScene.create = function() {
                     chatNameText.innerHTML = tabName;
 
                     uiScene.addChatTabListener();
+                }
+
+                $('#buddy-invite-button').on('click', function() {
+                    let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                    let checkedLabels = [];
+
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            let label = checkbox.parentElement.textContent.trim();
+                            checkedLabels.push(label);
+                        }
+                    });
+
+                    // load chat tab
+                    createChatTab(checkedLabels);
 
                     // socket.emit('acceptBuddyRequest', Number(id), username);
                     closePopup();
