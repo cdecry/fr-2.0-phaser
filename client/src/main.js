@@ -85,8 +85,6 @@ login.create = function () {
         var inLoading = login.add.sprite(400, 260, 'inLoading').play('inLoad');
 
         globalThis.socket.on('login success', (inventory, onlinePlayers) => {
-            console.log("ONLINE");
-            console.log(onlinePlayers);
             onlineUsers = onlinePlayers;
             myInventory = inventory;
             setTimeout(() => {
@@ -416,6 +414,59 @@ uiScene.create = function() {
         socket.emit('chatMessage', filtered);
     }
 
+    uiScene.createChatTab = (checkedLabels) => {
+        
+        imWindow.style.visibility = 'visible';
+
+        var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+        let tabId = checkedLabels.join('-');
+        let tabName = checkedLabels.join(', ');
+        
+        if (!chatTabs.hasOwnProperty(tabId)) {
+            let html = `
+                <div class="chat-tab" id="${tabId}">
+                    <div id="tabName">${tabName}</div>
+                </div>
+                        `
+            tabsFlexbox.innerHTML += html;
+            chatTabs[tabId] = "";
+        }
+
+        tab = instantMessenger.getChildByID(tabId);
+        for (let otherTabName in chatTabs) {
+            let otherTabId = otherTabName.replace(/, /g, '-');;
+            otherTab = instantMessenger.getChildByID(otherTabId);
+            otherTab.style.background = 'white';
+        };
+        
+        openChatTab = tabId;
+        tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
+        chatNameText.innerHTML = tabName;
+        chatHistory.innerHTML = chatTabs[tabId];
+
+        uiScene.toggleIMLayout('pm');
+        uiScene.addChatTabListener();
+    }
+
+    uiScene.toggleIMLayout = (layout='') => {
+        let chatSection = instantMessenger.getChildByID('chat-section');
+        let chatAvatarSection = instantMessenger.getChildByID('chat-avatar-section');
+        let chatInput = instantMessenger.getChildByID('chat-input');
+
+        chatInput.value = '';
+
+        if (layout === 'pm') {
+            chatSection.style.maxWidth = 'calc(100% - 126px)';
+            chatAvatarSection.style.marginRight = '4px';
+            chatAvatarSection.style.flex = '0 0 121px';
+        }
+        else {
+            chatSection.style.maxWidth = 'calc(100% - 2px)';
+            chatAvatarSection.style.marginRight = '0px';
+            chatAvatarSection.style.flex = '0';
+        }
+    }
+
     uiScene.addChatTabListener = () => {
         for (var chatTabName in chatTabs) {
             // convert name to id
@@ -436,6 +487,13 @@ uiScene.create = function() {
             }
             tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
             openChatTab = tab.id;
+
+            if (openChatTab == 'Current Room')
+                uiScene.toggleIMLayout();
+            else {
+                uiScene.toggleIMLayout('pm');
+            }
+
             chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -635,8 +693,9 @@ uiScene.create = function() {
             $('#buddy-menu').css('height', '68px');
             $('#chat-with-buddy-option').css('display', 'flex');
             chatOption = document.getElementById('chat-with-buddy-option');
-            chatOption.onmousedown = () => {
-                console.log("open chat with " + buddyName.innerHTML);
+            chatOption.onclick = () => {
+                uiScene.createChatTab([buddyName.innerHTML]);
+                buddyMenu.style.visibility = 'hidden';
             }
         }
         else {
@@ -645,16 +704,13 @@ uiScene.create = function() {
         }
 
         // remove buddy menu when clicking elsewhere
-        var buddyMenu = document.getElementById('buddy-menu');
-
+        let buddyMenu = document.getElementById('buddy-menu');
         document.onmousedown = (event) => {
             var target = event.target;
             if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
                 buddyMenu.style.visibility = 'hidden';
             }
         };
-
-        // add listener for buddy menu options
 
         idfoneOption = document.getElementById('view-idfone-option');
         deleteOption = document.getElementById('delete-buddy-option');
@@ -953,39 +1009,6 @@ uiScene.create = function() {
                     selectBlackScreen.style.visibility = 'hidden';
                 }
 
-                let createChatTab = (checkedLabels) => {
-                    var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
-                    
-                    let tabId = checkedLabels.join('-');
-                    let tabName = checkedLabels.join(', ');
-                    console.log('id: ');
-                    console.log(tabId);
-                    console.log('name :');
-                    console.log(tabName);
-
-                    let html = `
-                        <div class="chat-tab" id="${tabId}">
-                            <div id="tabName">${tabName}</div>
-                        </div>
-                                `
-                    tabsFlexbox.innerHTML += html;
-
-                    tab = instantMessenger.getChildByID(tabId);
-                    for (let otherTabName in chatTabs) {
-                        let otherTabId = otherTabName.replace(/, /g, '-');;
-                        otherTab = instantMessenger.getChildByID(otherTabId);
-                        otherTab.style.background = 'white';
-                    };
-                    openChatTab = tabId;
-                    tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                    
-                    chatTabs[tabId] = "";
-                    chatHistory.innerHTML = "";
-                    chatNameText.innerHTML = tabName;
-
-                    uiScene.addChatTabListener();
-                }
-
                 $('#buddy-invite-button').on('click', function() {
                     let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
                     let checkedLabels = [];
@@ -998,7 +1021,8 @@ uiScene.create = function() {
                     });
 
                     // load chat tab
-                    createChatTab(checkedLabels);
+                    if (checkedLabels.length > 0)
+                        uiScene.createChatTab(checkedLabels);
 
                     // socket.emit('acceptBuddyRequest', Number(id), username);
                     closePopup();
