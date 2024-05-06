@@ -153,6 +153,11 @@ io.on('connection', function (socket) {
         }
     })
 
+    socket.on('rejectBuddyRequest', async (username) => {
+        if (usernameToId.hasOwnProperty(username))
+            io.to(usernameToId[username]).emit('rejectBuddyRequestResponse', players[socket.id].username);
+    })
+
     socket.on('deleteBuddy', async function(username) {
         let buddyID = await getIdFromUsername(username);
 

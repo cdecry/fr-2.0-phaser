@@ -133,6 +133,7 @@ var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 var notifBubbleLifeTime, notifLifeTime, notifBubble, notifMessage;
 var myPlayerInfo;
+var outgoingBuddyRequests = [];
 var avatarPreview = null;
 var locationObjects = [];
 var bgm;
@@ -454,16 +455,15 @@ uiScene.create = function() {
                 buddyRequestPopup.destroy();
             }
 
+            let [id, username] = buddyRequest.id.slice(3).split('-');
+            
             $('#br-yes-button').on('mousedown', function() {
-
-                var userInfo = buddyRequest.id.slice(3);
-                var [id, username] = userInfo.split('-');
-
                 socket.emit('acceptBuddyRequest', Number(id), username);
                 removeBuddyRequest();
             });
 
             $('#br-no-button').on('mousedown', function() {
+                socket.emit('rejectBuddyRequest', username);
                 removeBuddyRequest();
             });
         };
@@ -1316,14 +1316,20 @@ uiScene.create = function() {
                 idfoneButtonsHTML.visible = true;
 
                 let addButton = idfoneButtonsHTML.getChildByID('addButton');
-
-                if (myPlayerInfo.buddies.some(buddy => buddy.username === playerInfo.username)) {
+                addButton.disabled = false;
+                addButton.style.cursor = 'pointer';
+                
+                if (myPlayerInfo.buddies.some(buddy => buddy.username === playerInfo.username) ||
+                    outgoingBuddyRequests.includes(playerInfo.username)) {
                     addButton.disabled = true;
                     addButton.style.cursor = 'default';
                 }
 
                 addButton.onclick = () => {
                     socket.emit('buddyRequest', playerInfo.username);
+                    outgoingBuddyRequests.push(playerInfo.username);
+                    addButton.disabled = true;
+                    addButton.style.cursor = 'default';
                 }
             }
 
@@ -2703,6 +2709,10 @@ inGame.create = function() {
 
     globalThis.socket.on('acceptBuddyRequestResponse', function (buddies, newBuddy) {
 
+        let idx = outgoingBuddyRequests.indexOf(newBuddy);
+        if (idx !== -1)
+            outgoingBuddyRequests.splice(idx, 1);
+
         if (notifLifeTime != undefined && notifLifeTime.isAlive) {
             notifBubbleLifeTime.stop();
             notifLifeTime.stop();
@@ -2732,6 +2742,10 @@ inGame.create = function() {
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
+    }.bind(this));
+
+    globalThis.socket.on('rejectBuddyRequestResponse', function (rejectedBy) {
+        outgoingBuddyRequests.splice(outgoingBuddyRequests.indexOf(rejectedBy), 1);
     }.bind(this));
 
     globalThis.socket.on('deleteBuddyResponse', function (buddies) {
