@@ -186,10 +186,10 @@ function createSpeechBubble (x, y, username, quote)
 
     container.add([chatBubble, chatMessage]);
 
-    chatTabs['Current Room'].chatHistory += username + ": " + quote + '<br>';
-    if (instantMessenger && openChatTab == 'Current Room') {
+    chatTabs['current-room'].chatHistory += username + ": " + quote + '<br>';
+    if (instantMessenger && openChatTab == 'current-room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
-        chatHistory.innerHTML = chatTabs['Current Room'].chatHistory;
+        chatHistory.innerHTML = chatTabs['current-room'].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 }
@@ -232,10 +232,10 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherBubbleLifeTime': otherBubbleLifeTime,
                                             'otherMessageLifeTime': otherMessageLifeTime });
 
-    chatTabs['Current Room'].chatHistory += otherPlayer.getData('username') + ": " + quote + '<br>';
-    if (instantMessenger && openChatTab == 'Current Room') {
+    chatTabs['current-room'].chatHistory += otherPlayer.getData('username') + ": " + quote + '<br>';
+    if (instantMessenger && openChatTab == 'current-room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
-        chatHistory.innerHTML = chatTabs['Current Room'].chatHistory;
+        chatHistory.innerHTML = chatTabs['current-room'].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 } 
@@ -489,7 +489,7 @@ uiScene.create = function() {
             tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
             openChatTab = tab.id;
 
-            if (openChatTab == 'Current Room')
+            if (openChatTab == 'current-room')
                 uiScene.toggleIMLayout();
             else {
                 uiScene.toggleIMLayout('pm');
@@ -712,8 +712,8 @@ uiScene.create = function() {
 
         $('#buddy-menu').css({
             visibility: 'visible',
-            left: pointerX - canvasRect.left - 210 + 'px',
-            top: pointerY - canvasRect.top - 120 + 'px',
+            left: pointerX - canvasRect.left - 215 + 'px',
+            top: pointerY - canvasRect.top - 135 + 'px',
         });
 
         if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
@@ -1012,7 +1012,7 @@ uiScene.create = function() {
 
                 buddyWindow = instantMessenger.getChildByID('buddy-window');
                 buddyHeader = instantMessenger.getChildByID('buddy-header');
-                
+
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
 
                 enableIMDrag(instantMessenger, imHeader, imWindow);
@@ -1074,6 +1074,12 @@ uiScene.create = function() {
                     isClickUI = true;
                     disableInput = true;
                 }
+                imWindow.style.top = '50px';
+                imWindow.style.left = '100px';
+                imWindow.style.width = '350px';
+                imWindow.style.height = '250px';
+                buddyWindow.style.top = '50px';
+                buddyWindow.style.left = '-104px';
             }
 
             // Set IM visible (open)
@@ -1105,7 +1111,7 @@ uiScene.create = function() {
                 msg = chatInput.value;
                 chatInput.value = '';
 
-                if (openChatTab == "Current Room")
+                if (openChatTab == "current-room")
                     uiScene.sendChatMessage(msg);
                 else {
                     var filtered = msg.replace(/<[^>]+>/g, '');
@@ -1598,7 +1604,7 @@ var currentLocation = "downtown";
 var boundOffset = 150;
 
 var buddyRequests = '';
-var openChatTab = "Current Room";
+var openChatTab = "current-room";
 
 function ChatTab(chatName, chatOwner='', chatMembers=[], chatHistory='') {
     this.chatName = chatName;
@@ -1608,7 +1614,7 @@ function ChatTab(chatName, chatOwner='', chatMembers=[], chatHistory='') {
 }
 
 var chatTabs = {
-    "Current Room" : {
+    "current-room" : {
         chatName: "Current Room",
         chatOwner: "",
         chatMembers: [],

@@ -234,7 +234,10 @@
                 -moz-user-select: none;
                 -o-user-select: none;
                 user-select: none;
-                /* pointer-events: none; */
+            }
+
+            .dragDisable {
+                pointer-events: none;
             }
 
             .selectEnable { 
@@ -544,7 +547,7 @@
     <body>
         <div id="im-window">
             <div id="im-header"></div>
-            <img class="selectDisable" id="im-title" src="./src/assets/scene/chat/instant-messager-title.png"/>
+            <img class="selectDisable dragDisable" id="im-title" src="./src/assets/scene/chat/instant-messager-title.png"/>
             <div id="im-close-button">
                 <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
@@ -553,7 +556,7 @@
 
                 <div id="chat-tabs-container">
                     <div id="chat-tabs-flexbox">
-                        <div class="chat-tab" id="Current Room">
+                        <div class="chat-tab" id="current-room">
                             <div id="tabName" class="selectDisable">Current Room</div>
                         </div>
                     </div>
@@ -585,7 +588,7 @@
 
         <div id="buddy-window">
             <div id="buddy-header"></div>
-            <div id="myBuddiesLabel" class="selectDisable">My Buddies</div>
+            <div id="myBuddiesLabel" class="selectDisable dragDisable">My Buddies</div>
             <div id="buddy-close-button">
                 <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
