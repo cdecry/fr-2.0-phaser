@@ -20,6 +20,7 @@ const usernameToId = {};
 const usernameToPID = {};
 // const rooms = {};
 const fashionShows = {};
+const chatRooms = {};
 
 // fashion show rooms structure
 /*
@@ -40,6 +41,32 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
+function ChatRoom(chatName, chatOwner='', chatMembers=[], chatHistory='') {
+    this.chatName = chatName;
+    this.chatOwner = chatOwner;
+    this.chatMembers = chatMembers,
+    this.chatHistory = chatHistory;
+}
+
+function removeUserFromAllChatRooms(userToRemove) {
+    let emptyChatRooms = []
+
+    for (let chatRoomId in chatRooms) {
+        let chatRoom = chatRooms[chatRoomId];
+        let idx = chatRoom.chatMembers.indexOf(userToRemove);
+
+        if (idx !== -1)
+            chatRoom.chatMembers.splice(idx, 1);
+
+        if (chatRoom.chatMembers.length == 0)
+            emptyChatRooms.push(chatRoomId);
+    }
+
+    emptyChatRooms.forEach(chatId => {
+        delete chatRooms[chatId];
+    });
+}
+
 // socket connections
 io.on('connection', function (socket) {
 
@@ -57,6 +84,8 @@ io.on('connection', function (socket) {
 
             delete usernameToId[players[socket.id].username];
             delete usernameToPID[players[socket.id].username];
+            removeUserFromAllChatRooms(players[socket.id].username);
+            
             delete players[socket.id];
         }
         else
@@ -140,8 +169,17 @@ io.on('connection', function (socket) {
         socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
     })
 
-    socket.on('privateMessage', function(msg, toUser) {
-        io.to(usernameToId[toUser]).emit('privateMessageResponse', players[socket.id], msg);
+    socket.on('privateMessage', function(chatId, msg, chatObj=null) {
+        if (chatObj)
+            chatRooms[chatId] = chatObj
+        else
+            chatRooms[chatId].chatHistory += msg;
+        
+        let fromUser = players[socket.id].username;
+        chatRooms[chatId].chatMembers.forEach(user => {
+            if (user != fromUser)
+                io.to(usernameToId[user]).emit('privateMessageResponse', chatId, chatRooms[chatId], fromUser, msg);
+        });
     })
 
     socket.on('buddyRequest', function(toUser) {

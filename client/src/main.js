@@ -186,10 +186,10 @@ function createSpeechBubble (x, y, username, quote)
 
     container.add([chatBubble, chatMessage]);
 
-    chatTabs['Current Room'] += username + ": " + quote + '<br>';
+    chatTabs['Current Room'].chatHistory += username + ": " + quote + '<br>';
     if (instantMessenger && openChatTab == 'Current Room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
-        chatHistory.innerHTML = chatTabs['Current Room'];
+        chatHistory.innerHTML = chatTabs['Current Room'].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 }
@@ -232,10 +232,10 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherBubbleLifeTime': otherBubbleLifeTime,
                                             'otherMessageLifeTime': otherMessageLifeTime });
 
-    chatTabs['Current Room'] += otherPlayer.getData('username') + ": " + quote + '<br>';
+    chatTabs['Current Room'].chatHistory += otherPlayer.getData('username') + ": " + quote + '<br>';
     if (instantMessenger && openChatTab == 'Current Room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
-        chatHistory.innerHTML = chatTabs['Current Room'];
+        chatHistory.innerHTML = chatTabs['Current Room'].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 } 
@@ -414,11 +414,36 @@ uiScene.create = function() {
         socket.emit('chatMessage', filtered);
     }
 
-    uiScene.createChatTab = (checkedLabels, msg='') => {
-        let tabId = checkedLabels.join('-');
+    function pmWithUserExists(username) {
+        for (let chatId in chatTabs) {
+            if (chatTabs[chatId].name == username)
+                return true;
+        }
+        return false;
+    }
+
+    uiScene.createChatTab = (invitedBuddies, msg='') => {
+        let tabId = '';
+        let tabName = invitedBuddies[0];
+
+        if (invitedBuddies.length == 1) {
+            let [username1, username2] = [myPlayerInfo.username, invitedBuddies[0]].sort();
+            tabId = username1 + '-' + username2;
+        }
+        else {
+            for (let i = 0; i < Object.keys(chatTabs).length; i++) {
+                if (!chatTabs.hasOwnProperty(myPlayerInfo.username + '-' + i)) {
+                    tabId = myPlayerInfo.username + '-' + i;
+                    break;
+                }
+            }
+        }
+        
+        if (invitedBuddies.length > 1)
+            tabName = myPlayerInfo.username + "'s Hideout";
 
         if (!chatTabs.hasOwnProperty(tabId))
-            chatTabs[tabId] = msg;
+            chatTabs[tabId] = new ChatTab(tabName, myPlayerInfo.username, [...invitedBuddies, myPlayerInfo.username], msg);
         openChatTab = tabId;
 
         uiScene.loadChatTabs();
@@ -448,11 +473,8 @@ uiScene.create = function() {
     }
 
     uiScene.addChatTabListener = () => {
-        for (let chatTabName in chatTabs) {
-            // convert name to id
-            let chatTabId = chatTabName.replace(/, /g, '-');;
-            console.log(chatTabId);
-            var tab = instantMessenger.getChildByID(chatTabId);
+        for (let chatId in chatTabs) {
+            var tab = instantMessenger.getChildByID(chatId);
             if (tab)
                 tab.onmousedown = createTabClickListener(tab);
         }
@@ -460,8 +482,7 @@ uiScene.create = function() {
     
     function createTabClickListener(tab) {
         return function() {
-            for (let otherTabName in chatTabs) {
-                let otherTabId = otherTabName.replace(/, /g, '-');;
+            for (let otherTabId in chatTabs) {
                 let otherTab = instantMessenger.getChildByID(otherTabId);
                 otherTab.style.background = 'white';
             }
@@ -474,8 +495,8 @@ uiScene.create = function() {
                 uiScene.toggleIMLayout('pm');
             }
 
-            chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');;
-            chatHistory.innerHTML = chatTabs[openChatTab];
+            chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+            chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
             chatHistory.scrollTop = chatHistory.scrollHeight;
         };
     }
@@ -522,7 +543,7 @@ uiScene.create = function() {
         for (let tabId in chatTabs) {
             let html = `
                     <div class="chat-tab" id="${tabId}">
-                        <div id="tabName">${tabId.replace(/-/g, ', ')}</div>
+                        <div id="tabName">${chatTabs[tabId].chatName}</div>
                     </div>
                     `;
 
@@ -534,10 +555,8 @@ uiScene.create = function() {
             }
         }
 
-        chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');
-        
-        let chatHistory = document.getElementById('chat-history');
-        chatHistory.innerHTML = chatTabs[openChatTab];
+        chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+        chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         uiScene.addChatTabListener();
@@ -1064,8 +1083,8 @@ uiScene.create = function() {
             // Load chat name & history for open tab, auto-scroll to bottom
             chatNameText = instantMessenger.getChildByID('chatName');
             chatHistory = document.getElementById('chat-history');
-            chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');;
-            chatHistory.innerHTML = chatTabs[openChatTab];
+            chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+            chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             // Load chat tabs
@@ -1091,11 +1110,17 @@ uiScene.create = function() {
                 else {
                     var filtered = msg.replace(/<[^>]+>/g, '');
                     if (filtered.length == 0) return;
-                    chatTabs[openChatTab] += myPlayerInfo.username + ": " + msg + '<br>';
-                    chatHistory.innerHTML = chatTabs[openChatTab];
+
+                    let firstMsg = chatTabs[openChatTab].chatHistory == '';
+
+                    chatTabs[openChatTab].chatHistory += myPlayerInfo.username + ": " + filtered + '<br>';
+                    chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
                     chatHistory.scrollTop = chatHistory.scrollHeight;
 
-                    socket.emit('privateMessage', filtered, openChatTab);
+                    if (firstMsg)
+                        socket.emit('privateMessage', openChatTab, filtered, chatTabs[openChatTab])
+                    else
+                        socket.emit('privateMessage', openChatTab, filtered);
                 }
             })
 
@@ -1574,9 +1599,23 @@ var boundOffset = 150;
 
 var buddyRequests = '';
 var openChatTab = "Current Room";
-var chatTabs = {
-    "Current Room": ""
+
+function ChatTab(chatName, chatOwner='', chatMembers=[], chatHistory='') {
+    this.chatName = chatName;
+    this.chatOwner = chatOwner;
+    this.chatMembers = chatMembers,
+    this.chatHistory = chatHistory;
 }
+
+var chatTabs = {
+    "Current Room" : {
+        chatName: "Current Room",
+        chatOwner: "",
+        chatMembers: [],
+        chatHistory: "",
+    }
+}
+
 var onlineUsers = [];
 var fashionShows = {};
 var fashionShowHost = "";
@@ -2788,10 +2827,14 @@ inGame.create = function() {
 
     }.bind(this));
 
-    globalThis.socket.on('privateMessageResponse', function (playerInfo, msg) {
-        if (!chatTabs.hasOwnProperty(playerInfo.username))
-            chatTabs[playerInfo.username] = '';
-        chatTabs[playerInfo.username] += playerInfo.username + ": " + msg + '<br>';
+    globalThis.socket.on('privateMessageResponse', function (chatId, chatObj, username, msg) {
+        if (!chatTabs.hasOwnProperty(chatId)) {
+            let chatName = username;
+            if (chatObj.chatMembers.length > 2)
+                chatName = chatObj.chatName;
+            chatTabs[chatId] = new ChatTab(chatName, chatObj.chatOwner, chatObj.chatMembers);
+        }
+        chatTabs[chatId].chatHistory += username + ": " + msg + '<br>';
 
         if (instantMessenger) {
             uiScene.loadChatTabs();
