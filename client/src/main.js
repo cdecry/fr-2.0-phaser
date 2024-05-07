@@ -2909,31 +2909,6 @@ inGame.create = function() {
 
     globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
 
-        // if (notifLifeTime != undefined && notifLifeTime.isAlive) {
-        //     notifBubbleLifeTime.stop();
-        //     notifLifeTime.stop();
-        //     notifBubble.destroy()
-        //     notifMessage.destroy();
-        // }
-
-        // notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
-        // var notifMsgContent = notifMessage.getChildByID('message');
-        // notifMsgContent.style.width = '150px';
-
-        // notifMessage.getChildByID('message').innerHTML = "Buddy request from: \"" + playerInfo.username + "\", click here on buddy list to accept/deny";
-        // notifBubble = uiScene.add.image(645, 410, 'notification-3');
-
-        // notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
-        //     lifeTime: 4000,
-        //     destroy: true,
-        //     start: true
-        // });
-
-        // notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
-        //     lifeTime: 4000,
-        //     destroy: true,
-        //     start: true
-        // });
         displayNotification(Notif.BUDDY_REQUEST, playerInfo.username);
 
         var gender = 'girl';
@@ -2953,32 +2928,7 @@ inGame.create = function() {
         let idx = outgoingBuddyRequests.indexOf(newBuddy);
         if (idx !== -1)
             outgoingBuddyRequests.splice(idx, 1);
-
-        // if (notifLifeTime != undefined && notifLifeTime.isAlive) {
-        //     notifBubbleLifeTime.stop();
-        //     notifLifeTime.stop();
-        //     notifBubble.destroy()
-        //     notifMessage.destroy();
-        // }
-
-        // notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
-        // var notifMsgContent = notifMessage.getChildByID('message');
-        // notifMsgContent.style.width = '150px';
-
-        // notifMessage.getChildByID('message').innerHTML = "User " + newBuddy + " is now your buddy";
-        // notifBubble = uiScene.add.image(645, 410, 'notification-2');
-
-        // notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
-        //     lifeTime: 4000,
-        //     destroy: true,
-        //     start: true
-        // });
-
-        // notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
-        //     lifeTime: 4000,
-        //     destroy: true,
-        //     start: true
-        // });
+        
         displayNotification(Notif.NEW_BUDDY, newBuddy);
 
         myPlayerInfo.buddies = buddies;
