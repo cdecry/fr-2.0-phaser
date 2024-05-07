@@ -34,6 +34,12 @@ const iMap = {
     9: cMap.costume,
 }
 
+const Notif = {
+    CHAT: 0,
+    BUDDY_REQUEST: 1,
+    NEW_BUDDY: 2,
+};
+
 //#region LoginScene
 var login = new Phaser.Scene('LoginScene');
 
@@ -2833,22 +2839,7 @@ inGame.create = function() {
 
     }.bind(this));
 
-    globalThis.socket.on('privateMessageResponse', function (chatId, chatObj, username, msg) {
-        if (!chatTabs.hasOwnProperty(chatId)) {
-            let chatName = username;
-            if (chatObj.chatMembers.length > 2)
-                chatName = chatObj.chatName;
-            chatTabs[chatId] = new ChatTab(chatName, chatObj.chatOwner, chatObj.chatMembers);
-        }
-        chatTabs[chatId].chatHistory += username + ": " + msg + '<br>';
-
-        if (instantMessenger) {
-            uiScene.loadChatTabs();
-        }
-    }.bind(this));
-
-    globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
-
+    function displayNotification(notifType, variable) {
         if (notifLifeTime != undefined && notifLifeTime.isAlive) {
             notifBubbleLifeTime.stop();
             notifLifeTime.stop();
@@ -2857,11 +2848,32 @@ inGame.create = function() {
         }
 
         notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
-        var notifMsgContent = notifMessage.getChildByID('message');
+        let notifMsgContent = notifMessage.getChildByID('message');
         notifMsgContent.style.width = '150px';
 
-        notifMessage.getChildByID('message').innerHTML = "Buddy request from: \"" + playerInfo.username + "\", click here on buddy list to accept/deny";
-        notifBubble = uiScene.add.image(645, 410, 'notification-3');
+        let msg = "";
+
+        switch (notifType) {
+            case Notif.BUDDY_REQUEST:
+                msg = "Buddy request from: \"" + variable + "\", click here on buddy list to accept/deny";
+                break;
+            case Notif.NEW_BUDDY:
+                msg = "User " + variable + " is now your buddy";
+                break;
+            default: // chat
+                msg = variable;
+        }
+        
+        let notifMessageContent = notifMessage.getChildByID('message');
+        notifMessageContent.innerHTML = msg;
+
+        var lines = notifMessageContent.clientHeight / 15;
+        if (lines > 4) {
+            let maxChars = Math.floor(notifMessageContent.clientWidth / 5);
+            notifMessageContent.innerHTML = msg.substring(0, maxChars - 3) + '...';
+            lines = 4;
+        }
+        notifBubble = uiScene.add.image(645, 410, `notification-${lines}`);
 
         notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
             lifeTime: 4000,
@@ -2874,6 +2886,55 @@ inGame.create = function() {
             destroy: true,
             start: true
         });
+    }
+
+    globalThis.socket.on('privateMessageResponse', function (chatId, chatObj, username, msg) {
+        if (!chatTabs.hasOwnProperty(chatId)) {
+            let chatName = username;
+            if (chatObj.chatMembers.length > 2)
+                chatName = chatObj.chatName;
+            chatTabs[chatId] = new ChatTab(chatName, chatObj.chatOwner, chatObj.chatMembers);
+        }
+        chatTabs[chatId].chatHistory += username + ": " + msg + '<br>';
+
+        let imWindow;
+        if (instantMessenger) {
+            imWindow = instantMessenger.getChildByID('im-window');
+            uiScene.loadChatTabs();
+        }
+
+        if (openChatTab !== chatId || (instantMessenger && imWindow.style.visibility === 'hidden'))
+            displayNotification(Notif.CHAT, username + ": " + msg);
+    }.bind(this));
+
+    globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
+
+        // if (notifLifeTime != undefined && notifLifeTime.isAlive) {
+        //     notifBubbleLifeTime.stop();
+        //     notifLifeTime.stop();
+        //     notifBubble.destroy()
+        //     notifMessage.destroy();
+        // }
+
+        // notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
+        // var notifMsgContent = notifMessage.getChildByID('message');
+        // notifMsgContent.style.width = '150px';
+
+        // notifMessage.getChildByID('message').innerHTML = "Buddy request from: \"" + playerInfo.username + "\", click here on buddy list to accept/deny";
+        // notifBubble = uiScene.add.image(645, 410, 'notification-3');
+
+        // notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
+        //     lifeTime: 4000,
+        //     destroy: true,
+        //     start: true
+        // });
+
+        // notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
+        //     lifeTime: 4000,
+        //     destroy: true,
+        //     start: true
+        // });
+        displayNotification(Notif.BUDDY_REQUEST, playerInfo.username);
 
         var gender = 'girl';
         if (playerInfo.avatar.gender == 'm')
@@ -2893,31 +2954,32 @@ inGame.create = function() {
         if (idx !== -1)
             outgoingBuddyRequests.splice(idx, 1);
 
-        if (notifLifeTime != undefined && notifLifeTime.isAlive) {
-            notifBubbleLifeTime.stop();
-            notifLifeTime.stop();
-            notifBubble.destroy()
-            notifMessage.destroy();
-        }
+        // if (notifLifeTime != undefined && notifLifeTime.isAlive) {
+        //     notifBubbleLifeTime.stop();
+        //     notifLifeTime.stop();
+        //     notifBubble.destroy()
+        //     notifMessage.destroy();
+        // }
 
-        notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
-        var notifMsgContent = notifMessage.getChildByID('message');
-        notifMsgContent.style.width = '150px';
+        // notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
+        // var notifMsgContent = notifMessage.getChildByID('message');
+        // notifMsgContent.style.width = '150px';
 
-        notifMessage.getChildByID('message').innerHTML = "User " + newBuddy + " is now your buddy";
-        notifBubble = uiScene.add.image(645, 410, 'notification-2');
+        // notifMessage.getChildByID('message').innerHTML = "User " + newBuddy + " is now your buddy";
+        // notifBubble = uiScene.add.image(645, 410, 'notification-2');
 
-        notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
-            lifeTime: 4000,
-            destroy: true,
-            start: true
-        });
+        // notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
+        //     lifeTime: 4000,
+        //     destroy: true,
+        //     start: true
+        // });
 
-        notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
-            lifeTime: 4000,
-            destroy: true,
-            start: true
-        });
+        // notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
+        //     lifeTime: 4000,
+        //     destroy: true,
+        //     start: true
+        // });
+        displayNotification(Notif.NEW_BUDDY, newBuddy);
 
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window")) {
