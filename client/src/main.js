@@ -414,38 +414,18 @@ uiScene.create = function() {
         socket.emit('chatMessage', filtered);
     }
 
-    uiScene.createChatTab = (checkedLabels) => {
+    uiScene.createChatTab = (checkedLabels, msg='') => {
+        let tabId = checkedLabels.join('-');
+
+        if (!chatTabs.hasOwnProperty(tabId))
+            chatTabs[tabId] = msg;
+        openChatTab = tabId;
+
+        uiScene.loadChatTabs();
+        uiScene.toggleIMLayout('pm');
+        // uiScene.addChatTabListener();
         
         imWindow.style.visibility = 'visible';
-
-        var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
-        let tabId = checkedLabels.join('-');
-        let tabName = checkedLabels.join(', ');
-        
-        if (!chatTabs.hasOwnProperty(tabId)) {
-            let html = `
-                <div class="chat-tab" id="${tabId}">
-                    <div id="tabName">${tabName}</div>
-                </div>
-                        `
-            tabsFlexbox.innerHTML += html;
-            chatTabs[tabId] = "";
-        }
-
-        tab = instantMessenger.getChildByID(tabId);
-        for (let otherTabName in chatTabs) {
-            let otherTabId = otherTabName.replace(/, /g, '-');;
-            otherTab = instantMessenger.getChildByID(otherTabId);
-            otherTab.style.background = 'white';
-        };
-        
-        openChatTab = tabId;
-        tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-        chatNameText.innerHTML = tabName;
-        chatHistory.innerHTML = chatTabs[tabId];
-
-        uiScene.toggleIMLayout('pm');
-        uiScene.addChatTabListener();
     }
 
     uiScene.toggleIMLayout = (layout='') => {
@@ -468,7 +448,7 @@ uiScene.create = function() {
     }
 
     uiScene.addChatTabListener = () => {
-        for (var chatTabName in chatTabs) {
+        for (let chatTabName in chatTabs) {
             // convert name to id
             let chatTabId = chatTabName.replace(/, /g, '-');;
             console.log(chatTabId);
@@ -533,6 +513,34 @@ uiScene.create = function() {
                 removeBuddyRequest();
             });
         };
+    }
+
+    uiScene.loadChatTabs = () => {
+        let tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+        tabsFlexbox.innerHTML = '';
+
+        for (let tabId in chatTabs) {
+            let html = `
+                    <div class="chat-tab" id="${tabId}">
+                        <div id="tabName">${tabId.replace(/-/g, ', ')}</div>
+                    </div>
+                    `;
+
+            tabsFlexbox.innerHTML += html;
+
+            if (openChatTab != tabId) {
+                let tab = instantMessenger.getChildByID(tabId);
+                tab.style.background = 'white';
+            }
+        }
+
+        chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');
+        
+        let chatHistory = document.getElementById('chat-history');
+        chatHistory.innerHTML = chatTabs[openChatTab];
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        uiScene.addChatTabListener();
     }
 
     uiScene.loadBuddyList = () => {
@@ -1020,9 +1028,10 @@ uiScene.create = function() {
                         }
                     });
 
-                    // load chat tab
-                    if (checkedLabels.length > 0)
+                    if (checkedLabels.length > 0) {
                         uiScene.createChatTab(checkedLabels);
+                        uiScene.loadChatTabs();
+                    }
 
                     // socket.emit('acceptBuddyRequest', Number(id), username);
                     closePopup();
@@ -1058,6 +1067,9 @@ uiScene.create = function() {
             chatNameText.innerHTML = openChatTab.replace(/-/g, ', ');;
             chatHistory.innerHTML = chatTabs[openChatTab];
             chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Load chat tabs
+            uiScene.loadChatTabs();
 
             // Load buddy list and requests
             uiScene.loadBuddyList();
@@ -2777,9 +2789,13 @@ inGame.create = function() {
     }.bind(this));
 
     globalThis.socket.on('privateMessageResponse', function (playerInfo, msg) {
-        // if no chat tab open, add this chat tab
-        console.log('Incoming PM from ' + playerInfo.username + ': ' + msg);
+        if (!chatTabs.hasOwnProperty(playerInfo.username))
+            chatTabs[playerInfo.username] = '';
+        chatTabs[playerInfo.username] += playerInfo.username + ": " + msg + '<br>';
 
+        if (instantMessenger) {
+            uiScene.loadChatTabs();
+        }
     }.bind(this));
 
     globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
