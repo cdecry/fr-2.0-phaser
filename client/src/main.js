@@ -1121,18 +1121,30 @@ uiScene.create = function() {
                     uiScene.sendChatMessage(msg);
                 else {
                     var filtered = msg.replace(/<[^>]+>/g, '');
-                    if (filtered.length == 0) return;
+                    if (filtered.length === 0) return;
 
-                    let firstMsg = chatTabs[openChatTab].chatHistory == '';
+                    let firstMsg = chatTabs[openChatTab].chatHistory === '';
+                    let idx = chatTabs[openChatTab].chatMembers.findIndex(usr => usr.username !== myPlayerInfo.username);
 
-                    chatTabs[openChatTab].chatHistory += myPlayerInfo.username + ": " + filtered + '<br>';
-                    chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                    // if (chatTabs[openChatTab].chatMembers.length === 2 && 
+                    //     idx !== -1 && !(chatTabs[openChatTab].chatMembers[idx] in onlineUsers)) {
+                    //     console.log('EXPIRE CHAT WITH OFFLINE USER.');
+                    //     chatTabs[openChatTab].expired = true;
+                    // }
 
-                    if (firstMsg)
-                        socket.emit('privateMessage', openChatTab, filtered, chatTabs[openChatTab])
-                    else
-                        socket.emit('privateMessage', openChatTab, filtered);
+                    if (!chatTabs[openChatTab].expired) {
+                        chatTabs[openChatTab].chatHistory += myPlayerInfo.username + ": " + filtered + '<br>';
+                        chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
+                        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                        if (firstMsg)
+                            socket.emit('privateMessage', openChatTab, filtered, chatTabs[openChatTab])
+                        else
+                            socket.emit('privateMessage', openChatTab, filtered);
+                    }
+                    else {
+                        console.log("this chat room has expired.");
+                    }
                 }
             })
 
@@ -1617,6 +1629,7 @@ function ChatTab(chatName, chatOwner='', chatMembers=[], chatHistory='') {
     this.chatOwner = chatOwner;
     this.chatMembers = chatMembers,
     this.chatHistory = chatHistory;
+    this.expired = false;
 }
 
 var chatTabs = {
@@ -1625,6 +1638,7 @@ var chatTabs = {
         chatOwner: "",
         chatMembers: [],
         chatHistory: "",
+        expired: false,
     }
 }
 
@@ -2624,11 +2638,54 @@ inGame.create = function() {
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
     });
-
+    
     globalThis.socket.on('playerOffline', function (username) {
         delete onlineUsers[username];
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
+
+        let expired = [];
+
+        for (let chatId in chatTabs) {
+
+            let members = chatTabs[chatId].chatMembers
+            let idx = members.indexOf(username);
+
+            if (idx !== -1)
+                members.splice(idx, 1);
+
+            if (members.length == 1 && !chatTabs[chatId].expired) {
+                chatTabs[chatId].expired = true;
+                expired.push(chatId);
+            }
+        }
+
+        for (let expiredId of expired) {
+            let counter = 0;
+            while (chatTabs.hasOwnProperty(expiredId + '-expired-' + counter)) {
+                counter++;
+            }
+
+            let newId = expiredId + '-expired-' + counter;
+
+            let modifiedObj = {}
+
+            for (let [k, v] of Object.entries(chatTabs)) {
+                if (k === expiredId)
+                modifiedObj[newId] = v
+                else
+                modifiedObj[k] = v
+            }
+
+            chatTabs = modifiedObj;
+            
+            if (openChatTab == expiredId)
+                openChatTab = newId;
+            if (instantMessenger) {
+                let tabElement = instantMessenger.getChildByID(expiredId);
+                tabElement.id = newId;
+            }
+        }
     });
 
     // Everyone removes the player with this id
@@ -2928,7 +2985,7 @@ inGame.create = function() {
         let idx = outgoingBuddyRequests.indexOf(newBuddy);
         if (idx !== -1)
             outgoingBuddyRequests.splice(idx, 1);
-        
+
         displayNotification(Notif.NEW_BUDDY, newBuddy);
 
         myPlayerInfo.buddies = buddies;
