@@ -173,6 +173,33 @@
                 background-image: url(/src/assets/scene/chat/im-avatar-section.png);
             }
 
+            #chat-avatar-section-container {
+                position: relative;
+                height: 100%;
+                width: 100%;
+            }
+
+            #chat-avatar-preview {
+                border: 3px solid green;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 2;
+            }
+
+            #chat-avatar-frame {
+                /* border: 1px solid red; */
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 3;
+                background-image: url(/src/assets/scene/chat/im-avatar-frame.png);
+            }
+
             #chat-content-container {
                 height: calc(100% - 65px);
                 width: calc(100% - 4px);
@@ -581,7 +608,13 @@
                             <textarea id="chat-input" spellcheck="false"></textarea>
                         </div>
                     </div>
-                    <div id="chat-avatar-section"></div>
+                    <div id="chat-avatar-section">
+                        <div id="chat-avatar-section-container">
+                            <div id="chat-avatar-preview"></div>
+                            <!-- <canvas id="chat-avatar-preview" width="121" height="150"> -->
+                            <div id="chat-avatar-frame"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

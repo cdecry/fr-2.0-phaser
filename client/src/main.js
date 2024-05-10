@@ -164,6 +164,8 @@ var boardPlayerCount;
 var boardStartDetails;
 var fashionStartBtn;
 
+var testAvatarPreview = null;
+
 function createSpeechBubble (x, y, username, quote)
 {
     chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
@@ -294,28 +296,28 @@ uiScene.create = function() {
 
     this.input.setTopOnly(true);
     uiScene.createAvatarPreview = (playerInfo, scene) => {
-        bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
-        headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
-        eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
-        lipsPreview = scene.add.sprite(0, 0, 'lips-0');
-        faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-        boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-        shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+        let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+        let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+        let eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+        let lipsPreview = scene.add.sprite(0, 0, 'lips-0');
+        let faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+        let boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        let hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        let hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        let headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        let shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
-        bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
-        topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
-        outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
-        costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
-        bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-        browPreview = scene.add.sprite(0, 0, 'brow-0');
-        boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
-        usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
-        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
+        let bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        let topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+        let outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        let costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+        let bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        let browPreview = scene.add.sprite(0, 0, 'brow-0');
+        let boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        let usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
+        let usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
         usernameLabelPreview.originX = 0.5;
-        usernameLabelCenter = usernameLabel.getCenter().x;
+        let usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
@@ -481,8 +483,10 @@ uiScene.create = function() {
     uiScene.addChatTabListener = () => {
         for (let chatId in chatTabs) {
             var tab = instantMessenger.getChildByID(chatId);
-            if (tab)
+            if (tab) {
+                tab.removeEventListener('click', tab.onclick);
                 tab.onmousedown = createTabClickListener(tab);
+            }
         }
     }
     
@@ -504,6 +508,107 @@ uiScene.create = function() {
             chatNameText.innerHTML = chatTabs[openChatTab].chatName;
             chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
             chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // avatar previe
+            let members = chatTabs[tab.id].chatMembers;
+            if (members.length === 2) {
+                let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
+                
+                let avatarScene = new Phaser.Scene('avatarScene');
+
+                avatarScene.preload = function() {
+                    preloadAvatarAssets(this);
+                }
+                let testConfig = {
+                    type: Phaser.AUTO,
+                    parent: 'chat-avatar-preview',
+                    width: 121,
+                    height: 150,
+                    backgroundColor: '#ffffff',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            debug: false
+                        }
+                    },
+                    dom: {
+                        createContainer: true
+                        },
+                    pixelArt: true,
+                    scene: [avatarScene]
+                };
+                
+                avatarScene.create = function() {
+
+                    // this.input.setTopOnly(true);
+                    avatarScene.createAvatarPreview = (playerInfo, scene) => {
+                        let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+                        let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+                        let eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+                        let lipsPreview = scene.add.sprite(0, 0, 'lips-0');
+                        let faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+                        let boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+                        let hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+                        let hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+                        let headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+                        let shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+                        // if (playerInfo.avatar['equipped'][3] === -1) {
+                        let bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+                        let topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+                        let outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+                        let costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+                        let bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+                        let browPreview = scene.add.sprite(0, 0, 'brow-0');
+                        let boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+                        let usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
+                        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
+                        usernameLabelPreview.originX = 0.5;
+                        let usernameLabelCenter = usernameLabel.getCenter().x;
+                        usernameLabelPreview.x = usernameLabelCenter;
+                        usernameLabelPreview.setStroke('#ffffff', 2);
+                        
+                        var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
+                        avPreview = scene.add.container(0, 0);
+                        avPreview.add(children);
+                        avPreview.setDepth(1001);
+                
+                        avPreview.setDataEnabled();
+                        avPreview.setData('username', playerInfo.username);
+                        avPreview.setData('skinTone', playerInfo.avatar['skinTone']);
+                        avPreview.setData('eyeType', playerInfo.avatar['eyeType']);
+                        avPreview.setData('gender', playerInfo.avatar['gender']);
+                        avPreview.setData('playerInfo', playerInfo);
+                
+                        var previewEquipped = [];
+                        for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
+                            previewEquipped[i] = playerInfo.avatar['equipped'][i]
+                        avPreview.setData('equipped', previewEquipped);
+                
+                        return avPreview;
+                    }
+
+                    let chatAvatarPreview = avatarScene.createAvatarPreview(myPlayerInfo, avatarScene);
+                    // chatAvatarPreview.setPosition(0, 0);
+                }
+
+                let testGame = new Phaser.Game(testConfig);
+                
+                // let testAvatarPreview = uiScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+                // let chatAvatar = instantMessenger.getChildByID('chat-avatar-preview');
+                // var ctx = chatAvatar.getContext('2d');
+
+                // var img = new Image();
+                // img.src = '/src/assets/scene/location/downtown/objects/topModelsBoa1.png';
+
+                // img.onload = function() {
+                //     ctx.drawImage(img, 0, 0);
+                // };
+                // testAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(testAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
+                // testAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(testAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
+                // testAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(testAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
+                // testAvatarPreview.setPosition(parseFloat(imWindow.style.left.slice(0, -2)) + 400, 
+                //                           parseFloat(imWindow.style.top.slice(0, -2)) + 260);
+            }
         };
     }
 
@@ -714,7 +819,23 @@ uiScene.create = function() {
 
     uiScene.createBuddyMenuListener = (buddyName, pointerX, pointerY) => {
         var chatOption, idfoneOption, deleteOption;
-        let canvasRect = document.getElementsByTagName('canvas')[0].getBoundingClientRect();
+        let canvasRect = document.getElementsByTagName('canvas')[1].getBoundingClientRect();
+        // let canvasRect = document.getElementsByTagName('canvas')[0].getBoundingClientRect();
+
+        var canvasElements = document.getElementsByTagName('canvas');
+
+        // Create an array to store the IDs
+        var canvasIds = [];
+
+        // Loop through each canvas element and extract its ID
+        for (var i = 0; i < canvasElements.length; i++) {
+            var canvasId = canvasElements[i].id;
+            // Push the ID to the array
+            canvasIds.push(canvasId);
+        }
+
+        // Now you have an array containing the IDs of all canvas elements
+        console.log(canvasIds);
 
         $('#buddy-menu').css({
             visibility: 'visible',
@@ -1124,13 +1245,6 @@ uiScene.create = function() {
                     if (filtered.length === 0) return;
 
                     let firstMsg = chatTabs[openChatTab].chatHistory === '';
-                    let idx = chatTabs[openChatTab].chatMembers.findIndex(usr => usr.username !== myPlayerInfo.username);
-
-                    // if (chatTabs[openChatTab].chatMembers.length === 2 && 
-                    //     idx !== -1 && !(chatTabs[openChatTab].chatMembers[idx] in onlineUsers)) {
-                    //     console.log('EXPIRE CHAT WITH OFFLINE USER.');
-                    //     chatTabs[openChatTab].expired = true;
-                    // }
 
                     if (!chatTabs[openChatTab].expired) {
                         chatTabs[openChatTab].chatHistory += myPlayerInfo.username + ": " + filtered + '<br>';
@@ -1237,6 +1351,8 @@ uiScene.create = function() {
                     currLeft = parseInt(imWindow.style.left.slice(0, -2));
                     imWindow.style.top = (currTop + imDiffY).toString() + 'px';
                     imWindow.style.left = (currLeft + imDiffX).toString() + 'px';
+                    testAvatarPreview.setPosition(currLeft + imDiffX + 260, 
+                                                  currTop + imDiffY + 400);
                 }
             }
 
@@ -1646,49 +1762,8 @@ var onlineUsers = [];
 var fashionShows = {};
 var fashionShowHost = "";
 
-var preloadGameAssets = (thisScene) => {
-    thisScene.load.setBaseURL('/src/assets')
-
-    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-    thisScene.load.scenePlugin({
-        key: 'rexuiplugin',
-        url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
-        sceneKey: 'rexUI'
-    });
-
-    thisScene.load.html('gameText', 'html/text.html');
-    thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
-
-    // Load locations and objects
-    thisScene.load.image('downtownBg', 'scene/location/downtown/downtown.png');
-    thisScene.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
-
-    thisScene.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
-    thisScene.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
-    thisScene.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
-    thisScene.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
-    thisScene.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
-    thisScene.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
-    thisScene.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
-    thisScene.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
-    
-    thisScene.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
-    thisScene.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
-    thisScene.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
-    thisScene.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
-    thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
-    thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
-
-    thisScene.load.image('fashionShowBg', 'scene/location/downtown/fashionShowBg.png');
-
-    thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
-    // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
-
-    // Load bgm
-    thisScene.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
-    thisScene.load.audio('downtownBGM', 'bgm/downtown.mp3');
-    thisScene.load.audio('fashionShowWaitingBGM', 'bgm/fashionShowWaiting.mp3');
-
+var preloadAvatarAssets = (thisScene) => {
+    thisScene.load.setBaseURL('/src/assets');
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
         thisScene.load.spritesheet('m-body-' + i.toString(), 'avatar/m-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
@@ -1763,6 +1838,53 @@ var preloadGameAssets = (thisScene) => {
 
     thisScene.load.image('username-tag', 'avatar/username-tag.png');
     thisScene.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+}
+
+var preloadGameAssets = (thisScene) => {
+    thisScene.load.setBaseURL('/src/assets')
+
+    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+    thisScene.load.scenePlugin({
+        key: 'rexuiplugin',
+        url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+        sceneKey: 'rexUI'
+    });
+
+    thisScene.load.html('gameText', 'html/text.html');
+    thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
+
+    // Load locations and objects
+    thisScene.load.image('downtownBg', 'scene/location/downtown/downtown.png');
+    thisScene.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
+
+    thisScene.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
+    thisScene.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
+    thisScene.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
+    thisScene.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
+    thisScene.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
+    thisScene.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
+    thisScene.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
+    thisScene.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
+    
+    thisScene.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
+    thisScene.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
+    thisScene.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
+    thisScene.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
+    thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
+    thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
+
+    thisScene.load.image('fashionShowBg', 'scene/location/downtown/fashionShowBg.png');
+
+    thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
+    // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
+
+    // Load bgm
+    thisScene.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
+    thisScene.load.audio('downtownBGM', 'bgm/downtown.mp3');
+    thisScene.load.audio('fashionShowWaitingBGM', 'bgm/fashionShowWaiting.mp3');
+
+    // load avatar assets
+    preloadAvatarAssets(thisScene);
 
     // load chat message containers
     for (let i = 1; i < 11; i++) {
