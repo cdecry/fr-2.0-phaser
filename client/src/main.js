@@ -591,6 +591,10 @@ uiScene.create = function() {
                 chatAvatarPreview.destroy();
             chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
             chatAvatarPreview.setPosition(60, 50);
+            // trigger wave
+            chatAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
+            chatAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
+            chatAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
         }
         else {
             instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
@@ -1196,6 +1200,7 @@ uiScene.create = function() {
             // Add listener: click to close instant messenger
             instantMessenger.getChildByID('im-close-button').onmousedown = () => {
                 imWindow.style.visibility = 'hidden';
+                instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
@@ -2889,6 +2894,8 @@ inGame.create = function() {
     globalThis.socket.on('playerWaveResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) { // && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying
+                console.log(JSON.parse(JSON.stringify(p.getAt(cMap.player))).textureKey + '-wave');
+                console.log(JSON.parse(JSON.stringify(p.getAt(cMap.top))).textureKey + '-wave');
                 p.getAt(cMap.player).play(JSON.parse(JSON.stringify(p.getAt(cMap.player))).textureKey + '-wave');
                 p.getAt(cMap.lips).play(JSON.parse(JSON.stringify(p.getAt(cMap.lips))).textureKey + '-wave');
                 p.getAt(cMap.top).play(JSON.parse(JSON.stringify(p.getAt(cMap.top))).textureKey + '-wave');
@@ -3527,10 +3534,22 @@ let avatarScene = new Phaser.Scene('avatarScene');
 
 avatarScene.preload = function() {
     preloadAvatarAssets(this);
+
+    // load action anim data
+    this.load.json('bodyAnims', 'anims/bodyAnims.json');
+    this.load.json('bottomShoes', 'anims/bottomShoes.json');
+    this.load.json('eyesAnims', 'anims/eyesAnims.json');
+    this.load.json('hairAnims', 'anims/hairAnims.json');
+    this.load.json('lipsAnims', 'anims/lipsAnims.json');
 }
 
 avatarScene.create = function() {
-    // this.input.setTopOnly(true);
+    let data = this.cache.json.get('bodyAnims');
+    let dataFace = this.cache.json.get('bottomShoes');
+    let dataEyes = this.cache.json.get('eyesAnims');
+    let dataHair = this.cache.json.get('hairAnims');
+    let dataLips = this.cache.json.get('lipsAnims');
+
     avatarScene.createAvatarPreview = (playerInfo, scene) => {
         let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
         let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
@@ -3576,6 +3595,63 @@ avatarScene.create = function() {
 
         return avPreview;
     }
+
+    //#region Avatar Preview Action Animations
+    data.skins.forEach(skin => {
+        data.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: data.frames[key] }),
+                frameRate: data.frameRate,
+                repeat: data.repeat
+            });
+        })
+    });
+
+    dataFace.skins.forEach(skin => {
+        dataFace.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataFace.frames[key] }),
+                frameRate: dataFace.frameRate,
+                repeat: dataFace.repeat
+            });
+        })
+    });
+
+    dataEyes.skins.forEach(skin => {
+        dataEyes.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataEyes.frames[key] }),
+                frameRate: dataEyes.frameRate,
+                repeat: dataEyes.repeat
+            });
+        })
+    });
+
+    dataHair.skins.forEach(skin => {
+        dataHair.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataHair.frames[key] }),
+                frameRate: dataHair.frameRate,
+                repeat: dataHair.repeat
+            });
+        })
+    });
+
+    dataLips.skins.forEach(skin => {
+        dataLips.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataLips.frames[key] }),
+                frameRate: dataLips.frameRate,
+                repeat: dataLips.repeat
+            });
+        })
+    });
+    //#endregion
 }
 //#endregion
 
