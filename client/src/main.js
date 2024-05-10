@@ -513,85 +513,9 @@ uiScene.create = function() {
             let members = chatTabs[tab.id].chatMembers;
             if (members.length === 2) {
                 let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
+                let chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+                chatAvatarPreview.setPosition(60, 50);
                 
-                let avatarScene = new Phaser.Scene('avatarScene');
-
-                avatarScene.preload = function() {
-                    preloadAvatarAssets(this);
-                }
-                let testConfig = {
-                    type: Phaser.AUTO,
-                    parent: 'chat-avatar-preview',
-                    width: 121,
-                    height: 150,
-                    backgroundColor: '#ffffff',
-                    physics: {
-                        default: 'arcade',
-                        arcade: {
-                            debug: false
-                        }
-                    },
-                    dom: {
-                        createContainer: true
-                        },
-                    pixelArt: true,
-                    scene: [avatarScene]
-                };
-                
-                avatarScene.create = function() {
-
-                    // this.input.setTopOnly(true);
-                    avatarScene.createAvatarPreview = (playerInfo, scene) => {
-                        let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
-                        let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
-                        let eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
-                        let lipsPreview = scene.add.sprite(0, 0, 'lips-0');
-                        let faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-                        let boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-                        let hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-                        let hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-                        let headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-                        let shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
-                        // if (playerInfo.avatar['equipped'][3] === -1) {
-                        let bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
-                        let topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
-                        let outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
-                        let costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
-                        let bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-                        let browPreview = scene.add.sprite(0, 0, 'brow-0');
-                        let boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
-                        let usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
-                        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
-                        usernameLabelPreview.originX = 0.5;
-                        let usernameLabelCenter = usernameLabel.getCenter().x;
-                        usernameLabelPreview.x = usernameLabelCenter;
-                        usernameLabelPreview.setStroke('#ffffff', 2);
-                        
-                        var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
-                        avPreview = scene.add.container(0, 0);
-                        avPreview.add(children);
-                        avPreview.setDepth(1001);
-                
-                        avPreview.setDataEnabled();
-                        avPreview.setData('username', playerInfo.username);
-                        avPreview.setData('skinTone', playerInfo.avatar['skinTone']);
-                        avPreview.setData('eyeType', playerInfo.avatar['eyeType']);
-                        avPreview.setData('gender', playerInfo.avatar['gender']);
-                        avPreview.setData('playerInfo', playerInfo);
-                
-                        var previewEquipped = [];
-                        for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
-                            previewEquipped[i] = playerInfo.avatar['equipped'][i]
-                        avPreview.setData('equipped', previewEquipped);
-                
-                        return avPreview;
-                    }
-
-                    let chatAvatarPreview = avatarScene.createAvatarPreview(myPlayerInfo, avatarScene);
-                    // chatAvatarPreview.setPosition(0, 0);
-                }
-
-                let testGame = new Phaser.Game(testConfig);
                 
                 // let testAvatarPreview = uiScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
                 // let chatAvatar = instantMessenger.getChildByID('chat-avatar-preview');
@@ -1207,6 +1131,27 @@ uiScene.create = function() {
                 imWindow.style.height = '250px';
                 buddyWindow.style.top = '50px';
                 buddyWindow.style.left = '-104px';
+
+                // create chat avatar preview layer
+                let testConfig = {
+                    type: Phaser.AUTO,
+                    parent: 'chat-avatar-preview',
+                    width: 121,
+                    height: 150,
+                    backgroundColor: '#ffffff',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            debug: false
+                        }
+                    },
+                    dom: {
+                        createContainer: true
+                        },
+                    pixelArt: true,
+                    scene: [avatarScene]
+                };
+                let testGame = new Phaser.Game(testConfig);
             }
 
             // Set IM visible (open)
@@ -3591,6 +3536,63 @@ uiObjectScene.preload = function () {
 uiObjectScene.create = function () {
     console.log('uiObjectScene created');
 };
+//#endregion
+
+//#region avatarPreview Scene
+let avatarScene = new Phaser.Scene('avatarScene');
+
+avatarScene.preload = function() {
+    preloadAvatarAssets(this);
+}
+
+avatarScene.create = function() {
+    // this.input.setTopOnly(true);
+    avatarScene.createAvatarPreview = (playerInfo, scene) => {
+        let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+        let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+        let eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+        let lipsPreview = scene.add.sprite(0, 0, 'lips-0');
+        let faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+        let boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        let hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        let hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        let headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        let shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+        // if (playerInfo.avatar['equipped'][3] === -1) {
+        let bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        let topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+        let outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        let costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+        let bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        let browPreview = scene.add.sprite(0, 0, 'brow-0');
+        let boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        let usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
+        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
+        usernameLabelPreview.originX = 0.5;
+        let usernameLabelCenter = usernameLabel.getCenter().x;
+        usernameLabelPreview.x = usernameLabelCenter;
+        usernameLabelPreview.setStroke('#ffffff', 2);
+        
+        var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
+        avPreview = scene.add.container(0, 0);
+        avPreview.add(children);
+        avPreview.setDepth(1001);
+
+        avPreview.setDataEnabled();
+        avPreview.setData('username', playerInfo.username);
+        avPreview.setData('skinTone', playerInfo.avatar['skinTone']);
+        avPreview.setData('eyeType', playerInfo.avatar['eyeType']);
+        avPreview.setData('gender', playerInfo.avatar['gender']);
+        avPreview.setData('playerInfo', playerInfo);
+
+        var previewEquipped = [];
+        for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
+            previewEquipped[i] = playerInfo.avatar['equipped'][i]
+        avPreview.setData('equipped', previewEquipped);
+
+        return avPreview;
+    }
+}
 //#endregion
 
 var uiConfig = {
