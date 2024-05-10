@@ -455,7 +455,7 @@ uiScene.create = function() {
             chatTabs[tabId] = new ChatTab(tabName, myPlayerInfo.username, [...invitedBuddies, myPlayerInfo.username], msg);
         openChatTab = tabId;
 
-        uiScene.loadChatTabs();
+        uiScene.loadChatTabs(true);
         uiScene.toggleIMLayout('pm');
         
         imWindow.style.visibility = 'visible';
@@ -560,7 +560,8 @@ uiScene.create = function() {
         };
     }
 
-    uiScene.loadChatTabs = () => {
+    uiScene.loadChatTabs = (newTab=false) => {
+        console.log(newTab);
         let tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
         tabsFlexbox.innerHTML = '';
 
@@ -593,9 +594,11 @@ uiScene.create = function() {
             chatAvatarPreview.setPosition(60, 50);
             // trigger wave
 
-            chatAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
-            chatAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
-            chatAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
+            if (newTab) {
+                chatAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
+                chatAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
+                chatAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
+            }
         }
         else {
             instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
@@ -1089,12 +1092,9 @@ uiScene.create = function() {
                         }
                     });
 
-                    if (checkedLabels.length > 0) {
+                    if (checkedLabels.length > 0)
                         uiScene.createChatTab(checkedLabels);
-                        uiScene.loadChatTabs();
-                    }
-
-                    // socket.emit('acceptBuddyRequest', Number(id), username);
+                    
                     closePopup();
                 });
     
