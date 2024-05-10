@@ -141,6 +141,7 @@ var notifBubbleLifeTime, notifLifeTime, notifBubble, notifMessage;
 var myPlayerInfo;
 var outgoingBuddyRequests = [];
 var avatarPreview = null;
+var chatAvatarPreview = null;
 var locationObjects = [];
 var bgm;
 var myDarkMask = null;
@@ -456,7 +457,6 @@ uiScene.create = function() {
 
         uiScene.loadChatTabs();
         uiScene.toggleIMLayout('pm');
-        // uiScene.addChatTabListener();
         
         imWindow.style.visibility = 'visible';
     }
@@ -509,29 +509,14 @@ uiScene.create = function() {
             chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // avatar previe
+            // avatar preview
             let members = chatTabs[tab.id].chatMembers;
             if (members.length === 2) {
                 let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
-                let chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+                if (chatAvatarPreview)
+                    chatAvatarPreview.destroy();
+                chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
                 chatAvatarPreview.setPosition(60, 50);
-                
-                
-                // let testAvatarPreview = uiScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
-                // let chatAvatar = instantMessenger.getChildByID('chat-avatar-preview');
-                // var ctx = chatAvatar.getContext('2d');
-
-                // var img = new Image();
-                // img.src = '/src/assets/scene/location/downtown/objects/topModelsBoa1.png';
-
-                // img.onload = function() {
-                //     ctx.drawImage(img, 0, 0);
-                // };
-                // testAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(testAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
-                // testAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(testAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
-                // testAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(testAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
-                // testAvatarPreview.setPosition(parseFloat(imWindow.style.left.slice(0, -2)) + 400, 
-                //                           parseFloat(imWindow.style.top.slice(0, -2)) + 260);
             }
         };
     }
@@ -593,6 +578,15 @@ uiScene.create = function() {
         chatNameText.innerHTML = chatTabs[openChatTab].chatName;
         chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        let members = chatTabs[openChatTab].chatMembers;
+            if (members.length === 2) {
+                let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
+                if (chatAvatarPreview)
+                    chatAvatarPreview.destroy();
+                chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+                chatAvatarPreview.setPosition(60, 50);
+            }
 
         uiScene.addChatTabListener();
     }
@@ -744,22 +738,6 @@ uiScene.create = function() {
     uiScene.createBuddyMenuListener = (buddyName, pointerX, pointerY) => {
         var chatOption, idfoneOption, deleteOption;
         let canvasRect = document.getElementsByTagName('canvas')[1].getBoundingClientRect();
-        // let canvasRect = document.getElementsByTagName('canvas')[0].getBoundingClientRect();
-
-        var canvasElements = document.getElementsByTagName('canvas');
-
-        // Create an array to store the IDs
-        var canvasIds = [];
-
-        // Loop through each canvas element and extract its ID
-        for (var i = 0; i < canvasElements.length; i++) {
-            var canvasId = canvasElements[i].id;
-            // Push the ID to the array
-            canvasIds.push(canvasId);
-        }
-
-        // Now you have an array containing the IDs of all canvas elements
-        console.log(canvasIds);
 
         $('#buddy-menu').css({
             visibility: 'visible',
@@ -1133,7 +1111,7 @@ uiScene.create = function() {
                 buddyWindow.style.left = '-104px';
 
                 // create chat avatar preview layer
-                let testConfig = {
+                let chatAvatarConfig = {
                     type: Phaser.AUTO,
                     parent: 'chat-avatar-preview',
                     width: 121,
@@ -1151,7 +1129,7 @@ uiScene.create = function() {
                     pixelArt: true,
                     scene: [avatarScene]
                 };
-                let testGame = new Phaser.Game(testConfig);
+                let chatAvatarGame = new Phaser.Game(chatAvatarConfig);
             }
 
             // Set IM visible (open)
@@ -1296,8 +1274,6 @@ uiScene.create = function() {
                     currLeft = parseInt(imWindow.style.left.slice(0, -2));
                     imWindow.style.top = (currTop + imDiffY).toString() + 'px';
                     imWindow.style.left = (currLeft + imDiffX).toString() + 'px';
-                    testAvatarPreview.setPosition(currLeft + imDiffX + 260, 
-                                                  currTop + imDiffY + 400);
                 }
             }
 
