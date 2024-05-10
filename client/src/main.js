@@ -513,7 +513,7 @@ uiScene.create = function() {
             let members = chatTabs[tab.id].chatMembers;
             if (members.length === 2) {
                 instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
-                let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
+                let idx = members.findIndex(usr => usr !== myPlayerInfo.username);
                 if (chatAvatarPreview)
                     chatAvatarPreview.destroy();
                 chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
@@ -586,12 +586,13 @@ uiScene.create = function() {
         let members = chatTabs[openChatTab].chatMembers;
         if (members.length === 2) {
             instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
-            let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
+            let idx = members.findIndex(usr => usr !== myPlayerInfo.username);
             if (chatAvatarPreview)
                 chatAvatarPreview.destroy();
             chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
             chatAvatarPreview.setPosition(60, 50);
             // trigger wave
+
             chatAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
             chatAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
             chatAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
@@ -3012,10 +3013,11 @@ inGame.create = function() {
         }
         chatTabs[chatId].chatHistory += username + ": " + msg + '<br>';
 
-        let imWindow;
+        let imWindow = null;
         if (instantMessenger) {
             imWindow = instantMessenger.getChildByID('im-window');
-            uiScene.loadChatTabs();
+            if (imWindow.style.visibility === 'visible')
+                uiScene.loadChatTabs();
         }
 
         if (openChatTab !== chatId || (instantMessenger && imWindow.style.visibility === 'hidden'))
