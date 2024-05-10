@@ -512,11 +512,15 @@ uiScene.create = function() {
             // avatar preview
             let members = chatTabs[tab.id].chatMembers;
             if (members.length === 2) {
+                instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
                 let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
                 if (chatAvatarPreview)
                     chatAvatarPreview.destroy();
                 chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
                 chatAvatarPreview.setPosition(60, 50);
+            }
+            else {
+                instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
             }
         };
     }
@@ -580,13 +584,17 @@ uiScene.create = function() {
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         let members = chatTabs[openChatTab].chatMembers;
-            if (members.length === 2) {
-                let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
-                if (chatAvatarPreview)
-                    chatAvatarPreview.destroy();
-                chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
-                chatAvatarPreview.setPosition(60, 50);
-            }
+        if (members.length === 2) {
+            instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
+            let idx = members.findIndex(usr => usr.username !== myPlayerInfo.username);
+            if (chatAvatarPreview)
+                chatAvatarPreview.destroy();
+            chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+            chatAvatarPreview.setPosition(60, 50);
+        }
+        else {
+            instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
+        }
 
         uiScene.addChatTabListener();
     }
