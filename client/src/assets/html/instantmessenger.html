@@ -29,6 +29,7 @@
                 max-height: 500px;
                 resize: both;
                 overflow: hidden;
+                z-index: 1
             }
 
             #im-header {
@@ -180,13 +181,13 @@
             }
 
             #chat-avatar-preview {
-                border: 3px solid green;
+                /* border: 3px solid green; */
                 position: absolute;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                z-index: 2;
+                overflow: hidden;
             }
 
             #chat-avatar-frame {
@@ -196,7 +197,6 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                z-index: 3;
                 background-image: url(/src/assets/scene/chat/im-avatar-frame.png);
             }
 
@@ -359,6 +359,7 @@
                 max-width: 350px;
                 max-height: 500px;
                 overflow: hidden;
+                z-index: 2;
             }
 
             #buddy-header {
@@ -542,6 +543,7 @@
                 justify-content: space-evenly;
                 align-items: flex-start;
                 font-size: 14px;
+                z-index: 3;
             }
 
             #buddy-menu-divider {
