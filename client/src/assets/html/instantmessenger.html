@@ -68,35 +68,48 @@
                 height: calc(100% - 37px);
                 border-radius: 5px;
                 background-color: white;
+                display: grid;
+                grid-auto-flow: row;
+                grid-auto-rows: min-content;
             }
 
             #chat-tabs-container {
-                position: absolute;
+                /* border: 1px solid red; */
+                position: relative;
                 left: 2px;
                 width: calc(100% - 4px);
-                height: 56px;
+                height: 30px;
+                display: grid;
+                grid-auto-flow: column;
+                overflow: hidden;
+            }
+
+            #chat-tabs-top {
+                position: relative;
+                display: grid;
+                grid-auto-flow: column;
             }
 
             #chat-tabs-flexbox {
-                position: absolute;
+                position: relative;
                 top: 8px;
                 width: calc(100% - 70px);
                 height: calc(100% - 8px);
                 display: grid;
                 grid-auto-flow: column;
-                overflow-x: scroll;
+                grid-auto-columns: min-content;
+                overflow-x: hidden;
                 overflow-y: hidden;
-                display: flex;
-                flex-direction: row;
             }
 
             .chat-tab {
-                /* flex-shrink: 1; */
-                float: left;
+                position: relative;
                 width: 113px;
                 max-width: 113px;
                 height: calc(100%);
                 border-radius: 7px;
+                border-bottom-left-radius: 0%;
+                border-bottom-right-radius: 0%;
                 border-top: 1px solid #189af6;
                 border-left: 1px solid #189af6;
                 border-right: 1px solid #189af6;
@@ -108,10 +121,20 @@
                 cursor: pointer;
             }
             
+            #chat-tabs-scroll-left {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-up.png);
+            }
+
+            #chat-tabs-scroll-left {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-down.png);
+            }
+
             #new-chat-button {
-                position: absolute;
-                top: 10px;
-                right: 11px;
+                /* border: 1px solid red; */
+                position: relative;
+                border: 1px solid green;
+                /* top: 10px; */
+                /* right: 11px; */
             }
 
             #new-chat-button:hover {
@@ -121,11 +144,14 @@
             #chat-tabs-bottom {
                 margin-left: 2px;
                 margin-right: 2px;
-                position: absolute;
-                top: 30px;
+                /* position: absolute; */
+                position: relative;
+                /* top: 30px; */
                 width: calc(100% - 4px);
                 height: 26px;
                 border-radius: 5px;
+                border-top-left-radius: 0%;
+                border-top-right-radius: 0%;
                 background: linear-gradient(to bottom, #20a0f0, #3fccf0, #42d0f0);
             }
 
@@ -137,11 +163,11 @@
 
 
             #chat-sections {
-                position: absolute;
+                position: relative;
                 display: flex;
                 height: calc(100% - 56px);
                 width: calc(100% - 2px);
-                top: 56px;
+                /* top: 56px; */
                 padding-left: 4px;
                 padding-right: 4px;
             }
@@ -152,10 +178,10 @@
                 height: 100%;
                 border: 1px solid green; */
                 flex: 1;
-
                 /* chat settings */
                 max-width: calc(100% - 2px);
-
+                height: 150px;
+                max-height: 150px;
                 /* avatar settings: */
                 /* max-width: calc(100% - 126px); */
             }
@@ -201,14 +227,15 @@
             }
 
             #chat-content-container {
-                height: calc(100% - 65px);
+                position: relative;
+                height: calc(89px);
                 width: calc(100% - 4px);
-                top: 0px;
             }
             
             #chat-input-top {
-                margin-bottom: 1px;
-                bottom: 42px;
+                /* margin-bottom: 1px; */
+                /* bottom: 42px; */
+                position: relative;
                 width: calc(100% - 4px);
                 height: 21px;
                 border-radius: 4px;
@@ -219,7 +246,7 @@
 
             #chat-input-container {
                 position: relative;
-                bottom: 4px;
+                margin-top: 1px;
                 width: calc(100% - 4px);
                 height: 39px;
                 border-radius: 4px;
@@ -584,15 +611,18 @@
             <div id="im-container">
 
                 <div id="chat-tabs-container">
-                    <div id="chat-tabs-flexbox">
-                        <div class="chat-tab" id="current-room">
-                            <div id="tabName" class="selectDisable">Current Room</div>
+                    <div id="chat-tabs-top">
+                        <div id="chat-tabs-flexbox">
+                            <div class="chat-tab" id="current-room">
+                                <div id="tabName" class="selectDisable">Current Room</div>
+                            </div>
+                        </div>
+                        <!-- <div id="chat-tabs-scroll-left"></div> -->
+                        <!-- <div id="chat-tabs-scroll-right"></div> -->
+                        <div id="new-chat-button">
+                            <img src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
                         </div>
                     </div>
-                </div>
-
-                <div id="new-chat-button">
-                    <img src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
                 </div>
 
                 <div id="chat-tabs-bottom">
