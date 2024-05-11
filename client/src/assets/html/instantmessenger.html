@@ -74,7 +74,6 @@
             }
 
             #chat-tabs-container {
-                /* border: 1px solid red; */
                 position: relative;
                 left: 2px;
                 width: calc(100% - 4px);
@@ -88,18 +87,24 @@
                 position: relative;
                 display: grid;
                 grid-auto-flow: column;
+                grid-auto-columns: min-content;
+                width: 336px;
             }
 
             #chat-tabs-flexbox {
                 position: relative;
                 top: 8px;
-                width: calc(100% - 70px);
+                width: 270px;
                 height: calc(100% - 8px);
                 display: grid;
                 grid-auto-flow: column;
                 grid-auto-columns: min-content;
-                overflow-x: hidden;
+                overflow-x: auto;
                 overflow-y: hidden;
+            }
+
+            #chat-tabs-flexbox::-webkit-scrollbar {
+                display: none; /* Chrome, Safari, and Opera */
             }
 
             .chat-tab {
@@ -121,18 +126,43 @@
                 cursor: pointer;
             }
             
-            #chat-tabs-scroll-left {
-                background-image: url(/src/assets/scene/chat/im-scrollbar-up.png);
+            #chat-tabs-buttons {
+                position: relative;
+                margin-top: 10px;
+                width: 60px;
+                height: 100%;
+                /* margin-left: 0px;
+                left: 0px; */
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: min-content;
+            }
+
+            .chat-tabs-scroll-buttons {
+                visibility: hidden;
+                margin-left: 6px;
+                width: 15px;
+                height: 16px;
+            }
+
+            .chat-tabs-scroll-buttons:hover {
+                cursor: pointer;
             }
 
             #chat-tabs-scroll-left {
-                background-image: url(/src/assets/scene/chat/im-scrollbar-down.png);
+                background-image: url(/src/assets/scene/chat/im-scrollbar-left.png);
+            }
+
+            #chat-tabs-scroll-right {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-right.png);
             }
 
             #new-chat-button {
-                /* border: 1px solid red; */
-                position: relative;
-                border: 1px solid green;
+                margin-left: 6px;
+                height: 14px;
+                width: 14px;
+                /* position: relative; */
+                background-image: url(/src/assets/scene/chat/new-chat-icon.png);
                 /* top: 10px; */
                 /* right: 11px; */
             }
@@ -217,7 +247,6 @@
             }
 
             #chat-avatar-frame {
-                /* border: 1px solid red; */
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -617,10 +646,11 @@
                                 <div id="tabName" class="selectDisable">Current Room</div>
                             </div>
                         </div>
-                        <!-- <div id="chat-tabs-scroll-left"></div> -->
-                        <!-- <div id="chat-tabs-scroll-right"></div> -->
-                        <div id="new-chat-button">
-                            <img src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
+                        <div id="chat-tabs-buttons">
+                            <div id="chat-tabs-scroll-left" class="chat-tabs-scroll-buttons"></div>
+                            <div id="chat-tabs-scroll-right" class="chat-tabs-scroll-buttons"></div>
+                            <div id="new-chat-button">
+                            </div>
                         </div>
                     </div>
                 </div>
