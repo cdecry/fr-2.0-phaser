@@ -1,17 +1,27 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem, updateInventory, changeEquipped, getUserAvatar, changeEyeType, addToInventory, getItem } = require("./queries");
+const { userExists, registerUser, getNumberOfUsers, getUser, addAvatar, addItem, updateInventory, changeEquipped, getUserAvatar, changeEyeType, addToInventory, getItem, itemInInventory } = require("./queries");
 const { userMigration} = require("./migrations");
 
 main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect(process.env.DB_URI);
-    await userMigration();
-    // for (let i = 0; i < 9; i++) {
-    //     await addToInventory(0, 2, i, false);
+    // await userMigration();
+    //  await addToInventory(0, 0, 0, false);
+    // let val = await itemInInventory(0, 0, 0, false);
+    // console.log(`This user has ${val} copies of this item.`);
+    // for (let i = 2; i < 9; i++) {
+    //     if (i == 2 || i == 6 || i == 7)
+    //         await addToInventory(0, 0, i, true);
+    //     else
+    //         await addToInventory(0, 0, i, false);
     // }
+    // for (let i = 0; i < 4; i++) {
+    //     await addToInventory(0, 5, i, false);
+    // }
+    // await addToInventory(0, 4, 2, false);
     // await addToInventory(0, 2, 13, false);
     // await addToInventory(0, 3, 10, false);
     // await addToInventory(0, 1, 15, false);
@@ -44,7 +54,7 @@ async function main() {
     // await addAvatar(0, 0, 'f', 1, 0, [0, 1, 2, 3, 4]);
 
     // UPDATE INVENTORY
-    // await updateInventory(0, [0, 1, 2, 3, 4]);
+    // await updateInventory(0, {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 'favorite': []});
 
     // ADD ITEM
     // await addAvatar(0, 0, 'f', 1, 0, [0, 0, 0, 0, 0]);
