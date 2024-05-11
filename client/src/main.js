@@ -474,7 +474,7 @@ uiScene.create = function() {
         uiScene.loadChatTabs(true);
         scrollToTab(openChatTab);
 
-        imWindow.style.visibility = 'visible';
+        imWindow.style.display = '';
     }
 
     uiScene.toggleIMLayout = (layout='') => {
@@ -1075,7 +1075,7 @@ uiScene.create = function() {
         }
         else if (event.target.id === 'buddiesButton') {
             // Click buddies button while IM is open to reset window to default
-            if (instantMessenger != null && (imWindow.style.visibility == 'visible' || buddyWindow.style.visibility == 'visible')) {
+            if (instantMessenger != null && imWindow.style.display == '' && buddyWindow.style.visibility == 'visible') {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
                 buddyCurrX = 0, buddyCurrY = 0, buddyDiffX = 0, buddyDiffY = 0;
                 imWindow.style.top = '50px';
@@ -1085,7 +1085,7 @@ uiScene.create = function() {
                 buddyWindow.style.top = '50px';
                 buddyWindow.style.left = '-104px';
 
-                imWindow.style.visibility = 'visible';
+                imWindow.style.display = '';
                 buddyWindow.style.visibility = 'visible';
 
                 return;
@@ -1240,27 +1240,10 @@ uiScene.create = function() {
                     scene: [avatarScene]
                 };
                 let chatAvatarGame = new Phaser.Game(chatAvatarConfig);
-            }
 
-            // Set IM visible (open)
-            imWindow.style.visibility = 'visible';
-            buddyWindow.style.visibility = 'visible';
 
-            // Load chat name & history for open tab, auto-scroll to bottom
-            chatNameText = instantMessenger.getChildByID('chatName');
-            chatHistory = document.getElementById('chat-history');
-            chatNameText.innerHTML = chatTabs[openChatTab].chatName;
-            chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
-            chatHistory.scrollTop = chatHistory.scrollHeight;
 
-            // Load chat tabs
-            uiScene.loadChatTabs();
-
-            // Load buddy list and requests
-            uiScene.loadBuddyList();
-            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
-
-            // Add listener: press enter to send IM message, not chat bar
+                // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
                 
                 if (document.activeElement.id != 'chat-input' || chatInput.value.trim().length == 0)
@@ -1297,8 +1280,8 @@ uiScene.create = function() {
 
             // Add listener: click to close instant messenger
             instantMessenger.getChildByID('im-close-button').onmousedown = () => {
-                imWindow.style.visibility = 'hidden';
-                instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
+                imWindow.style.display = 'none';
+
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
@@ -1445,6 +1428,25 @@ uiScene.create = function() {
                     buddyWindow.style.left = (currLeft + buddyDiffX).toString() + 'px';
                 }
             }
+            }
+
+            // Set IM visible (open)
+            imWindow.style.display = '';
+            buddyWindow.style.visibility = 'visible';
+
+            // Load chat name & history for open tab, auto-scroll to bottom
+            chatNameText = instantMessenger.getChildByID('chatName');
+            chatHistory = document.getElementById('chat-history');
+            chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+            chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Load chat tabs
+            uiScene.loadChatTabs();
+
+            // Load buddy list and requests
+            uiScene.loadBuddyList();
+            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
         }
         
     });
@@ -3113,11 +3115,11 @@ inGame.create = function() {
         let imWindow = null;
         if (instantMessenger) {
             imWindow = instantMessenger.getChildByID('im-window');
-            if (imWindow.style.visibility === 'visible')
+            if (imWindow.style.display === '')
                 uiScene.loadChatTabs();
         }
 
-        if (openChatTab !== chatId || (instantMessenger && imWindow.style.visibility === 'hidden'))
+        if (openChatTab !== chatId || (instantMessenger && imWindow.style.visibility === 'none'))
             displayNotification(Notif.CHAT, username + ": " + msg);
     }.bind(this));
 
