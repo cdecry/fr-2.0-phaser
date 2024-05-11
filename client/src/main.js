@@ -176,6 +176,12 @@ function scrollToTab(tabId) {
         left: targetScrollPosition,
         behavior: 'smooth'
     });
+
+    if (tabId === 'current-room')
+        uiScene.toggleIMLayout();
+    else {
+        uiScene.toggleIMLayout('pm');
+    }
 }
 
 function createSpeechBubble (x, y, username, quote)
@@ -477,18 +483,20 @@ uiScene.create = function() {
         let chatSection = instantMessenger.getChildByID('chat-section');
         let chatAvatarSection = instantMessenger.getChildByID('chat-avatar-section');
         let chatInput = instantMessenger.getChildByID('chat-input');
-
+        let chatTabsBottom = instantMessenger.getChildByID('chat-tabs-bottom');
         chatInput.value = '';
 
         if (layout === 'pm') {
             chatSection.style.maxWidth = 'calc(100% - 126px)';
             chatAvatarSection.style.marginRight = '4px';
             chatAvatarSection.style.flex = '0 0 121px';
+            chatTabsBottom.style.borderBottomRightRadius = '0%';
         }
         else {
             chatSection.style.maxWidth = 'calc(100% - 2px)';
             chatAvatarSection.style.marginRight = '0px';
             chatAvatarSection.style.flex = '0';
+            chatTabsBottom.style.borderBottomRightRadius = '';
         }
     }
 
@@ -511,12 +519,6 @@ uiScene.create = function() {
             tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
             openChatTab = tab.id;
 
-            if (openChatTab == 'current-room')
-                uiScene.toggleIMLayout();
-            else {
-                uiScene.toggleIMLayout('pm');
-            }
-
             scrollToTab(openChatTab);
             chatNameText.innerHTML = chatTabs[openChatTab].chatName;
             chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
@@ -524,6 +526,7 @@ uiScene.create = function() {
 
             // avatar preview
             let members = chatTabs[tab.id].chatMembers;
+            let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
             if (members.length === 2) {
                 instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
                 let idx = members.findIndex(usr => usr !== myPlayerInfo.username);
@@ -531,9 +534,11 @@ uiScene.create = function() {
                     chatAvatarPreview.destroy();
                 chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
                 chatAvatarPreview.setPosition(60, 50);
+                chatAvatarFrame.style.visibility = 'visible';
             }
             else {
                 instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
+                chatAvatarFrame.style.visibility = 'hidden';
             }
         };
     }
@@ -597,6 +602,7 @@ uiScene.create = function() {
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         let members = chatTabs[openChatTab].chatMembers;
+        let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
         if (members.length === 2) {
             instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
             let idx = members.findIndex(usr => usr !== myPlayerInfo.username);
@@ -611,9 +617,11 @@ uiScene.create = function() {
                 chatAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
                 chatAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
             }
+            chatAvatarFrame.style.visibility = 'visible';
         }
         else {
             instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
+            chatAvatarFrame.style.visibility = 'hidden';
         }
 
         let scrollLeftButton = instantMessenger.getChildByID('chat-tabs-scroll-left');
