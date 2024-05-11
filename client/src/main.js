@@ -561,7 +561,6 @@ uiScene.create = function() {
     }
 
     uiScene.loadChatTabs = (newTab=false) => {
-        console.log(newTab);
         let tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
         tabsFlexbox.innerHTML = '';
 
@@ -1094,7 +1093,7 @@ uiScene.create = function() {
 
                     if (checkedLabels.length > 0)
                         uiScene.createChatTab(checkedLabels);
-                    
+
                     closePopup();
                 });
     
@@ -1690,7 +1689,7 @@ var chatTabs = {
         chatMembers: [],
         chatHistory: "",
         expired: false,
-    }
+    },
 }
 
 var onlineUsers = [];
