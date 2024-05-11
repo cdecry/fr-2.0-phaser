@@ -353,14 +353,39 @@
             }
 
             #close-chat-avatar-preview-button {
+                visibility: hidden;
+                width: 11px;
+                height: 10px;
                 position: absolute;
-                left: 35px;
-                /* bottom: 5px; */
+                top: 8px;
+                left: 219px;
+                background-image: url(/src/assets/scene/chat/im-close-avatar-preview.png);
+            }
+
+            #open-chat-avatar-preview-button {
+                visibility: hidden;
+                width: 11px;
+                height: 10px;
+                position: absolute;
+                top: 8px;
+                right: 27px;
+                background-image: url(/src/assets/scene/chat/im-open-avatar-preview.png);
             }
 
             #close-chat-tab-button {
+                visibility: hidden;
+                width: 12px;
+                height: 12px;
                 position: absolute;
-                left: 35px;
+                top: 7px;
+                right: 5px;
+                background-image: url(/src/assets/scene/chat/im-close-chat.png);
+            }
+
+            #close-chat-tab-button:hover,
+            #close-chat-avatar-preview-button:hover,
+            #open-chat-avatar-preview-button:hover {
+                cursor: pointer;
             }
 
             #chat-history {
@@ -671,6 +696,7 @@
                     <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
                     <div id="chatName" class="selectDisable">Current Room</div>
                     <div id="close-chat-avatar-preview-button"></div>
+                    <div id="open-chat-avatar-preview-button"></div>
                     <div id="close-chat-tab-button"></div>
                 </div>
 
