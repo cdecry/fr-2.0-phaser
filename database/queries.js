@@ -77,6 +77,26 @@ exports.loginRequest = async function (username, password) {
     });
 }
 
+exports.itemInInventory = async function (userId, itemType, itemId, coined) {
+    return new Promise((resolve, reject) => {
+        User.findOne({ 'id': userId }, 'inventory', function (err, user) {
+            if (user != null && user.inventory) {
+                let itemList = user.inventory[itemType];
+                let quantity = 0;
+                for (let item of itemList) {
+                    if (item.id === itemId && item.coined === coined) {
+                        quantity = item.quantity;
+                        break;
+                    }
+                }
+                resolve(quantity);
+            }
+            else
+                resolve(null);
+        });
+    });
+}
+
 exports.getNumberOfUsers = async function () {
     return new Promise((resolve, reject) => {
         User.countDocuments({}, function (err, count) {
@@ -160,23 +180,74 @@ exports.deleteBuddy = async function (userID, buddyIDToDelete) {
 //     });
 // }
 
+// exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
+//     const query = { 'id': userId };
+//     const update = {
+//       $push: {
+//         [`inventory.${itemType.toString()}`]: { id: itemTypeId, coined: coined }
+//       }
+//     };
+//     const options = { upsert: true };
+  
+//     try {
+//         await User.findOneAndUpdate(query, update, options).exec();
+//         console.log('Added to inventory');
+//     } catch (error) {
+//         console.error('Error adding item to inventory:', error);
+//     }
+// };
+
+// exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
+//     const query = { 'id': userId };
+//     let numThisItem = await itemInInventory(userId, itemType, itemTypeId, coined);
+//     if (numThisItem > 0) {
+//         // this item ixists, just update the quantity by adding one.
+//     }
+//     else {
+//         // add the whole item like below
+//     }
+//     const update = {
+//       $push: {
+//         [`inventory.${itemType.toString()}`]: { id: itemTypeId, coined: coined, quantity: 1 }
+//       }
+//     };
+//     const options = { upsert: true };
+  
+//     try {
+//         await User.findOneAndUpdate(query, update, options).exec();
+//         console.log('Added to inventory');
+//     } catch (error) {
+//         console.error('Error adding item to inventory:', error);
+//     }
+// };
+
 exports.addToInventory = async function (userId, itemType, itemTypeId, coined) {
     const query = { 'id': userId };
-    const update = {
-      $push: {
-        [`inventory.${itemType.toString()}`]: { id: itemTypeId, coined: coined }
-      }
-    };
-    const options = { upsert: true };
-  
+
     try {
-        await User.findOneAndUpdate(query, update, options).exec();
+        let numThisItem = await exports.itemInInventory(userId, itemType, itemTypeId, coined);
+        
+        if (numThisItem > 0) {
+            // Item exists, update the quantity by adding one
+            const update = {
+                $inc: { [`inventory.${itemType.toString()}.quantity`]: 1 }
+            };
+            await User.findOneAndUpdate(query, update).exec();
+        } else {
+            // Item doesn't exist, add it to the inventory
+            const newItem = { id: itemTypeId, coined: coined, quantity: 1 };
+            const update = {
+                $push: { [`inventory.${itemType.toString()}`]: newItem }
+            };
+            const options = { upsert: true };
+            await User.findOneAndUpdate(query, update, options).exec();
+        }
+        
         console.log('Added to inventory');
     } catch (error) {
         console.error('Error adding item to inventory:', error);
     }
-  };
-  
+};
 
 //#endregion
 
