@@ -179,9 +179,8 @@ function scrollToTab(tabId) {
 
     if (tabId === 'current-room')
         uiScene.toggleIMLayout();
-    else {
+    else
         uiScene.toggleIMLayout('pm');
-    }
 }
 
 function createSpeechBubble (x, y, username, quote)
@@ -473,7 +472,6 @@ uiScene.create = function() {
         openChatTab = tabId;
 
         uiScene.loadChatTabs(true);
-        uiScene.toggleIMLayout('pm');
         scrollToTab(openChatTab);
 
         imWindow.style.visibility = 'visible';
@@ -484,6 +482,7 @@ uiScene.create = function() {
         let chatAvatarSection = instantMessenger.getChildByID('chat-avatar-section');
         let chatInput = instantMessenger.getChildByID('chat-input');
         let chatTabsBottom = instantMessenger.getChildByID('chat-tabs-bottom');
+        
         chatInput.value = '';
 
         if (layout === 'pm') {
@@ -491,12 +490,20 @@ uiScene.create = function() {
             chatAvatarSection.style.marginRight = '4px';
             chatAvatarSection.style.flex = '0 0 121px';
             chatTabsBottom.style.borderBottomRightRadius = '0%';
+
+            instantMessenger.getChildByID('close-chat-avatar-preview-button').style.visibility = 'visible';
+            instantMessenger.getChildByID('open-chat-avatar-preview-button').style.visibility = 'hidden';
+            instantMessenger.getChildByID('close-chat-tab-button').style.visibility = 'visible';
         }
         else {
             chatSection.style.maxWidth = 'calc(100% - 2px)';
             chatAvatarSection.style.marginRight = '0px';
             chatAvatarSection.style.flex = '0';
             chatTabsBottom.style.borderBottomRightRadius = '';
+
+            instantMessenger.getChildByID('close-chat-avatar-preview-button').style.visibility = 'hidden';
+            instantMessenger.getChildByID('close-chat-tab-button').style.visibility = 'hidden';
+            instantMessenger.getChildByID('open-chat-avatar-preview-button').style.visibility = 'hidden';
         }
     }
 
@@ -600,6 +607,11 @@ uiScene.create = function() {
         chatNameText.innerHTML = chatTabs[openChatTab].chatName;
         chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
+        
+        if (openChatTab === 'current-room')
+            uiScene.toggleIMLayout();
+        else
+            uiScene.toggleIMLayout('pm');
 
         let members = chatTabs[openChatTab].chatMembers;
         let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
@@ -634,7 +646,7 @@ uiScene.create = function() {
             scrollLeftButton.style.visibility = 'hidden';
             scrollRightButton.style.visibility = 'hidden';
         }
-        
+
         uiScene.addChatTabListener();
     }
 
@@ -1167,6 +1179,38 @@ uiScene.create = function() {
                 
                 instantMessenger.getChildByID('chat-tabs-scroll-right').onclick = () => {
                     scrollLeftRight('right');
+                }
+
+                let closeChatAvatarPreviewBtn = instantMessenger.getChildByID('close-chat-avatar-preview-button');
+                let openChatAvatarPreviewBtn = instantMessenger.getChildByID('open-chat-avatar-preview-button');
+                let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
+                let closeChatButton = instantMessenger.getChildByID('close-chat-tab-button');
+
+                closeChatAvatarPreviewBtn.onclick = () => {
+                    uiScene.toggleIMLayout();
+
+                    chatAvatarFrame.style.visibility = 'hidden';
+                    openChatAvatarPreviewBtn.style.visibility = 'visible';
+                    closeChatButton.style.visibility = 'visible';
+                }
+
+                openChatAvatarPreviewBtn.onclick = () => {
+                    uiScene.toggleIMLayout('pm');
+                    chatAvatarFrame.style.visibility = 'visible';
+                    openChatAvatarPreviewBtn.style.visibility = 'hidden';
+                }
+
+                closeChatButton.onclick = () => {
+                    let chatTabsList = Object.keys(chatTabs);
+                    let tabSwitch = chatTabsList.indexOf(openChatTab) + 1;
+
+                    if (tabSwitch > chatTabsList.length - 1)
+                        tabSwitch -= 2;
+
+                    delete chatTabs[openChatTab];
+                    openChatTab = chatTabsList[tabSwitch];
+
+                    uiScene.loadChatTabs();
                 }
 
                 imWindow.style.top = '50px';
