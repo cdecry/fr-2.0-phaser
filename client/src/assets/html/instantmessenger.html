@@ -99,8 +99,9 @@
                 display: grid;
                 grid-auto-flow: column;
                 grid-auto-columns: min-content;
-                overflow-x: auto;
+                overflow-x: hidden;
                 overflow-y: hidden;
+                scroll-behavior: smooth;
             }
 
             #chat-tabs-flexbox::-webkit-scrollbar {
@@ -139,7 +140,7 @@
             }
 
             .chat-tabs-scroll-buttons {
-                visibility: hidden;
+                /* visibility: hidden; */
                 margin-left: 6px;
                 width: 15px;
                 height: 16px;

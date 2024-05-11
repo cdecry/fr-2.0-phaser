@@ -167,6 +167,17 @@ var fashionStartBtn;
 
 var testAvatarPreview = null;
 
+function scrollToTab(tabId) {
+    let flexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+    let tab = instantMessenger.getChildByID(tabId);
+    let targetScrollPosition = tab.offsetLeft;
+
+    flexbox.scrollTo({
+        left: targetScrollPosition,
+        behavior: 'smooth'
+    });
+}
+
 function createSpeechBubble (x, y, username, quote)
 {
     chatMessage = inGame.add.dom(0, 0).createFromCache('chatMessageHTML');
@@ -457,7 +468,8 @@ uiScene.create = function() {
 
         uiScene.loadChatTabs(true);
         uiScene.toggleIMLayout('pm');
-        
+        scrollToTab(openChatTab);
+
         imWindow.style.visibility = 'visible';
     }
 
@@ -505,6 +517,7 @@ uiScene.create = function() {
                 uiScene.toggleIMLayout('pm');
             }
 
+            scrollToTab(openChatTab);
             chatNameText.innerHTML = chatTabs[openChatTab].chatName;
             chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
             chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -603,6 +616,17 @@ uiScene.create = function() {
             instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
         }
 
+        let scrollLeftButton = instantMessenger.getChildByID('chat-tabs-scroll-left');
+        let scrollRightButton = instantMessenger.getChildByID('chat-tabs-scroll-right');
+        
+        if (tabsFlexbox.scrollWidth > tabsFlexbox.clientWidth) {
+            scrollLeftButton.style.visibility = 'visible';
+            scrollRightButton.style.visibility = 'visible';
+        } else {
+            scrollLeftButton.style.visibility = 'hidden';
+            scrollRightButton.style.visibility = 'hidden';
+        }
+        
         uiScene.addChatTabListener();
     }
 
@@ -1115,6 +1139,28 @@ uiScene.create = function() {
                     isClickUI = true;
                     disableInput = true;
                 }
+
+                function scrollLeftRight(direction) {
+                    let chatTabsList = Object.keys(chatTabs);
+                    let idx = chatTabsList.indexOf(openChatTab);
+                    
+                    if (direction == 'left' && idx > 0)
+                        openChatTab = chatTabsList[idx - 1];
+                    else if (direction == 'right' && idx < chatTabsList.length - 1)
+                        openChatTab = chatTabsList[idx + 1];
+                    
+                    scrollToTab(openChatTab);
+                    uiScene.loadChatTabs();
+                }
+                
+                instantMessenger.getChildByID('chat-tabs-scroll-left').onclick = () => {
+                    scrollLeftRight('left');
+                }
+                
+                instantMessenger.getChildByID('chat-tabs-scroll-right').onclick = () => {
+                    scrollLeftRight('right');
+                }
+
                 imWindow.style.top = '50px';
                 imWindow.style.left = '100px';
                 imWindow.style.width = '350px';
