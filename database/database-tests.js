@@ -9,14 +9,14 @@ main().catch(err => console.log(err));
 async function main() {
     await mongoose.connect(process.env.DB_URI);
     // await userMigration();
-    //  await addToInventory(0, 0, 0, false);
+     await addToInventory(0, 2, 13, false);
     // let val = await itemInInventory(0, 0, 0, false);
     // console.log(`This user has ${val} copies of this item.`);
-    // for (let i = 2; i < 9; i++) {
-    //     if (i == 2 || i == 6 || i == 7)
-    //         await addToInventory(0, 0, i, true);
+    // for (let i = 9; i < 16; i++) {
+    //     if (i == 13)
+    //         continue;
     //     else
-    //         await addToInventory(0, 0, i, false);
+    //         await addToInventory(0, 2, i, false);
     // }
     // for (let i = 0; i < 4; i++) {
     //     await addToInventory(0, 5, i, false);
