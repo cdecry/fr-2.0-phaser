@@ -34,6 +34,12 @@ const iMap = {
     9: cMap.costume,
 }
 
+const Notif = {
+    CHAT: 0,
+    BUDDY_REQUEST: 1,
+    NEW_BUDDY: 2,
+};
+
 //#region LoginScene
 var login = new Phaser.Scene('LoginScene');
 
@@ -43,10 +49,19 @@ login.preload = function () {
 
     this.load.image('loginBg', 'scene/temp-login.png');
     this.load.html('loginForm', 'html/loginform.html');
+    this.load.spritesheet('inLoading', 'scene/ui/inLoading.png', { frameWidth: 129, frameHeight: 129 });
+    this.load.image('loadingScreen', 'scene/ui/loadingScreen.png');
   
 };
   
 login.create = function () {
+    this.anims.create({
+        key: 'inLoad',
+        frames: this.anims.generateFrameNumbers('inLoading'),
+        frameRate: 40,
+        repeat: -1
+    });
+
     this.add.image(400, 260, 'loginBg');
     const loginForm = this.add.dom(392, 173).createFromCache('loginForm');
 
@@ -60,7 +75,7 @@ login.create = function () {
 
             if (inputUsername.value !== '' && inputPassword.value!= '')
             {
-                loginForm.removeListener('click');
+                loginForm.setVisible(false);
                 globalThis.socket = io();
                 globalThis.socket.emit('login request', inputUsername.value, inputPassword.value);
                 load();
@@ -72,55 +87,30 @@ login.create = function () {
     });
 
     const load = () => {
-        this.scene.transition( {
-            target: 'LoadingScene',
-            moveBelow: true
+        var loadingScreen = login.add.image(400, 260, 'loadingScreen');
+        var inLoading = login.add.sprite(400, 260, 'inLoading').play('inLoad');
+
+        globalThis.socket.on('login success', (inventory, onlinePlayers) => {
+            onlineUsers = onlinePlayers;
+            myInventory = inventory;
+            setTimeout(() => {
+                this.scene.transition( {
+                    target: 'GameScene',
+                    moveBelow: true,
+                });
+            }, 1000);
+        });
+
+        globalThis.socket.on('login fail', () => {
+            setTimeout(() => {
+                globalThis.socket.disconnect();
+                inLoading.setVisible(false);
+                loadingScreen.setVisible(false);
+                loginForm.setVisible(true);
+            }, 1000);
         });
     }
 };
-//#endregion
-
-//#region LoadingScene
-var loading = new Phaser.Scene('LoadingScene');
-
-loading.preload = function() {
-    this.load.setBaseURL('/src/assets')
-    this.load.atlas('outLoading', 'scene/outLoading.png', 'scene/loading.json');
-}
-
-loading.create = function() {
-    const sprite = this.add.sprite(400, 260, 'outLoading', 'loading-0');
-    const animConfig = {
-        key: 'outLoad',
-        frames: 'outLoading',
-        frameRate: 12,
-        repeat: -1,
-    };
-    
-    this.anims.create(animConfig);
-    sprite.play('outLoad');
-
-    globalThis.socket.on('login success', (inventory, onlinePlayers) => {
-        onlineUsers = onlinePlayers;
-        myInventory = inventory;
-        setTimeout(() => {
-            this.scene.transition( {
-                target: 'GameScene',
-                moveBelow: true,
-            });
-        }, 1000);
-    });
-
-    globalThis.socket.on('login fail', () => {
-        setTimeout(() => {
-            globalThis.socket.disconnect();
-            this.scene.transition( {
-                target: 'LoginScene',
-                moveBelow: true
-            });
-        }, 1000);
-    });
-}
 //#endregion
 
 //#region GameScene
@@ -132,8 +122,6 @@ var globalPointer = {
 }
 
 var usernameLabelCenter = 0;
-// var clickOffsetX = 0;
-// var clickOffsetY = 110;
 var usernameOffsetY = 30;
 var numContainerItems = 19;
 var chatBubbleOffsetY = -125;
@@ -143,6 +131,7 @@ var disableInput = false;
 var stopMoving = false;
 var container;
 var player = null;
+var otherPlayers;
 var rightBound;
 var locationBounds; // list of object of bounds (cannot go to ex: [{ startX: 5, startY: 5, endX: 205, endY: 105 } ]
 var head, eyes, brow, lips, hairUpper, hairLower, bottomItem, topItem, shoes, board, usernameTag, usernameLabel, faceAcc, headAcc, bodyAcc, outfit;
@@ -150,9 +139,13 @@ var isTyping = false;
 var bubbleLifeTime, messageLifeTime, chatBubble, chatMessage;
 var notifBubbleLifeTime, notifLifeTime, notifBubble, notifMessage;
 var myPlayerInfo;
+var outgoingBuddyRequests = [];
 var avatarPreview = null;
+var chatAvatarPreview = null;
 var locationObjects = [];
 var bgm;
+var myDarkMask = null;
+var darkMasks = {};
 
 // Inventory Load:
 var myInventory;
@@ -167,6 +160,28 @@ var iHeadAcc = [];
 var iBodyAcc = [];
 
 var instantMessenger;
+var buddySelectPopup = null;
+var boardPlayerCount;
+var boardStartDetails;
+var fashionStartBtn;
+
+var testAvatarPreview = null;
+
+function scrollToTab(tabId) {
+    let flexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+    let tab = instantMessenger.getChildByID(tabId);
+    let targetScrollPosition = tab.offsetLeft;
+
+    flexbox.scrollTo({
+        left: targetScrollPosition,
+        behavior: 'smooth'
+    });
+
+    if (tabId === 'current-room')
+        uiScene.toggleIMLayout();
+    else
+        uiScene.toggleIMLayout('pm');
+}
 
 function createSpeechBubble (x, y, username, quote)
 {
@@ -196,10 +211,10 @@ function createSpeechBubble (x, y, username, quote)
 
     container.add([chatBubble, chatMessage]);
 
-    chatTabs['Current Room'] += username + ": " + quote + '<br>';
-    if (instantMessenger && openChatTab == 'Current Room') {
+    chatTabs['current-room'].chatHistory += username + ": " + quote + '<br>';
+    if (instantMessenger && openChatTab == 'current-room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
-        chatHistory.innerHTML = chatTabs['Current Room'];
+        chatHistory.innerHTML = chatTabs['current-room'].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 }
@@ -242,13 +257,36 @@ function createOtherSpeechBubble (otherPlayer, x, y, quote)
                                             'otherBubbleLifeTime': otherBubbleLifeTime,
                                             'otherMessageLifeTime': otherMessageLifeTime });
 
-    chatTabs['Current Room'] += otherPlayer.getData('username') + ": " + quote + '<br>';
-    if (instantMessenger && openChatTab == 'Current Room') {
+    chatTabs['current-room'].chatHistory += otherPlayer.getData('username') + ": " + quote + '<br>';
+    if (instantMessenger && openChatTab == 'current-room') {
         var chatHistory = instantMessenger.getChildByID('chat-history');
-        chatHistory.innerHTML = chatTabs['Current Room'];
+        chatHistory.innerHTML = chatTabs['current-room'].chatHistory;
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 } 
+
+function addFashionShowPlayer(playerCount, playerJoined) {
+    boardPlayerCount.text = `${playerCount}/10`;
+
+    var oldBoardDetails = boardStartDetails.text;
+    if (playerCount >= 5) {
+        oldBoardDetails = "Ready To Start";
+        if (fashionShowHost == myPlayerInfo.username) {
+            fashionStartBtn.setTexture('fashionStart');
+            fashionStartBtn.off('pointerdown');
+            fashionStartBtn.on('pointerdown', function (pointer) {
+                // fashionStartBtn.setPosition(fashionStartBtn.x+1, fashionStartBtn.y+1);
+                fashionStartBtn.destroy();
+                socket.emit('startFashionShowRequest', fashionShowHost);
+            });
+        }
+    }
+
+    boardStartDetails.text = `User ${playerJoined} Has Joined.`;
+    setTimeout(() => {
+        boardStartDetails.text = oldBoardDetails;
+      }, "3000");
+}
 
 var uiScene = new Phaser.Scene('UIScene');
 
@@ -274,57 +312,56 @@ uiScene.preload = function() {
 uiScene.create = function() {
 
     this.input.setTopOnly(true);
-    function createAvatarPreview(playerInfo) {
-        bodyPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
-        headPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
-        eyesPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
-        lipsPreview = uiObjectScene.add.sprite(0, 0, 'lips-0');
-        faceAccPreview = uiObjectScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-        boardLowerPreview = uiObjectScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        hairLowerPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        hairUpperPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        headAccPreview = uiObjectScene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-        shoesPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+    uiScene.createAvatarPreview = (playerInfo, scene) => {
+        let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+        let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+        let eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+        let lipsPreview = scene.add.sprite(0, 0, 'lips-0');
+        let faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+        let boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        let hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        let hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        let headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        let shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
         // if (playerInfo.avatar['equipped'][3] === -1) {
-        bottomItemPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
-        topItemPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
-        outfitPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
-        costumePreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
-        bodyAccPreview = uiObjectScene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-        browPreview = uiObjectScene.add.sprite(0, 0, 'brow-0');
-        boardUpperPreview = uiObjectScene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
-        usernameTagPreview = uiObjectScene.add.sprite(0, 0, 'username-tag');
-        usernameLabelPreview = uiObjectScene.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
+        let bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        let topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+        let outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        let costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+        let bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        let browPreview = scene.add.sprite(0, 0, 'brow-0');
+        let boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        let usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
+        let usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
         usernameLabelPreview.originX = 0.5;
-        usernameLabelCenter = usernameLabel.getCenter().x;
+        let usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabelPreview.x = usernameLabelCenter;
         usernameLabelPreview.setStroke('#ffffff', 2);
         
         var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
-        avatarPreview = uiObjectScene.add.container(0, 0);
-        avatarPreview.add(children);
-        avatarPreview.setDepth(1001);
+        avPreview = scene.add.container(0, 0);
+        avPreview.add(children);
+        avPreview.setDepth(1001);
 
-        avatarPreview.setDataEnabled();
-        avatarPreview.setData('username', playerInfo.username);
-        avatarPreview.setData('skinTone', playerInfo.avatar['skinTone']);
-        avatarPreview.setData('eyeType', playerInfo.avatar['eyeType']);
-        avatarPreview.setData('gender', playerInfo.avatar['gender']);
+        avPreview.setDataEnabled();
+        avPreview.setData('username', playerInfo.username);
+        avPreview.setData('skinTone', playerInfo.avatar['skinTone']);
+        avPreview.setData('eyeType', playerInfo.avatar['eyeType']);
+        avPreview.setData('gender', playerInfo.avatar['gender']);
+        avPreview.setData('playerInfo', playerInfo);
+
         var previewEquipped = [];
         for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
             previewEquipped[i] = playerInfo.avatar['equipped'][i]
-        avatarPreview.setData('equipped', previewEquipped);
-    }
+        avPreview.setData('equipped', previewEquipped);
 
-    WebFont.load({
-        custom: {
-            families: [ 'usernameFont', 'titleFont', 'titleFontOutline' ]
-        }
-    });
+        return avPreview;
+    }
 
     var uiBar = this.add.image(400, 490, 'uiBar');
     var uiButtons = this.add.dom(0, 464).createFromCache('uiButtons');
     uiBar.setInteractive({ pixelPerfect: true});
+    uiBar.setDepth(1000);
 
     var inventory = uiObjectScene.add.image(400, 260, 'inventoryHairTab');
     var inventoryUI = uiObjectScene.add.dom(400,260).createFromCache('inventoryUI');
@@ -350,8 +387,6 @@ uiScene.create = function() {
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
 
     inputChat.value = defaultChatBarMessage;
-
-    uiBar.setDepth(1000);
 
     inGame.input.keyboard.on('keydown-ENTER', function (event) {
         if (disableInput || document.activeElement.id == 'chat-input') return;
@@ -404,24 +439,114 @@ uiScene.create = function() {
         socket.emit('chatMessage', filtered);
     }
 
+    function pmWithUserExists(username) {
+        for (let chatId in chatTabs) {
+            if (chatTabs[chatId].name == username)
+                return true;
+        }
+        return false;
+    }
+
+    uiScene.createChatTab = (invitedBuddies, msg='') => {
+        let tabId = '';
+        let tabName = invitedBuddies[0];
+
+        if (invitedBuddies.length == 1) {
+            let [username1, username2] = [myPlayerInfo.username, invitedBuddies[0]].sort();
+            tabId = username1 + '-' + username2;
+        }
+        else {
+            for (let i = 0; i < Object.keys(chatTabs).length; i++) {
+                if (!chatTabs.hasOwnProperty(myPlayerInfo.username + '-' + i)) {
+                    tabId = myPlayerInfo.username + '-' + i;
+                    break;
+                }
+            }
+        }
+        
+        if (invitedBuddies.length > 1)
+            tabName = myPlayerInfo.username + "'s Hideout";
+
+        if (!chatTabs.hasOwnProperty(tabId))
+            chatTabs[tabId] = new ChatTab(tabName, myPlayerInfo.username, [...invitedBuddies, myPlayerInfo.username], msg);
+        openChatTab = tabId;
+
+        uiScene.loadChatTabs(true);
+        scrollToTab(openChatTab);
+
+        imWindow.style.display = '';
+    }
+
+    uiScene.toggleIMLayout = (layout='') => {
+        let chatSection = instantMessenger.getChildByID('chat-section');
+        let chatAvatarSection = instantMessenger.getChildByID('chat-avatar-section');
+        let chatInput = instantMessenger.getChildByID('chat-input');
+        let chatTabsBottom = instantMessenger.getChildByID('chat-tabs-bottom');
+        
+        chatInput.value = '';
+
+        if (layout === 'pm') {
+            chatSection.style.maxWidth = 'calc(100% - 126px)';
+            chatAvatarSection.style.marginRight = '4px';
+            chatAvatarSection.style.flex = '0 0 121px';
+            chatTabsBottom.style.borderBottomRightRadius = '0%';
+
+            instantMessenger.getChildByID('close-chat-avatar-preview-button').style.visibility = 'visible';
+            instantMessenger.getChildByID('open-chat-avatar-preview-button').style.visibility = 'hidden';
+            instantMessenger.getChildByID('close-chat-tab-button').style.visibility = 'visible';
+        }
+        else {
+            chatSection.style.maxWidth = 'calc(100% - 2px)';
+            chatAvatarSection.style.marginRight = '0px';
+            chatAvatarSection.style.flex = '0';
+            chatTabsBottom.style.borderBottomRightRadius = '';
+
+            instantMessenger.getChildByID('close-chat-avatar-preview-button').style.visibility = 'hidden';
+            instantMessenger.getChildByID('close-chat-tab-button').style.visibility = 'hidden';
+            instantMessenger.getChildByID('open-chat-avatar-preview-button').style.visibility = 'hidden';
+        }
+    }
+
     uiScene.addChatTabListener = () => {
-        for (var chatTabName in chatTabs) {
-            var tab = instantMessenger.getChildByID(chatTabName);
-            tab.onmousedown = createTabClickListener(tab);
+        for (let chatId in chatTabs) {
+            var tab = instantMessenger.getChildByID(chatId);
+            if (tab) {
+                tab.removeEventListener('click', tab.onclick);
+                tab.onmousedown = createTabClickListener(tab);
+            }
         }
     }
     
     function createTabClickListener(tab) {
         return function() {
-            for (var otherTabName in chatTabs) {
-                var otherTab = instantMessenger.getChildByID(otherTabName);
+            for (let otherTabId in chatTabs) {
+                let otherTab = instantMessenger.getChildByID(otherTabId);
                 otherTab.style.background = 'white';
             }
             tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
             openChatTab = tab.id;
-            chatNameText.innerHTML = openChatTab;
-            chatHistory.innerHTML = chatTabs[openChatTab];
+
+            scrollToTab(openChatTab);
+            chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+            chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
             chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // avatar preview
+            let members = chatTabs[tab.id].chatMembers;
+            let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
+            if (members.length === 2) {
+                instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
+                let idx = members.findIndex(usr => usr !== myPlayerInfo.username);
+                if (chatAvatarPreview)
+                    chatAvatarPreview.destroy();
+                chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+                chatAvatarPreview.setPosition(60, 50);
+                chatAvatarFrame.style.visibility = 'visible';
+            }
+            else {
+                instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
+                chatAvatarFrame.style.visibility = 'hidden';
+            }
         };
     }
 
@@ -446,31 +571,97 @@ uiScene.create = function() {
                 buddyRequestPopup.destroy();
             }
 
+            let [id, username] = buddyRequest.id.slice(3).split('-');
+            
             $('#br-yes-button').on('mousedown', function() {
-
-                var userInfo = buddyRequest.id.slice(3);
-                var [id, username] = userInfo.split('-');
-
                 socket.emit('acceptBuddyRequest', Number(id), username);
                 removeBuddyRequest();
             });
 
             $('#br-no-button').on('mousedown', function() {
+                socket.emit('rejectBuddyRequest', username);
                 removeBuddyRequest();
             });
         };
     }
 
+    uiScene.loadChatTabs = (newTab=false) => {
+        let tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
+        tabsFlexbox.innerHTML = '';
+
+        for (let tabId in chatTabs) {
+            let html = `
+                    <div class="chat-tab" id="${tabId}">
+                        <div id="tabName">${chatTabs[tabId].chatName}</div>
+                    </div>
+                    `;
+
+            tabsFlexbox.innerHTML += html;
+
+            if (openChatTab != tabId) {
+                let tab = instantMessenger.getChildByID(tabId);
+                tab.style.background = 'white';
+            }
+        }
+
+        chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+        chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        
+        if (openChatTab === 'current-room')
+            uiScene.toggleIMLayout();
+        else
+            uiScene.toggleIMLayout('pm');
+
+        let members = chatTabs[openChatTab].chatMembers;
+        let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
+        if (members.length === 2) {
+            instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'visible';
+            let idx = members.findIndex(usr => usr !== myPlayerInfo.username);
+            if (chatAvatarPreview)
+                chatAvatarPreview.destroy();
+            chatAvatarPreview = avatarScene.createAvatarPreview(onlineUsers[members[idx]], avatarScene);
+            chatAvatarPreview.setPosition(60, 50);
+            // trigger wave
+
+            if (newTab) {
+                chatAvatarPreview.getAt(cMap.player).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.player))).textureKey + '-wave');
+                chatAvatarPreview.getAt(cMap.lips).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.lips))).textureKey + '-wave');
+                chatAvatarPreview.getAt(cMap.top).play(JSON.parse(JSON.stringify(chatAvatarPreview.getAt(cMap.top))).textureKey + '-wave');
+            }
+            chatAvatarFrame.style.visibility = 'visible';
+        }
+        else {
+            instantMessenger.getChildByID('chat-avatar-preview').style.visibility = 'hidden';
+            chatAvatarFrame.style.visibility = 'hidden';
+        }
+
+        let scrollLeftButton = instantMessenger.getChildByID('chat-tabs-scroll-left');
+        let scrollRightButton = instantMessenger.getChildByID('chat-tabs-scroll-right');
+        
+        if (tabsFlexbox.scrollWidth > tabsFlexbox.clientWidth) {
+            scrollLeftButton.style.visibility = 'visible';
+            scrollRightButton.style.visibility = 'visible';
+        } else {
+            scrollLeftButton.style.visibility = 'hidden';
+            scrollRightButton.style.visibility = 'hidden';
+        }
+
+        uiScene.addChatTabListener();
+    }
+
     uiScene.loadBuddyList = () => {
-        var buddyRows = [];
+        let buddyRows = [];
+        let selectBuddyRows = [];
 
         myPlayerInfo.buddies.forEach(buddyObj => {
             
             var buddyStatus = 'offline';
-            if (onlineUsers.hasOwnProperty(buddyObj.username))
+            if (onlineUsers.hasOwnProperty(buddyObj.username)) {
                 buddyStatus = 'online';
+            }
 
-            const row = `
+            let row = `
             <tr class="buddy-table-row">
                 <td class="buddy-table-data">
                 <img src="./src/assets/scene/chat/${buddyStatus}-icon.png"/>
@@ -479,45 +670,186 @@ uiScene.create = function() {
                 </td>
             </tr>
             `;
+            
             buddyRows.push(row);
+
+            if (buddyStatus == 'online') {
+                let row = `
+                    <tr class="select-buddy-table-row">
+                        <td class="select-buddy-table-data">
+                            <label class="checkbox-container">${buddyObj.username}
+                                <input type="checkbox">
+                                <span class="checkmark"></span>
+                            </label>
+                        </td>
+                    </tr>
+                `;
+                selectBuddyRows.push(row);
+            }
         });
 
-        var buddyRowsHtml = buddyRows.join('');
-        var table = document.getElementById("buddy-table");
+        let buddyRowsHtml = buddyRows.join('');
+        let table = document.getElementById("buddy-table");
         table.innerHTML = buddyRowsHtml;
+
+        let selectTable = document.getElementById("select-buddy-table");
+        if (selectTable) {
+            let selectBuddyRowsHtml = selectBuddyRows.join('');
+            selectTable.innerHTML = selectBuddyRowsHtml;
+        }
+
         // Sort buddies
-        sortTable();
+        sortTable('buddy-table');
+        sortTable('select-buddy-table');
         addBuddyMenuListener();
+    }
+
+    uiScene.loadJoinGameList = (fashionShows) => {
+        var gameList = [];
+
+        for (var host in fashionShows) {
+            if (fashionShows[host].started)
+                continue;
+
+            var gender = 'girl';
+
+            if (fashionShows[host].hostGender == 'm')
+                gender = 'boy';
+
+            const item = `
+            <div class="tm-join-game-item">
+                <div class="tm-join-game-data">
+                    <img class="tm-join-host-gender" class="selectDisable" src="./src/assets/scene/location/topModels/sprites/${gender}Icon.png"/>
+                    <p class="tm-join-host-username">${host}</p>
+                    <p class="tm-join-players">${fashionShows[host].playerCount}</p>
+                    <img class="tm-join-button" id="fashionShow-${host}" src="./src/assets/scene/location/topModels/sprites/joinButton.png"></button>
+                </div>
+            </div>
+            `;
+            gameList.push(item);
+        };
+
+        var gameListHTML = gameList.join('');
+        var gameListContainer = document.getElementById("tm-join-game-list");
+        gameListContainer.innerHTML = gameListHTML;
+    }
+
+    uiScene.loadUIBar = () => {
+        uiBar.setTexture(`uiBar`);
+        disableEnableButton('inventoryButton', false);
+
+        hideShowElement('homeButton', false);
+        hideShowElement('worldMapButton', false);
+        hideShowElement('partyInvitesButton'), true;
+        hideShowElement('settingsButton', true);
+    }
+
+    uiScene.loadUIBarFashion = (disabled) => {
+        var disabledPostfix = "";
+        if (disabled) disabledPostfix = "Disabled"
+
+        uiBar.setTexture(`uiBarFashion${disabledPostfix}`);
+
+        disableEnableButton('inventoryButton', disabled);
+            
+        hideShowElement('homeButton', true);
+        hideShowElement('worldMapButton', true);
+        hideShowElement('partyInvitesButton'), true;
+        hideShowElement('settingsButton', true);
+    }
+
+    uiScene.fashionCloseInventory = (fashionCountdown) => {
+        if (inventoryOpen) {
+            closeInventory();
+            return true;
+        }
+        return false;
+    }
+
+    function disableEnableButton(buttonID, disable) {
+        var btn = document.getElementById(buttonID);
+        
+        if (disable)
+            btn.style['pointer-events'] = 'none';
+        else
+            btn.style['pointer-events'] = null;
+    }
+    function hideShowElement(elementID, hide) {
+        var ele = document.getElementById(elementID);
+        
+        if (hide)
+            ele.style.visibility = 'hidden';
+        else
+            ele.style.visibility = 'visible';
     }
 
     function addBuddyMenuListener() {
         var buddyNames = document.getElementsByClassName("buddy-username");
-        for (var i = 0; i < buddyNames.length; i++) {
-            buddyNames[i].onmousedown = createBuddyMenuListener(buddyNames[i]);
+
+        instantMessenger.addListener('pointerdown');
+            instantMessenger.on('pointerdown', function (pointer) {
+                if (pointer.target.className == 'buddy-username') {
+                    uiScene.createBuddyMenuListener(pointer.target, pointer.x, pointer.y);
+                }
+            });
+    }
+
+    uiScene.createBuddyMenuListener = (buddyName, pointerX, pointerY) => {
+        var chatOption, idfoneOption, deleteOption;
+        let canvasRect = document.getElementsByTagName('canvas')[1].getBoundingClientRect();
+
+        $('#buddy-menu').css({
+            visibility: 'visible',
+            left: pointerX - canvasRect.left - 215 + 'px',
+            top: pointerY - canvasRect.top - 135 + 'px',
+        });
+
+        if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
+            $('#buddy-menu').css('height', '68px');
+            $('#chat-with-buddy-option').css('display', 'flex');
+            chatOption = document.getElementById('chat-with-buddy-option');
+            chatOption.onclick = () => {
+                uiScene.createChatTab([buddyName.innerHTML]);
+                buddyMenu.style.visibility = 'hidden';
+            }
+        }
+        else {
+            $('#buddy-menu').css('height', '50px');
+            $('#chat-with-buddy-option').css('display', 'none');
+        }
+
+        // remove buddy menu when clicking elsewhere
+        let buddyMenu = document.getElementById('buddy-menu');
+        document.onmousedown = (event) => {
+            var target = event.target;
+            if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
+                buddyMenu.style.visibility = 'hidden';
+            }
+        };
+
+        idfoneOption = document.getElementById('view-idfone-option');
+        deleteOption = document.getElementById('delete-buddy-option');
+
+        idfoneOption.onmousedown = () => {
+            //if they not online, get the id from our buddies map
+            // request info for idfone
+            if (onlineUsers.hasOwnProperty(buddyName.innerHTML)) {
+                uiScene.openIDFone(false, onlineUsers[buddyName.innerHTML])
+            }
+            else {
+                let buddyID = myPlayerInfo.buddies.find(buddy => buddy.username === buddyName.innerHTML).id;
+                socket.emit('getOfflineIdfone', buddyID);
+            }
+        }
+
+        deleteOption.onmousedown = () => {
+            socket.emit('deleteBuddy', buddyName.innerHTML);
+            buddyMenu.style.visibility = 'hidden';
         }
     }
 
-    function createBuddyMenuListener(buddyName) {
-        return function(event) {
-            $('#buddy-menu').css({
-                visibility: 'visible',
-                left: (event.pageX - 260).toString() + 'px',
-                top: (event.pageY - 175).toString() + 'px',
-            });
-
-            var buddyMenu = document.getElementById('buddy-menu');
-
-            document.onmousedown = (event) => {
-                var target = event.target;
-                if (!target.classList.contains("buddy-username") && !buddyMenu.contains(target)) {
-                    buddyMenu.style.visibility = 'hidden';
-                }
-            };
-        };
-    }
-
-    function sortTable() {
-        var table = document.getElementById("buddy-table");
+    function sortTable(tableId) {
+        var table = document.getElementById(tableId);
         var rows = Array.from(table.rows);
 
         var rowsOnline = [];
@@ -574,12 +906,44 @@ uiScene.create = function() {
         arr[j] = temp;
     }
 
+    function closeInventory() {
+        inventoryOpen = false;
+        isClickUI = false;
+
+        disableInput = false;
+        uiButtons.setVisible(true);
+        chatBar.setVisible(true);
+        uiBar.setVisible(true);
+
+        inventory.setVisible(false);
+        inventoryUI.setVisible(false);
+
+        // hide loaded clothes, avatar preview
+        inventoryItems.forEach(item => item.destroy());
+        if (prevButton != null)
+            prevButton.destroy();
+        if (nextButton != null)
+            nextButton.destroy();
+
+        // Send request to equip all items on avatar preview:
+        if (avatarPreview.getData('equipped') != null || fashionShowHost != "") {
+            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'), fashionShowHost);
+        }
+        
+        avatarPreview.destroy();
+    }
+
+    var inventoryOpen = false;
     uiButtons.addListener('click');
     uiButtons.on('click', function (event) {
-        if (!uiScene.checkInteractive)
-                return;
+        if (uiScene.blockInteractive())
+            return;
 
         if (event.target.id === 'inventoryButton') {
+            if (inventoryOpen)
+                return;
+
+            inventoryOpen = true;
 
             var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
             var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
@@ -618,28 +982,7 @@ uiScene.create = function() {
                 inventoryUI.addListener('click');
                 inventoryUI.on('click', function (event) {
                     if (event.target.id === 'closeInventoryButton') {
-                        isClickUI = false;
-
-                        disableInput = false;
-                        uiButtons.setVisible(true);
-                        chatBar.setVisible(true);
-                        uiBar.setVisible(true);
-
-                        inventory.setVisible(false);
-                        inventoryUI.setVisible(false);
-
-                        // hide loaded clothes, avatar preview
-                        inventoryItems.forEach(item => item.destroy());
-                        if (prevButton != null)
-                            prevButton.destroy();
-                        if (nextButton != null)
-                            nextButton.destroy();
-
-                        // Send request to equip all items on avatar preview:
-                        if (avatarPreview.getData('equipped') != null)
-                            globalThis.socket.emit('changeClothes', avatarPreview.getData('equipped'));
-                        
-                        avatarPreview.destroy();
+                        closeInventory();
                     }
                     else if (event.target.id === 'hairButton') {
                         inventoryUI.getChildByID('clothesSubtabs').style.visibility = 'hidden';
@@ -649,7 +992,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(0);
                         createInventoryItems(0);
                     }
@@ -661,7 +1004,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(1);
                         createInventoryItems(1);
                     }
@@ -670,7 +1013,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(2);
                         createInventoryItems(2);
                     }
@@ -680,7 +1023,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(3);
                         createInventoryItems(3);
                     }
@@ -691,7 +1034,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(1);
                         createInventoryItems(1);
                     }
@@ -701,7 +1044,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(4);
                         createInventoryItems(4);
                     }
@@ -712,7 +1055,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 124;
                         cellHeight = 110;
-                        gridX = 100;
+                        gridX = 50;
                         createNavigationButtons(5);
                         createInventoryItems(5);
                     }
@@ -723,7 +1066,7 @@ uiScene.create = function() {
                         gridHeight = 3;
                         cellWidth = 62;
                         cellHeight = 110;
-                        gridX = 70;
+                        gridX = 50;
                         createNavigationButtons(7);
                         createInventoryItems(7)
                     }
@@ -732,7 +1075,7 @@ uiScene.create = function() {
         }
         else if (event.target.id === 'buddiesButton') {
             // Click buddies button while IM is open to reset window to default
-            if (instantMessenger != null && (imWindow.style.visibility == 'visible' || buddyWindow.style.visibility == 'visible')) {
+            if (instantMessenger != null && imWindow.style.display == '' && buddyWindow.style.visibility == 'visible') {
                 imCurrX = 0, imCurrY = 0, imDiffX = 0, imDiffY = 0;
                 buddyCurrX = 0, buddyCurrY = 0, buddyDiffX = 0, buddyDiffY = 0;
                 imWindow.style.top = '50px';
@@ -742,7 +1085,7 @@ uiScene.create = function() {
                 buddyWindow.style.top = '50px';
                 buddyWindow.style.left = '-104px';
 
-                imWindow.style.visibility = 'visible';
+                imWindow.style.display = '';
                 buddyWindow.style.visibility = 'visible';
 
                 return;
@@ -757,30 +1100,150 @@ uiScene.create = function() {
 
                 buddyWindow = instantMessenger.getChildByID('buddy-window');
                 buddyHeader = instantMessenger.getChildByID('buddy-header');
-                
-                
+
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
 
                 enableIMDrag(instantMessenger, imHeader, imWindow);
                 enableBuddyDrag(instantMessenger, buddyHeader, buddyWindow);
-            }
 
-            // Set IM visible (open)
-            imWindow.style.visibility = 'visible';
-            buddyWindow.style.visibility = 'visible';
+                buddySelectPopup = uiScene.add.dom(400, 260).createFromCache('buddySelectPopup');
+                buddySelectPopup.setDepth(3000);
+                let selectWindow = buddySelectPopup.getChildByID('select-buddy-list');
+                let selectBlackScreen = buddySelectPopup.getChildByID('select-black-screen');
 
-            // Load chat name & history for open tab, auto-scroll to bottom
-            chatNameText = instantMessenger.getChildByID('chatName');
-            chatHistory = document.getElementById('chat-history');
-            chatNameText.innerHTML = openChatTab;
-            chatHistory.innerHTML = chatTabs[openChatTab];
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+                let closePopup = () => {
+                    setTimeout(function () {
+                        isClickUI = false;
+                        disableInput = false;
+                    }, 50);
+                    let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    selectWindow.style.visibility = 'hidden';
+                    selectBlackScreen.style.visibility = 'hidden';
+                }
 
-            // Load buddy list and requests
-            uiScene.loadBuddyList();
-            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
+                $('#buddy-invite-button').on('click', function() {
+                    let checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                    let checkedLabels = [];
 
-            // Add listener: press enter to send IM message, not chat bar
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            let label = checkbox.parentElement.textContent.trim();
+                            checkedLabels.push(label);
+                        }
+                    });
+
+                    if (checkedLabels.length > 0)
+                        uiScene.createChatTab(checkedLabels);
+
+                    closePopup();
+                });
+    
+                $('#buddy-cancel-button').on('click', function() {
+                    // socket.emit('rejectBuddyRequest', username);
+                    closePopup();
+                    console.log('cancel');
+                });
+
+                buddySelectPopup.getChildByID('buddy-close-button').onclick = () => {
+                    closePopup();
+                }
+
+                instantMessenger.getChildByID('new-chat-button').onclick = () => {
+                    // Test${Object.keys(chatTabs).length.toString()}
+                    // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
+                    selectWindow.style.visibility = 'visible';
+                    selectBlackScreen.style.visibility = 'visible';
+                    isClickUI = true;
+                    disableInput = true;
+                }
+
+                function scrollLeftRight(direction) {
+                    let chatTabsList = Object.keys(chatTabs);
+                    let idx = chatTabsList.indexOf(openChatTab);
+                    
+                    if (direction == 'left' && idx > 0)
+                        openChatTab = chatTabsList[idx - 1];
+                    else if (direction == 'right' && idx < chatTabsList.length - 1)
+                        openChatTab = chatTabsList[idx + 1];
+                    
+                    scrollToTab(openChatTab);
+                    uiScene.loadChatTabs();
+                }
+                
+                instantMessenger.getChildByID('chat-tabs-scroll-left').onclick = () => {
+                    scrollLeftRight('left');
+                }
+                
+                instantMessenger.getChildByID('chat-tabs-scroll-right').onclick = () => {
+                    scrollLeftRight('right');
+                }
+
+                let closeChatAvatarPreviewBtn = instantMessenger.getChildByID('close-chat-avatar-preview-button');
+                let openChatAvatarPreviewBtn = instantMessenger.getChildByID('open-chat-avatar-preview-button');
+                let chatAvatarFrame = instantMessenger.getChildByID('chat-avatar-frame');
+                let closeChatButton = instantMessenger.getChildByID('close-chat-tab-button');
+
+                closeChatAvatarPreviewBtn.onclick = () => {
+                    uiScene.toggleIMLayout();
+
+                    chatAvatarFrame.style.visibility = 'hidden';
+                    openChatAvatarPreviewBtn.style.visibility = 'visible';
+                    closeChatButton.style.visibility = 'visible';
+                }
+
+                openChatAvatarPreviewBtn.onclick = () => {
+                    uiScene.toggleIMLayout('pm');
+                    chatAvatarFrame.style.visibility = 'visible';
+                    openChatAvatarPreviewBtn.style.visibility = 'hidden';
+                }
+
+                closeChatButton.onclick = () => {
+                    let chatTabsList = Object.keys(chatTabs);
+                    let tabSwitch = chatTabsList.indexOf(openChatTab) + 1;
+
+                    if (tabSwitch > chatTabsList.length - 1)
+                        tabSwitch -= 2;
+
+                    delete chatTabs[openChatTab];
+                    openChatTab = chatTabsList[tabSwitch];
+
+                    uiScene.loadChatTabs();
+                }
+
+                imWindow.style.top = '50px';
+                imWindow.style.left = '100px';
+                imWindow.style.width = '350px';
+                imWindow.style.height = '250px';
+                buddyWindow.style.top = '50px';
+                buddyWindow.style.left = '-104px';
+
+                // create chat avatar preview layer
+                let chatAvatarConfig = {
+                    type: Phaser.AUTO,
+                    parent: 'chat-avatar-preview',
+                    width: 121,
+                    height: 150,
+                    backgroundColor: '#ffffff',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            debug: false
+                        }
+                    },
+                    dom: {
+                        createContainer: true
+                        },
+                    pixelArt: true,
+                    scene: [avatarScene]
+                };
+                let chatAvatarGame = new Phaser.Game(chatAvatarConfig);
+
+
+
+                // Add listener: press enter to send IM message, not chat bar
             uiScene.input.keyboard.on('keydown-ENTER', function (event) {
                 
                 if (document.activeElement.id != 'chat-input' || chatInput.value.trim().length == 0)
@@ -791,22 +1254,34 @@ uiScene.create = function() {
                 msg = chatInput.value;
                 chatInput.value = '';
 
-                if (openChatTab == "Current Room")
+                if (openChatTab == "current-room")
                     uiScene.sendChatMessage(msg);
                 else {
                     var filtered = msg.replace(/<[^>]+>/g, '');
-                    if (filtered.length == 0) return;
-                    chatTabs[openChatTab] += myPlayerInfo.username + ": " + msg + '<br>';
-                    chatHistory.innerHTML = chatTabs[openChatTab];
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                    if (filtered.length === 0) return;
 
-                    socket.emit('privateMessage', filtered, openChatTab);
+                    let firstMsg = chatTabs[openChatTab].chatHistory === '';
+
+                    if (!chatTabs[openChatTab].expired) {
+                        chatTabs[openChatTab].chatHistory += myPlayerInfo.username + ": " + filtered + '<br>';
+                        chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
+                        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                        if (firstMsg)
+                            socket.emit('privateMessage', openChatTab, filtered, chatTabs[openChatTab])
+                        else
+                            socket.emit('privateMessage', openChatTab, filtered);
+                    }
+                    else {
+                        console.log("this chat room has expired.");
+                    }
                 }
             })
 
             // Add listener: click to close instant messenger
             instantMessenger.getChildByID('im-close-button').onmousedown = () => {
-                imWindow.style.visibility = 'hidden';
+                imWindow.style.display = 'none';
+
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
@@ -818,30 +1293,6 @@ uiScene.create = function() {
                 setTimeout(function () {
                     isClickUI = false;
                 }, 50);
-            }
-
-            instantMessenger.getChildByID('new-chat-button').onmousedown = () => {
-                // Test${Object.keys(chatTabs).length.toString()}
-                // console.log(instantMessenger.getChildByID('chat-tabs-container').innerHTML);
-                var tabsFlexbox = instantMessenger.getChildByID('chat-tabs-flexbox');
-                var html = `<div class="chat-tab" id="jake">
-                                <div id="tabName">jake</div>
-                            </div> `
-                tabsFlexbox.innerHTML += html;
-
-                tab = instantMessenger.getChildByID('jake');
-                for (var otherTabName in chatTabs) {
-                    otherTab = instantMessenger.getChildByID(otherTabName);
-                    otherTab.style.background = 'white';
-                };
-                openChatTab = 'jake';
-                tab.style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
-                
-                chatTabs['jake'] = "";
-                chatHistory.innerHTML = "";
-                chatNameText.innerHTML = 'jake';
-
-                uiScene.addChatTabListener();
             }
             
             // Add listener: click to switch to chat tab
@@ -977,6 +1428,25 @@ uiScene.create = function() {
                     buddyWindow.style.left = (currLeft + buddyDiffX).toString() + 'px';
                 }
             }
+            }
+
+            // Set IM visible (open)
+            imWindow.style.display = '';
+            buddyWindow.style.visibility = 'visible';
+
+            // Load chat name & history for open tab, auto-scroll to bottom
+            chatNameText = instantMessenger.getChildByID('chatName');
+            chatHistory = document.getElementById('chat-history');
+            chatNameText.innerHTML = chatTabs[openChatTab].chatName;
+            chatHistory.innerHTML = chatTabs[openChatTab].chatHistory;
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Load chat tabs
+            uiScene.loadChatTabs();
+
+            // Load buddy list and requests
+            uiScene.loadBuddyList();
+            instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
         }
         
     });
@@ -987,8 +1457,8 @@ uiScene.create = function() {
     var gridHeight = 3;
     var cellWidth = 62;
     var cellHeight = 110;
-    var gridX = 70;
-    var gridY = 220;
+    var gridX = 50;
+    var gridY = 160;
 
     // Define variables for the inventory items and navigation buttons
     let prevButton = null;
@@ -1052,18 +1522,18 @@ uiScene.create = function() {
             nextButton.destroy();
 
         // Create the "previous page" button
-        prevButton = uiScene.add.sprite(550, 160, 'inventoryArrowUp');
+        prevButton = uiObjectScene.add.sprite(550, 160, 'inventoryArrowUp');
         prevButton.setDepth(1001);
-        prevButton.setInteractive();
+        prevButton.setInteractive({useHandCursor: true});
         prevButton.on('pointerdown', () => {
             currentPage--;
             createInventoryItems(typeId);
         });
 
         // Create the "next page" button
-        nextButton = uiScene.add.sprite(550, 460, 'inventoryArrowDown');
+        nextButton = uiObjectScene.add.sprite(550, 460, 'inventoryArrowDown');
         nextButton.setDepth(1001);
-        nextButton.setInteractive();
+        nextButton.setInteractive({useHandCursor: true});
         nextButton.on('pointerdown', () => {
             currentPage++;
             createInventoryItems(typeId);
@@ -1114,10 +1584,10 @@ uiScene.create = function() {
         gridHeight = 3;
         cellWidth = 62;
         cellHeight = 110;
-        gridX = 70;
+        gridX = 50;
         createNavigationButtons(0);
         createInventoryItems(0);
-        createAvatarPreview(myPlayerInfo);
+        avatarPreview = uiScene.createAvatarPreview(myPlayerInfo, uiObjectScene);
         avatarPreview.setPosition(675, 250);
     }
 
@@ -1127,9 +1597,6 @@ uiScene.create = function() {
     }
 
     uiScene.openIDFone = function(isLocalPlayer, playerInfo) {
-        if (!uiScene.checkInteractive())
-            return;
-
         var tempDomBlocker;
         // var tempDomBlocker = uiScene.add.dom(0,0).createFromCache('transparentHTML');
         // tempDomBlocker.getChildByID('screen').style.backgroundColor = 'rgba(0, 0, 0, 0.1);';
@@ -1172,12 +1639,26 @@ uiScene.create = function() {
                 });
 
                 idfoneButtonsHTML.visible = true;
-                idfoneButtonsHTML.getChildByID('addButton').onmousedown = () => {
+
+                let addButton = idfoneButtonsHTML.getChildByID('addButton');
+                addButton.disabled = false;
+                addButton.style.cursor = 'pointer';
+
+                if (myPlayerInfo.buddies.some(buddy => buddy.username === playerInfo.username) ||
+                    outgoingBuddyRequests.includes(playerInfo.username)) {
+                    addButton.disabled = true;
+                    addButton.style.cursor = 'default';
+                }
+
+                addButton.onclick = () => {
                     socket.emit('buddyRequest', playerInfo.username);
+                    outgoingBuddyRequests.push(playerInfo.username);
+                    addButton.disabled = true;
+                    addButton.style.cursor = 'default';
                 }
             }
 
-            createAvatarPreview(playerInfo);
+            avatarPreview = uiScene.createAvatarPreview(playerInfo, uiObjectScene);
             avatarPreview.setPosition(460, 190);
 
             idfoneBlueStar = uiObjectScene.add.image(180, 141, 'idfoneBlueStar');
@@ -1258,8 +1739,8 @@ uiScene.create = function() {
         // })
     }
 
-    uiScene.checkInteractive = function() {
-        return !(isClickUI || disableInput);
+    uiScene.blockInteractive = function() {
+        return (isClickUI || disableInput);
     }
     uiObjectScene.anims.create({
         key: 'inLoad',
@@ -1272,21 +1753,10 @@ uiScene.create = function() {
 
 var inGame = new Phaser.Scene('GameScene');
 
-
-inGame.init = function()
-{
-    //  inject css
-    var element = document.createElement('style');
-    document.head.appendChild(element);
-
-    var sheet = element.sheet;
-    var styles = '@font-face { font-family: "usernameFont"; src: url("src/assets/fonts/Cedora-RegularStd.otf") format("opentype"); }\n';
-
-    sheet.insertRule(styles, 0);
-}
-
 inGame.preload = function() {
     preloadGameAssets(this);
+
+    preloadUIAssets(this);
 }
 
 var camPosX = 0;
@@ -1302,47 +1772,32 @@ var currentLocation = "downtown";
 var boundOffset = 150;
 
 var buddyRequests = '';
-var openChatTab = "Current Room";
-var chatTabs = {
-    "Current Room": ""
+var openChatTab = "current-room";
+
+function ChatTab(chatName, chatOwner='', chatMembers=[], chatHistory='') {
+    this.chatName = chatName;
+    this.chatOwner = chatOwner;
+    this.chatMembers = chatMembers,
+    this.chatHistory = chatHistory;
+    this.expired = false;
 }
+
+var chatTabs = {
+    "current-room" : {
+        chatName: "Current Room",
+        chatOwner: "",
+        chatMembers: [],
+        chatHistory: "",
+        expired: false,
+    },
+}
+
 var onlineUsers = [];
+var fashionShows = {};
+var fashionShowHost = "";
 
-var preloadGameAssets = (thisScene) => {
-    thisScene.load.setBaseURL('/src/assets')
-
-    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
-    
-    thisScene.load.html('gameText', 'html/text.html');
-    thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
-
-    // Load locations and objects
-    thisScene.load.image('downtownBg', 'scene/location/downtown/downtown.png');
-    thisScene.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
-
-    thisScene.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
-    thisScene.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
-    thisScene.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
-    thisScene.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
-    thisScene.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
-    thisScene.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
-    thisScene.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
-    thisScene.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
-    
-    thisScene.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
-    thisScene.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
-    thisScene.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
-    thisScene.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
-    thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
-    thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
-
-    thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
-    // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
-
-    // Load bgm
-    thisScene.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
-    thisScene.load.audio('downtownBGM', 'bgm/downtown.mp3');
-
+var preloadAvatarAssets = (thisScene) => {
+    thisScene.load.setBaseURL('/src/assets');
     // load all avatar bases
     for (let i = 0; i < 6; i++) {
         thisScene.load.spritesheet('m-body-' + i.toString(), 'avatar/m-body-' + i.toString() + '.png', { frameWidth: 300, frameHeight: 250 });
@@ -1417,6 +1872,53 @@ var preloadGameAssets = (thisScene) => {
 
     thisScene.load.image('username-tag', 'avatar/username-tag.png');
     thisScene.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+}
+
+var preloadGameAssets = (thisScene) => {
+    thisScene.load.setBaseURL('/src/assets')
+
+    thisScene.load.plugin('rexlifetimeplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlifetimeplugin.min.js', true);
+    thisScene.load.scenePlugin({
+        key: 'rexuiplugin',
+        url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+        sceneKey: 'rexUI'
+    });
+
+    thisScene.load.html('gameText', 'html/text.html');
+    thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
+
+    // Load locations and objects
+    thisScene.load.image('downtownBg', 'scene/location/downtown/downtown.png');
+    thisScene.load.image('topModelsObject', 'scene/location/downtown/objects/topmodels.png');
+
+    thisScene.load.image('topModelsBg', 'scene/location/downtown/topmodels.png');
+    thisScene.load.spritesheet('topModelsSean', 'scene/location/downtown/objects/topModelsSean.png', { frameWidth: 105, frameHeight: 100 });
+    thisScene.load.spritesheet('topModelsBoa1', 'scene/location/downtown/objects/topModelsBoa1.png', { frameWidth: 52, frameHeight: 108 });
+    thisScene.load.spritesheet('topModelsBoa2', 'scene/location/downtown/objects/topModelsBoa2.png', { frameWidth: 52, frameHeight: 108 });
+    thisScene.load.spritesheet('topModelsModel', 'scene/location/downtown/objects/topModelsModel.png', { frameWidth: 62, frameHeight: 102 });
+    thisScene.load.spritesheet('topModelsReporter1', 'scene/location/downtown/objects/topModelsReporter1.png', { frameWidth: 63, frameHeight: 106 });
+    thisScene.load.spritesheet('topModelsReporter2', 'scene/location/downtown/objects/topModelsReporter2.png', { frameWidth: 63, frameHeight: 106 });
+    thisScene.load.spritesheet('topModelsReporter3', 'scene/location/downtown/objects/topModelsReporter3.png', { frameWidth: 63, frameHeight: 106 });
+    
+    thisScene.load.spritesheet('topModelsFan', 'scene/location/downtown/objects/topModelsFan.png', { frameWidth: 49, frameHeight: 132 });
+    thisScene.load.image('topModelsPlant', 'scene/location/downtown/objects/topModelsPlant.png');
+    thisScene.load.image('topModelsRope1', 'scene/location/downtown/objects/topModelsRope1.png');
+    thisScene.load.image('topModelsRope2', 'scene/location/downtown/objects/topModelsRope2.png');
+    thisScene.load.image('topModelsDesk', 'scene/location/downtown/objects/topModelsDesk.png');
+    thisScene.load.image('topModelsChair', 'scene/location/downtown/objects/topModelsChair.png');
+
+    thisScene.load.image('fashionShowBg', 'scene/location/downtown/fashionShowBg.png');
+
+    thisScene.load.image('beachBg', 'scene/location/beach/beach.png');
+    // thisScene.load.image('avatarCollider', 'avatar/avatarCollider.png');
+
+    // Load bgm
+    thisScene.load.audio('topModelsLobbyBGM', 'bgm/topModelsLobby.mp3');
+    thisScene.load.audio('downtownBGM', 'bgm/downtown.mp3');
+    thisScene.load.audio('fashionShowWaitingBGM', 'bgm/fashionShowWaiting.mp3');
+
+    // load avatar assets
+    preloadAvatarAssets(thisScene);
 
     // load chat message containers
     for (let i = 1; i < 11; i++) {
@@ -1448,7 +1950,10 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.html('instantMessengerHTML', 'html/instantmessenger.html');
     thisScene.load.html('transparentHTML', 'html/transparent.html');
     thisScene.load.html('buddyRequestPopup', 'html/buddyRequestPopup.html');
+    thisScene.load.html('buddySelectPopup', 'html/buddySelectPopup.html');
     thisScene.load.image('uiBar', 'scene/chat/ui-bar.png');
+    thisScene.load.image('uiBarFashionDisabled', 'scene/chat/ui-bar-fashion-disabled.png');
+    thisScene.load.image('uiBarFashion', 'scene/chat/ui-bar-fashion.png');
     
     // Load inventory ui
     thisScene.load.image('inventoryHairTab', 'scene/ui/inventoryHairTab.png');
@@ -1477,6 +1982,28 @@ var preloadUIAssets = (thisScene) => {
     thisScene.load.image('transparentScreen', 'scene/ui/transparentScreen.png');
     thisScene.load.image('greyScreen', 'scene/ui/greyScreen.png');
     thisScene.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+
+    // load top models UI
+    thisScene.load.image('tmPlayButton', 'scene/location/topModels/sprites/playIcon.png');
+    thisScene.load.image('tmJoinHostPanel', 'scene/location/topModels/sprites/joinHostPanel.png');
+    thisScene.load.image('tmJoinHostPanelEx', 'scene/location/topModels/sprites/joinHostPanelEx.png');
+    thisScene.load.image('tmJoinGameItem', 'scene/location/topModels/sprites/joinGameItem.png');
+    thisScene.load.image('tmJoinGameItemEx', 'scene/location/topModels/sprites/joinGameItemEx.png');
+
+    thisScene.load.image('tmHostButton', 'scene/location/topModels/sprites/hostButton.png');
+    thisScene.load.image('tmJoinHostCloseButton', 'scene/location/topModels/sprites/joinHostCloseButton.png');
+
+    thisScene.load.image('tmGirlIcon', 'scene/location/topModels/sprites/girlIcon.png');
+    thisScene.load.image('tmBoyIcon', 'scene/location/topModels/sprites/boyIcon.png');
+
+    thisScene.load.html('tmJoinGameList', 'html/tmJoinGameList.html');
+
+    thisScene.load.image('fashionStartGrey', 'scene/location/topModels/sprites/fashionStartGrey.png');
+    thisScene.load.image('fashionStart', 'scene/location/topModels/sprites/fashionStart.png');
+    thisScene.load.image('fashionExit', 'scene/location/topModels/sprites/fashionExitButton.png');
+
+    thisScene.load.html('fashionCountdown', 'html/fashionCountdown.html');
+    thisScene.load.image('fashionPlayerScoreBackground', 'scene/location/topModels/sprites/playerScoreBackground.png');
 }
 
 var locationConfig = {
@@ -1495,6 +2022,14 @@ var locationConfig = {
         playerSpawnX: 300,
         playerSpawnY: 300,
         boundsPolygon: 0    // load json polygon for space player can move around in
+    },
+    fashionShow: {
+        width: 800,
+        backgroundX: 0,
+        initialScroll: 0,
+        playerSpawnX: 300,
+        playerSpawnY: 300,
+        boundsPolygon: 0    // load json polygon for space player can move around in
     }
 }
 
@@ -1507,17 +2042,22 @@ inGame.create = function() {
 
     // Load background
     bg = this.add.image(400, 260, 'downtownBg');
+
     bg.setInteractive();
     bg.setDepth(-500);
 
     this.input.setTopOnly(true);
     bg.on('pointerdown', function (pointer) {
+        // console.log(pointer);
+        // if (pointer.target == 'buddy-username') {
+        //     createBuddyMenuListener(pointer.target, pointer.x, pointer.y);
+        // }
         clickMovement(pointer);
     });
     inGame.sound.pauseOnBlur = false;
 
     var defaultChatBarMessage = "Click Here Or Press ENTER To Chat";
-    var otherPlayers = this.add.group();
+    otherPlayers = this.add.group();
 
     let data = this.cache.json.get('bodyAnims');
     let dataFace = this.cache.json.get('bottomShoes');
@@ -1557,19 +2097,10 @@ inGame.create = function() {
             });
 
             topModelsObject.on('pointerdown', () => {
-                if (!uiScene.checkInteractive())
+                if (uiScene.blockInteractive())
                     return;
 
-                currentLocation = "topModels";
                 socket.emit('changeRoom', "topModels");
-
-                bg.destroy();
-                bg = inGame.add.image(430, 260, 'topModelsBg');
-                bg.setDepth(-500);
-                bg.setInteractive();
-                bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-
-                setCameraPosition(currentLocation);
                 loadLocation('topModels');
             });
             topModelsObject.on('pointerup', () => {
@@ -1580,16 +2111,26 @@ inGame.create = function() {
     }
 
     function loadLocation(location) {
-        if (bgm)
-                bgm.destroy();
+        
+        currentLocation = location;
+        bg.destroy();
+        bg = inGame.add.image(430, 260, location + 'Bg');
+        bg.setDepth(-500);
+        bg.setInteractive();
+        bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
 
+        setCameraPosition(currentLocation);
+
+        if (bgm)
+            bgm.destroy();
 
         var loadingScreen = uiObjectScene.add.image(400, 260, 'loadingScreen');
         var inLoading = uiObjectScene.add.sprite(400, 260, 'inLoading').play('inLoad');
 
-        for (let i = 0; i < locationObjects.length; i++) {
-            locationObjects[i].destroy();
-        }
+        locationObjects.forEach(function(obj) { if (obj) obj.destroy(); });
+        // for (let i = 0; i < locationObjects.length; i++) {
+        //     locationObjects[i].destroy();
+        // }
         locationObjects = [];
 
         setTimeout(function () {
@@ -1610,16 +2151,7 @@ inGame.create = function() {
                 // topModelsObject.setInteractive(inGame.input.makePixelPerfect());
     
                 topModelsObject.on('pointerdown', () => {
-                    currentLocation = "topModels";
                     socket.emit('changeRoom', "topModels");
-    
-                    bg.destroy();
-                    bg = inGame.add.image(430, 260, 'topModelsBg');
-                    bg.setDepth(-500);
-                    bg.setInteractive();
-                    bg.on('pointerdown', function (pointer) { clickMovement(pointer); });
-    
-                    setCameraPosition(currentLocation);
                     loadLocation('topModels');
                 });
                 topModelsObject.on('pointerup', () => {
@@ -1628,6 +2160,10 @@ inGame.create = function() {
                 locationObjects.push(topModelsObject);
             }
             else if (location == 'topModels') {
+
+                // load all open fashion shows
+                socket.emit('getFashionShows');
+
                 bgm = inGame.sound.add('topModelsLobbyBGM');
                 bgm.play();
                 bgm.setLoop(true);
@@ -1651,9 +2187,7 @@ inGame.create = function() {
                 // for (let i = 0; i < tmObjects.length; i++) {
                 //     console.log(tmObjects);
                 // }
-                // sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
-                // plant.setInteractive();
-
+                sean.setInteractive({ pixelPerfect: true, useHandCursor: true});
 
                 sean.setDepth(220);
                 boa1.setDepth(330);
@@ -1669,6 +2203,390 @@ inGame.create = function() {
                 chair.setDepth(20);
     
                 locationObjects.push(sean, boa1, boa2, model, reporter1, reporter2, reporter3, fan, plant, rope1, rope2, desk, chair);
+
+                var tmPlayButton = inGame.add.sprite(795, 35, 'tmPlayButton');
+                tmPlayButton.setDepth('1000');
+                tmPlayButton.setInteractive({
+                    pixelPerfect: true,
+                    useHandCursor: true,
+                });
+
+                locationObjects.push(tmPlayButton);
+
+                var panelOpen = false;
+
+                var openJoinHostPanel = function() {
+                    if (uiScene.blockInteractive() || panelOpen)
+                        return;
+                    
+                    panelOpen = true;
+                    disableInput = true;
+                    isClickUI = true;
+                    
+                    tmPlayButton.x  += 1;
+                    tmPlayButton.y  += 1;
+
+                    var greyScreen = uiObjectScene.add.image(400, 260, 'greyScreen');
+                    var joinHostPanel = uiObjectScene.add.image(400, 260, 'tmJoinHostPanel');
+                    var joinGameList = uiObjectScene.add.dom(400, 260).createFromCache('tmJoinGameList');
+
+                    uiScene.loadJoinGameList(fashionShows);
+
+                    var joinHostWindow = [greyScreen, joinHostPanel, joinGameList];
+                    
+                    var closeJoinHostPanel = function() {
+                        disableInput = false;
+                        isClickUI = false;
+                        for (const obj of joinHostWindow) {
+                            obj.destroy();
+                        }
+                    }
+
+                    joinGameList.addListener('click');
+                    joinGameList.on('click', function (event) {
+                        if (event.target.id === 'tm-join-x-button' || event.target.id === 'tm-close-button') {
+                            closeJoinHostPanel();
+                        }
+                        else if (event.target.id === 'tm-host-button') {
+                            socket.emit('hostFashionShow');
+                            
+                            fashionShowHost = myPlayerInfo.username;
+                            var fashionShow = {};
+                            fashionShow.playerCount = 0;
+                            fashionShows[myPlayerInfo.username] = fashionShow;
+
+                            closeJoinHostPanel();
+                            loadLocation('fashionShow');
+                        }
+                        else if (event.target.classList.contains('tm-join-button')) {
+                            fashionShowHost = event.target.id.split('-')[1];
+                            socket.emit('joinFashionShow', event.target.id)
+
+                            fashionShows[fashionShowHost].playerCount++;
+                            fashionShows[fashionShowHost].players.push(myPlayerInfo.username);
+
+                            closeJoinHostPanel();
+                            loadLocation('fashionShow');
+                        }
+
+                    });
+                }
+
+                sean.on('pointerdown', () => {
+                    openJoinHostPanel();
+                });
+
+                tmPlayButton.on('pointerdown', () => {
+                    openJoinHostPanel();
+                });
+
+                tmPlayButton.on('pointerup', () => {
+                    if (!panelOpen)
+                        return;
+                    panelOpen = false;
+                    tmPlayButton.x -=1;
+                    tmPlayButton.y -=1;
+                });
+
+            }
+            else if (location == 'fashionShow') {
+                bgm = inGame.sound.add('fashionShowWaitingBGM');
+                bgm.play();
+                bgm.setLoop(true);
+                
+                uiScene.loadUIBarFashion(true);
+                var midPoint = 430;
+
+                //#region initBoardDisplay
+                function setBoardLabel(text) {
+                    boardLabel.text = text.replace(/\s/g, '   ');
+                }
+
+                var boardLabel = inGame.add.text(midPoint-2, 32, "Top Models Inc Fashion Show".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '21px', fill: 'white' }).setOrigin(0.5);;
+                boardLabel.setStroke('#333333', 1);
+                boardLabel.setShadow(2, 2, '#333333', 2, true, true);
+
+                boardPlayerCount = inGame.add.text(582, 162, `${fashionShows[fashionShowHost].playerCount}/10`, { fontFamily: 'fashionBoardBold', fontSize: '15px', fill: '#ffcc00'});
+                boardPlayerCount.setStroke('#000000', 1);
+                boardPlayerCount.setShadow(2, 2, '#000000', 2, true, true);
+
+                boardStartDetails = inGame.add.text(midPoint-2, 105, 'Waiting For More Users To Join', {
+                    fontFamily: 'Arial', fontSize: '14px', fill: 'white'
+                }).setOrigin(0.5);
+                boardStartDetails.setShadow(2, 2, '#333333', 2, true, true);
+
+                var boardHostDetails = inGame.add.text(midPoint-2, 160, `Hosted By ${fashionShowHost}`, {
+                    fontFamily: 'Arial', fontSize: '12px', fill: 'white'
+                }).setOrigin(0.5);
+                boardHostDetails.setShadow(2, 2, '#333333', 2, true, true);
+                
+                fashionStartBtn = inGame.add.image(midPoint-2, 135, 'fashionStartGrey').setOrigin(0.5);
+                fashionStartBtn.setInteractive({useHandCursor: true});
+
+                if (fashionShowHost != myPlayerInfo.username) {
+                    boardStartDetails.text = "Host Is Waiting For More Users To Join";
+                    fashionStartBtn.setVisible(false);
+                }
+
+                if (fashionShows[fashionShowHost].playerCount >= 5)
+                    boardStartDetails.text = "Ready To Start";
+
+                boardTheme = inGame.add.text(midPoint-2, 65, `theme`, { fontFamily: 'fashionBoardBold', fontSize: '22px', fill: 'white'}).setOrigin(0.5);
+                boardTheme.setStroke('#0e1863', 4);
+                boardTheme.setShadow(2, 2, '#000000', 2, true, true);
+                boardTheme.setVisible(false);
+
+                boardDifficulty = inGame.add.text(midPoint-2, 100, `Easy`, { fontFamily: 'fashionHelvetica', fontSize: '18px', fill: 'white'}).setOrigin(0.5);
+                boardDifficulty.setStroke('#3cac25', 6);
+                boardDifficulty.setShadow(2, 2, '#000000', 2, true, true);
+                boardDifficulty.setVisible(false);
+
+                boardDescription = inGame.add.text(midPoint-2, 120, `description`, { fontFamily: 'Arial', fontSize: '11px', fill: 'white'}).setOrigin(0.5);
+                boardDescription.setShadow(2, 2, '#333333', 2, true, true);
+                boardDescription.setVisible(false);
+
+                var boardScoreListLabel = inGame.add.text(midPoint-2, 20, "Theme Score List".replace(/\s/g, '   '), { fontFamily: 'fashionHelvetica', fontSize: '14px', fill: 'white' }).setOrigin(0.5);;
+                boardScoreListLabel.setStroke('#333333', 1);
+                boardScoreListLabel.setShadow(2, 2, '#333333', 2, true, true);
+                boardScoreListLabel.setVisible(false);
+            
+                var boardPosingLabel = inGame.add.text(midPoint-2, 38, "Posing Will Start In 10 Seconds", { fontFamily: 'Arial', fontSize: '11px', fill: '#f8fb40' }).setOrigin(0.5);;
+                boardPosingLabel.setStroke('#333333', 1);
+                boardPosingLabel.setShadow(2, 2, '#333333', 2, true, true);
+                boardPosingLabel.setVisible(false);
+                //#endregion
+
+                var playerScores = [];
+
+                var displayObjects = [boardLabel, boardPlayerCount, boardStartDetails, boardHostDetails, boardTheme, boardDifficulty, boardDescription, fashionStartBtn, boardScoreListLabel, boardPosingLabel];
+                displayObjects.forEach((obj) => obj.setDepth(-200));
+
+                var exitBtn = uiScene.add.image(765, 25, 'fashionExit');
+                exitBtn.setInteractive({useHandCursor: true});
+                locationObjects.push(exitBtn);
+
+                exitBtn.on('pointerdown', () => {
+                    if (uiScene.blockInteractive()) return;
+
+                    socket.emit('changeRoom', "topModels");
+                    locationObjects = locationObjects.concat(displayObjects);
+                    loadLocation('topModels');
+                    uiScene.loadUIBar();
+                })
+
+                var fashionShowRound = 1;
+                var fashionCountdown;
+                var dimLights;
+                socket.on('startFashionShow', function(fashionShow) {
+                    
+                    fashionShows[fashionShowHost] = fashionShow;
+                    dimLights = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
+                    dimLights.setDepth(-499);
+                    locationObjects.push(dimLights);
+
+                    otherPlayers.getChildren().filter(player => player.getData('username') !== fashionShowHost && !darkMasks.hasOwnProperty(player.getData('username'))).forEach(function (p) {
+            
+                        var darkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
+                        darkMask.setDepth(p.y);
+                        darkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, p);
+                        darkMasks[p.getData('username')] = darkMask;
+                    });
+
+                    boardStartDetails.setVisible(false);
+                    boardPlayerCount.destroy();
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        // alert("hey host choose ur theme");
+                        selectedTheme = 'blue'
+                        socket.emit('selectFashionShowTheme', fashionShowHost, selectedTheme);
+                    }
+                    else {
+                        if (myDarkMask == null) {
+                            myDarkMask = inGame.add.rectangle(430, 260, 800, 520, 0x00000000, 0.5);
+                            myDarkMask.setDepth(container.y);
+                            myDarkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, container);
+                        }
+
+                        // update board for host selecting a theme
+                        setBoardLabel('Host Is Selecting a Theme');
+                    }
+                });
+
+                socket.on('selectedFashionShowTheme', function(theme) {
+                    
+                    var changeTimer = 20;
+                    var changeInterval = setInterval(function() {
+                        changeTimer-=1;
+                        boardPosingLabel.text = "Time Left: " + changeTimer;
+                        
+                        if (changeTimer < 0) {
+                            clearInterval(changeInterval);
+                            boardPosingLabel.text = "Posing Will Start In 10 Seconds";
+                        }
+                    }, 1000);
+
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        console.log('you selected the theme now wait');
+                    }
+                    else {
+                        setBoardLabel('The Theme Selected Is:');
+                        boardTheme.text = theme.toUpperCase();
+                        boardTheme.setVisible(true);
+                        boardDifficulty.setVisible(true);
+                        boardDescription.text = '(Anything with the color blue in it)'
+                        boardDescription.setVisible(true);
+                        uiScene.loadUIBarFashion(false);
+
+                        // on receiving msg, start timer
+                        fashionCountdown = uiObjectScene.add.dom(400, -32).createFromCache('fashionCountdown');
+                        document.getElementById("fashionThemeLabel").innerHTML = "Theme: " + theme.toUpperCase();
+                        // display so the playeri s aware of how much time they have left
+                        createCountdown(20);
+                    }
+                });
+
+                function showScoring(scoring) {
+                    if (fashionCountdown)
+                        fashionCountdown.destroy();
+
+                    boardLabel.setVisible(false);
+                    boardHostDetails.setVisible(false);
+                    boardTheme.setVisible(false);
+                    boardDifficulty.setVisible(false);
+                    boardDescription.setVisible(false);
+
+                    var fashionAvatarPreview = uiScene.createAvatarPreview(myPlayerInfo, inGame);
+                    fashionAvatarPreview.setPosition(350, 50);
+                    fashionAvatarPreview.setDepth(-200);
+
+                    console.log(`theme: ${scoring.theme}, originality: ${scoring.originality}`);
+                    
+                    setTimeout(function () {
+                        fashionAvatarPreview.destroy();
+
+                        boardScoreListLabel.setVisible(true);
+                        boardPosingLabel.setVisible(true);
+
+                        for (let i = 0; i < 10; i++) {
+                            var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                            item.setDepth(-200);
+                            playerScores.push(item);
+                        }
+                    
+                        Phaser.Actions.GridAlign(playerScores, {
+                            width: 2,
+                            height: 5,
+                            cellWidth: 205,
+                            cellHeight: 27,
+                            x: 226,
+                            y: 50
+                        });
+                    }, 3000);
+                }
+
+                socket.on('fashionShowUpdateScores', function(currScores, playerUpdated, scoring) {
+
+                    fashionShows[fashionShowHost].currentScores = currScores;
+                    if (playerUpdated == myPlayerInfo.username) {
+                        myDarkMask.setVisible(false);
+
+                        showScoring(scoring);
+                    }
+                    else {
+                        darkMasks[playerUpdated].setVisible(false);
+                    }
+
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        boardLabel.setVisible(false);
+                        boardHostDetails.setVisible(false);
+                        boardScoreListLabel.setVisible(true);
+
+                        boardPosingLabel.setVisible(true);
+
+                        for (let i = 0; i < 10; i++) {
+                            var item = inGame.add.image(0, 0, 'fashionPlayerScoreBackground');
+                            item.setDepth(-200);
+                            playerScores.push(item);
+                        }
+                    
+                        Phaser.Actions.GridAlign(playerScores, {
+                            width: 2,
+                            height: 5,
+                            cellWidth: 205,
+                            cellHeight: 27,
+                            x: 226,
+                            y: 50
+                        });
+                        
+                    }
+                });
+
+                socket.on('fashionShowForceClose', function(scoring) {
+                    
+                    if (fashionShowHost == myPlayerInfo.username) {
+                        console.log('force clsing peoples invnet');
+                    }
+                    else {
+                        console.log('times up, we will calc ur score');
+                        var forced = uiScene.fashionCloseInventory(fashionCountdown);
+
+                        // if (forced) {
+                        //     btn = document.getElementById('inventoryButton');
+                        //     btn.style['pointer-events'] = 'none';
+                        // }
+                        
+                    }
+
+                    var sec = 10;
+                    var x = setInterval(function() {
+                        sec-=1;
+                        boardPosingLabel.text = `Posing Will Start In ${sec} Seconds`;
+                        
+                        if (sec == 0) {
+                            clearInterval(x);
+                            boardPosingLabel.text = "Time Left: 36";
+                        }
+                    }, 1000);
+                });
+
+                socket.on('fashionShowStartPosing', function() {
+                    alert('POSING TIME');
+                })
+
+                function createCountdown(sec) {
+                    var x = setInterval(function() {
+                        sec-=1;
+                        document.getElementById("fashionTimeLabel").innerHTML = "Time Left: " + sec;
+                        
+                        if (sec < 0) {
+                            clearInterval(x);
+                            document.getElementById("fashionTimeLabel").innerHTML = "TIMES UP";
+                        }
+                    }, 1000);
+                }
+
+                // exit button, volume button
+
+                // fashion show game
+                // -----------------
+                // start game button for our host
+                //      greyed out until 5 people in game
+                // waiting + player count for our players
+                //      update wheneer someone joins or leaves game room
+
+                // when 5th person joins, server side sends msg enable start button for host
+                
+                // when host clicks start button, send msg to server to start game
+                // server sends msg to remove game from join game list
+                
+                // start game:
+                // host chooses a theme
+                // board changes for users sayign host is selecting a theme + round 1
+                // everythign darkens except for board and curtains, and host
+
+                // after host chooses, board changes for uses saying host selected __
+                // users given 60 seconds to open inventory and change
+                // theme + timer appears on theirr screen (tick from server side)
+
             }
             loadingScreen.destroy();
             inLoading.destroy();
@@ -1720,7 +2638,7 @@ inGame.create = function() {
         boardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         usernameTag = inGame.add.sprite(0, 0, 'username-tag');
 
-        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '14px', fill: "#000000" });
+        usernameLabel = inGame.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
         usernameLabel.originX = 0.5;
         usernameLabelCenter = usernameLabel.getCenter().x;
         usernameLabel.x = usernameLabelCenter;
@@ -1746,6 +2664,7 @@ inGame.create = function() {
         container.setData('eyeType', playerInfo.avatar['eyeType']);
         container.setData('gender', playerInfo.avatar['gender']);
         container.setData('equipped', playerInfo.avatar['equipped']);
+        container.setData('playerInfo', playerInfo);
 
         var children = container.getAll();
         for (let i = 0; i < children.length - 2; i ++) {
@@ -1756,23 +2675,24 @@ inGame.create = function() {
 
             children[i].on('pointerdown', () => {
                 inGame.input.stopPropagation();
-                uiScene.openIDFone(true, playerInfo);
+                if (!uiScene.blockInteractive()) {
+                    uiScene.openIDFone(true, playerInfo);
+                }
             });
         }
     }
 
     function addOtherPlayers(playerInfo) {
-        
-        const otherEyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
-        const otherLips = inGame.add.sprite(0, 0, 'lips-0');
+        var otherEyes = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' + playerInfo.avatar['eyeType']);
+        var otherLips = inGame.add.sprite(0, 0, 'lips-0');
         var otherFaceAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
-        const otherBoardLower = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
-        const otherHairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
-        const otherHairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
-        const otherBrow = inGame.add.sprite(0, 0, 'brow-0');
+        var otherBoardLower = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        var otherHairLower = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        var otherHairUpper = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        var otherBrow = inGame.add.sprite(0, 0, 'brow-0');
         var otherHeadAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
-        const otherPlayer = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-body-' + playerInfo.avatar['skinTone']);
-        const otherShoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-4-' + playerInfo.avatar['equipped'][4]);
+        var otherPlayer = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-body-' + playerInfo.avatar['skinTone']);
+        var otherShoes = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-4-' + playerInfo.avatar['equipped'][4]);
         var otherBottomItem, otherTopItem;
         otherBottomItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
         otherTopItem = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
@@ -1780,10 +2700,10 @@ inGame.create = function() {
         var otherOutfit = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
         var otherCostume = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
         var otherBodyAcc = inGame.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
-        const otherBoardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        var otherBoardUpper = inGame.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
         var otherUsernameTag = inGame.add.sprite(0, 0, 'username-tag');
-        var otherUsernameLabel = inGame.add.text(0, 0 + 100, playerInfo.username, { fontFamily: 'usernameFont', fontSize: '15px', fill: "#000000" });
-        const otherHead = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' + playerInfo.avatar['skinTone']);
+        var otherUsernameLabel = inGame.add.text(0, 0 + 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
+        var otherHead = inGame.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' + playerInfo.avatar['skinTone']);
         otherUsernameLabel.originX = 0.5;
         var tempCenter = otherUsernameLabel.getCenter().x;
         otherUsernameLabel.x = tempCenter;
@@ -1806,7 +2726,7 @@ inGame.create = function() {
 
         var orderItems = [otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel];
 
-        const otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
+        var otherContainer = inGame.add.container(playerInfo.x, playerInfo.y);
 
         otherContainer.add([otherHairLower, otherHead, otherEyes, otherLips, otherFaceAcc, otherBoardLower, otherHairUpper, otherBrow, otherHeadAcc, otherPlayer, otherShoes, otherBottomItem, otherTopItem, otherOutfit, otherCostume, otherBodyAcc, otherBoardUpper, otherUsernameTag, otherUsernameLabel]);
 
@@ -1819,6 +2739,7 @@ inGame.create = function() {
         otherContainer.setData('eyeType', playerInfo.avatar['eyeType']);
         otherContainer.setData('gender', playerInfo.avatar['gender']);
         otherContainer.setData('equipped', playerInfo.avatar['equipped']);
+        otherContainer.setData('playerInfo', playerInfo);
         otherContainer.setData('messageData', { hasMessage: false, otherChatBubble: null, otherChatMessage: null, otherBubbleLifeTime: null, otherMessageLifeTime: null });
         
         otherContainer.id = playerInfo.id;
@@ -1833,9 +2754,20 @@ inGame.create = function() {
             });
 
             children[i].on('pointerdown', () => {
-                uiScene.openIDFone(false, playerInfo);
+                if (!uiScene.blockInteractive()) {
+                    uiScene.openIDFone(false, playerInfo);
+                }
             });
         }
+
+        // mask test
+        // otherPlayers.getChildren().forEach(function (p) {
+        //     var darkMask = inGame.add.rectangle(0, 0, 800, 520, 0x00000000, 0.4).setOrigin(0);
+        //     darkMask.setDepth(p.y);
+        //     darkMask.mask = new Phaser.Display.Masks.BitmapMask(inGame, p);
+        //     console.log(p.getData('username'));
+        //     darkMasks[p.getData('username')] = darkMask;
+        // });
       }
 
     globalThis.socket.emit('game loaded');
@@ -1858,15 +2790,58 @@ inGame.create = function() {
     });
 
     globalThis.socket.on('playerOnline', function (p) {
-        onlineUsers[p.username] = p.pid;
+        onlineUsers[p.username] = p;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
     });
-
+    
     globalThis.socket.on('playerOffline', function (username) {
         delete onlineUsers[username];
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
+
+        let expired = [];
+
+        for (let chatId in chatTabs) {
+
+            let members = chatTabs[chatId].chatMembers
+            let idx = members.indexOf(username);
+
+            if (idx !== -1)
+                members.splice(idx, 1);
+
+            if (members.length == 1 && !chatTabs[chatId].expired) {
+                chatTabs[chatId].expired = true;
+                expired.push(chatId);
+            }
+        }
+
+        for (let expiredId of expired) {
+            let counter = 0;
+            while (chatTabs.hasOwnProperty(expiredId + '-expired-' + counter)) {
+                counter++;
+            }
+
+            let newId = expiredId + '-expired-' + counter;
+
+            let modifiedObj = {}
+
+            for (let [k, v] of Object.entries(chatTabs)) {
+                if (k === expiredId)
+                modifiedObj[newId] = v
+                else
+                modifiedObj[k] = v
+            }
+
+            chatTabs = modifiedObj;
+            
+            if (openChatTab == expiredId)
+                openChatTab = newId;
+            if (instantMessenger) {
+                let tabElement = instantMessenger.getChildByID(expiredId);
+                tabElement.id = newId;
+            }
+        }
     });
 
     // Everyone removes the player with this id
@@ -1886,7 +2861,7 @@ inGame.create = function() {
                 p.removeAll(true);
                 otherPlayers.remove(p);
                 p.destroy();
-                
+                break;
             }
         }
     });
@@ -1894,20 +2869,19 @@ inGame.create = function() {
     // Sent only to one person, who removes everyone else
     globalThis.socket.on('removePlayers', function () {
 
-        for (let i = 0; i < otherPlayers.getLength(); i++) {
+        for (let i = otherPlayers.getLength()-1; i >= 0; i--) {
             var p = otherPlayers.getChildren()[i];
+            var msgData = p.getData('messageData');
+            if (msgData['hasMessage']) {
+                msgData['otherBubbleLifeTime'].stop();
+                msgData['otherMessageLifeTime'].stop();
+                msgData['otherChatBubble'].destroy();
+                msgData['otherChatMessage'].destroy();
+            }
 
-                var msgData = p.getData('messageData');
-                if (msgData['hasMessage']) {
-                    msgData['otherBubbleLifeTime'].stop();
-                    msgData['otherMessageLifeTime'].stop();
-                    msgData['otherChatBubble'].destroy();
-                    msgData['otherChatMessage'].destroy();
-                }
-
-                p.removeAll(true);
-                p.destroy();
-                otherPlayers.remove(p);
+            p.removeAll(true);
+            p.destroy();
+            otherPlayers.remove(p);
         }
     });
 
@@ -1925,6 +2899,11 @@ inGame.create = function() {
 
                 p.setPosition(playerInfo.x, playerInfo.y);
                 p.setDepth(playerInfo.y);
+                
+                if (darkMasks.hasOwnProperty(playerInfo.username)) {
+                    darkMasks[playerInfo.username].setDepth(playerInfo.y);
+                    console.log(`player ${playerInfo.username} mask depth ${playerInfo.y}`);
+                }
                 p.flipX = playerInfo.flipX;
                 
                 for (let i = 0; i < 15; i++)
@@ -1967,7 +2946,7 @@ inGame.create = function() {
         var prefix = "n"
 
         if (typeId != 5)
-            prefix = myPlayerInfo.avatar['gender'];
+            prefix = cont.getData('gender');
 
         if (typeId == 0 && isLocalPlayer) {
             equippedItem = inGame.add.sprite(0, 0, prefix + '-'+ typeId.toString()+ '-' + itemId.toString() + '-1');
@@ -2015,6 +2994,8 @@ inGame.create = function() {
     globalThis.socket.on('playerWaveResponse', function (playerInfo) {
         otherPlayers.getChildren().forEach(function (p) {
             if (playerInfo.id === p.id) { // && !p.x[7].anims.isPlaying && !p.x[1].anims.isPlaying
+                console.log(JSON.parse(JSON.stringify(p.getAt(cMap.player))).textureKey + '-wave');
+                console.log(JSON.parse(JSON.stringify(p.getAt(cMap.top))).textureKey + '-wave');
                 p.getAt(cMap.player).play(JSON.parse(JSON.stringify(p.getAt(cMap.player))).textureKey + '-wave');
                 p.getAt(cMap.lips).play(JSON.parse(JSON.stringify(p.getAt(cMap.lips))).textureKey + '-wave');
                 p.getAt(cMap.top).play(JSON.parse(JSON.stringify(p.getAt(cMap.top))).textureKey + '-wave');
@@ -2073,14 +3054,7 @@ inGame.create = function() {
 
     }.bind(this));
 
-    globalThis.socket.on('privateMessageResponse', function (playerInfo, msg) {
-        // if no chat tab open, add this chat tab
-        console.log('Incoming PM from ' + playerInfo.username + ': ' + msg);
-
-    }.bind(this));
-
-    globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
-
+    function displayNotification(notifType, variable) {
         if (notifLifeTime != undefined && notifLifeTime.isAlive) {
             notifBubbleLifeTime.stop();
             notifLifeTime.stop();
@@ -2089,11 +3063,32 @@ inGame.create = function() {
         }
 
         notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
-        var notifMsgContent = notifMessage.getChildByID('message');
+        let notifMsgContent = notifMessage.getChildByID('message');
         notifMsgContent.style.width = '150px';
 
-        notifMessage.getChildByID('message').innerHTML = "Buddy request from: \"" + playerInfo.username + "\", click here on buddy list to accept/deny";
-        notifBubble = uiScene.add.image(645, 410, 'notification-3');
+        let msg = "";
+
+        switch (notifType) {
+            case Notif.BUDDY_REQUEST:
+                msg = "Buddy request from: \"" + variable + "\", click here on buddy list to accept/deny";
+                break;
+            case Notif.NEW_BUDDY:
+                msg = "User " + variable + " is now your buddy";
+                break;
+            default: // chat
+                msg = variable;
+        }
+        
+        let notifMessageContent = notifMessage.getChildByID('message');
+        notifMessageContent.innerHTML = msg;
+
+        var lines = notifMessageContent.clientHeight / 15;
+        if (lines > 4) {
+            let maxChars = Math.floor(notifMessageContent.clientWidth / 5);
+            notifMessageContent.innerHTML = msg.substring(0, maxChars - 3) + '...';
+            lines = 4;
+        }
+        notifBubble = uiScene.add.image(645, 410, `notification-${lines}`);
 
         notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
             lifeTime: 4000,
@@ -2106,6 +3101,31 @@ inGame.create = function() {
             destroy: true,
             start: true
         });
+    }
+
+    globalThis.socket.on('privateMessageResponse', function (chatId, chatObj, username, msg) {
+        if (!chatTabs.hasOwnProperty(chatId)) {
+            let chatName = username;
+            if (chatObj.chatMembers.length > 2)
+                chatName = chatObj.chatName;
+            chatTabs[chatId] = new ChatTab(chatName, chatObj.chatOwner, chatObj.chatMembers);
+        }
+        chatTabs[chatId].chatHistory += username + ": " + msg + '<br>';
+
+        let imWindow = null;
+        if (instantMessenger) {
+            imWindow = instantMessenger.getChildByID('im-window');
+            if (imWindow.style.display === '')
+                uiScene.loadChatTabs();
+        }
+
+        if (openChatTab !== chatId || (instantMessenger && imWindow.style.visibility === 'none'))
+            displayNotification(Notif.CHAT, username + ": " + msg);
+    }.bind(this));
+
+    globalThis.socket.on('buddyRequestResponse', function (playerInfo) {
+
+        displayNotification(Notif.BUDDY_REQUEST, playerInfo.username);
 
         var gender = 'girl';
         if (playerInfo.avatar.gender == 'm')
@@ -2121,35 +3141,50 @@ inGame.create = function() {
 
     globalThis.socket.on('acceptBuddyRequestResponse', function (buddies, newBuddy) {
 
-        if (notifLifeTime != undefined && notifLifeTime.isAlive) {
-            notifBubbleLifeTime.stop();
-            notifLifeTime.stop();
-            notifBubble.destroy()
-            notifMessage.destroy();
+        let idx = outgoingBuddyRequests.indexOf(newBuddy);
+        if (idx !== -1)
+            outgoingBuddyRequests.splice(idx, 1);
+
+        displayNotification(Notif.NEW_BUDDY, newBuddy);
+
+        myPlayerInfo.buddies = buddies;
+        if (document.getElementById("buddy-window")) {
+            uiScene.loadBuddyList();
+            console.log('refresh buddy list');
         }
+    }.bind(this));
 
-        notifMessage = uiScene.add.dom(615, 487).createFromCache('chatMessageHTML');
-        var notifMsgContent = notifMessage.getChildByID('message');
-        notifMsgContent.style.width = '150px';
+    globalThis.socket.on('rejectBuddyRequestResponse', function (rejectedBy) {
+        outgoingBuddyRequests.splice(outgoingBuddyRequests.indexOf(rejectedBy), 1);
+    }.bind(this));
 
-        notifMessage.getChildByID('message').innerHTML = "User " + newBuddy + " is now your buddy";
-        notifBubble = uiScene.add.image(645, 410, 'notification-2');
-
-        notifLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifMessage, {
-            lifeTime: 4000,
-            destroy: true,
-            start: true
-        });
-
-        notifBubbleLifeTime = uiScene.plugins.get('rexlifetimeplugin').add(notifBubble, {
-            lifeTime: 4000,
-            destroy: true,
-            start: true
-        });
-
+    globalThis.socket.on('deleteBuddyResponse', function (buddies) {
         myPlayerInfo.buddies = buddies;
         if (document.getElementById("buddy-window") != null)
             uiScene.loadBuddyList();
+    }.bind(this));
+
+    globalThis.socket.on('getOfflineIdfoneResponse', function (idfone) {
+        uiScene.openIDFone(false, idfone);
+    }.bind(this));
+
+    globalThis.socket.on('updateFashionShowList', function (fashionShow) {
+        if (fashionShow.started)
+            delete fashionShows[fashionShow.hostUser];
+        else
+            fashionShows[fashionShow.hostUser] = fashionShow;
+
+        if (document.getElementById("tm-join-game-list") != null)
+            uiScene.loadJoinGameList(fashionShows);
+    }.bind(this));
+
+    globalThis.socket.on('addFashionShowPlayer', function (fashionShow, playerJoined) {
+        fashionShows[fashionShowHost] = fashionShow;
+        addFashionShowPlayer(fashionShow.playerCount, playerJoined);
+    }.bind(this));
+
+    globalThis.socket.on('getFashionShowsResponse', function (allFashionShows) {
+        fashionShows = allFashionShows;
     }.bind(this));
 
     //#region Action Animations
@@ -2299,6 +3334,10 @@ inGame.create = function() {
     //#endregion
 
     function clickMovement(pointer) {
+
+        globalPointer.x = pointer.x + clickOffsetX;
+        globalPointer.y = pointer.y;
+
         isTyping = false;
         globalInputChat.value = defaultChatBarMessage;
         globalInputChat.blur();
@@ -2306,10 +3345,8 @@ inGame.create = function() {
         if (instantMessenger)
             instantMessenger.getChildByID('chat-input').blur();
 
-        if (!uiScene.checkInteractive()) return;
+        if (uiScene.blockInteractive()) return;
         
-        globalPointer.x = pointer.x + clickOffsetX;
-        globalPointer.y = pointer.y;
         inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
     }
 }
@@ -2398,6 +3435,10 @@ inGame.update = function() {
         }
 
         container.setDepth(container.y);
+        if (myDarkMask) { 
+            myDarkMask.setDepth(container.y);
+            // console.log(`local player mask depth: ${container.y}`);
+        }
 
         if (!disableInput) {
         //#region Arrow Key Movement
@@ -2568,7 +3609,7 @@ var config = {
         createContainer: true
         },
     pixelArt: true,
-    scene: [login, loading, inGame, uiScene]
+    scene: [login, inGame, uiScene]
 };
 
 var game = new Phaser.Game(config);
@@ -2587,6 +3628,132 @@ uiObjectScene.preload = function () {
 uiObjectScene.create = function () {
     console.log('uiObjectScene created');
 };
+//#endregion
+
+//#region avatarPreview Scene
+let avatarScene = new Phaser.Scene('avatarScene');
+
+avatarScene.preload = function() {
+    preloadAvatarAssets(this);
+
+    // load action anim data
+    this.load.json('bodyAnims', 'anims/bodyAnims.json');
+    this.load.json('bottomShoes', 'anims/bottomShoes.json');
+    this.load.json('eyesAnims', 'anims/eyesAnims.json');
+    this.load.json('hairAnims', 'anims/hairAnims.json');
+    this.load.json('lipsAnims', 'anims/lipsAnims.json');
+}
+
+avatarScene.create = function() {
+    let data = this.cache.json.get('bodyAnims');
+    let dataFace = this.cache.json.get('bottomShoes');
+    let dataEyes = this.cache.json.get('eyesAnims');
+    let dataHair = this.cache.json.get('hairAnims');
+    let dataLips = this.cache.json.get('lipsAnims');
+
+    avatarScene.createAvatarPreview = (playerInfo, scene) => {
+        let bodyPreview = scene.add.sprite(0, 0, playerInfo.avatar.gender + '-body-' +  playerInfo.avatar['skinTone']);
+        let headPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-face-' +  playerInfo.avatar['skinTone']);
+        let eyesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-eyes-' +  playerInfo.avatar['eyeType']);
+        let lipsPreview = scene.add.sprite(0, 0, 'lips-0');
+        let faceAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-7-' + playerInfo.avatar['equipped'][7]);
+        let boardLowerPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-1');
+        let hairLowerPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-2');
+        let hairUpperPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-0-' + playerInfo.avatar['equipped'][0] + '-1');
+        let headAccPreview = scene.add.sprite(playerInfo.x, playerInfo.y, playerInfo.avatar['gender'] + '-6-' + playerInfo.avatar['equipped'][6]);
+        let shoesPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-4-' + playerInfo.avatar['equipped'][4]);
+        // if (playerInfo.avatar['equipped'][3] === -1) {
+        let bottomItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-2-' + playerInfo.avatar['equipped'][2]);
+        let topItemPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender']  + '-1-' + playerInfo.avatar['equipped'][1]);
+        let outfitPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-3-' + playerInfo.avatar['equipped'][3]);
+        let costumePreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-9-' + playerInfo.avatar['equipped'][9]);
+        let bodyAccPreview = scene.add.sprite(0, 0, playerInfo.avatar['gender'] + '-8-' + playerInfo.avatar['equipped'][8]);
+        let browPreview = scene.add.sprite(0, 0, 'brow-0');
+        let boardUpperPreview = scene.add.sprite(0, 0, 'n-5-' + playerInfo.avatar['equipped'][5] + '-2');
+        let usernameTagPreview = scene.add.sprite(0, 0, 'username-tag');
+        usernameLabelPreview = scene.add.text(0, 100, playerInfo.username, { fontFamily: 'Arial', fontSize: '13px', fill: "#000000" });
+        usernameLabelPreview.originX = 0.5;
+        let usernameLabelCenter = usernameLabel.getCenter().x;
+        usernameLabelPreview.x = usernameLabelCenter;
+        usernameLabelPreview.setStroke('#ffffff', 2);
+        
+        var children  = [hairLowerPreview, headPreview, eyesPreview, lipsPreview, faceAccPreview, boardLowerPreview, hairUpperPreview, browPreview, headAccPreview, bodyPreview, shoesPreview, bottomItemPreview, topItemPreview, outfitPreview, costumePreview, bodyAccPreview, boardUpperPreview, usernameTagPreview, usernameLabelPreview];
+        avPreview = scene.add.container(0, 0);
+        avPreview.add(children);
+        avPreview.setDepth(1001);
+
+        avPreview.setDataEnabled();
+        avPreview.setData('username', playerInfo.username);
+        avPreview.setData('skinTone', playerInfo.avatar['skinTone']);
+        avPreview.setData('eyeType', playerInfo.avatar['eyeType']);
+        avPreview.setData('gender', playerInfo.avatar['gender']);
+        avPreview.setData('playerInfo', playerInfo);
+
+        var previewEquipped = [];
+        for (let i = 0; i < playerInfo.avatar['equipped'].length; i++)
+            previewEquipped[i] = playerInfo.avatar['equipped'][i]
+        avPreview.setData('equipped', previewEquipped);
+
+        return avPreview;
+    }
+
+    //#region Avatar Preview Action Animations
+    data.skins.forEach(skin => {
+        data.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: data.frames[key] }),
+                frameRate: data.frameRate,
+                repeat: data.repeat
+            });
+        })
+    });
+
+    dataFace.skins.forEach(skin => {
+        dataFace.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataFace.frames[key] }),
+                frameRate: dataFace.frameRate,
+                repeat: dataFace.repeat
+            });
+        })
+    });
+
+    dataEyes.skins.forEach(skin => {
+        dataEyes.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataEyes.frames[key] }),
+                frameRate: dataEyes.frameRate,
+                repeat: dataEyes.repeat
+            });
+        })
+    });
+
+    dataHair.skins.forEach(skin => {
+        dataHair.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataHair.frames[key] }),
+                frameRate: dataHair.frameRate,
+                repeat: dataHair.repeat
+            });
+        })
+    });
+
+    dataLips.skins.forEach(skin => {
+        dataLips.keys.forEach(key => {
+            this.anims.create({
+                key: skin + '-' + key,
+                frames: this.anims.generateFrameNumbers(skin, { frames: dataLips.frames[key] }),
+                frameRate: dataLips.frameRate,
+                repeat: dataLips.repeat
+            });
+        })
+    });
+    //#endregion
+}
 //#endregion
 
 var uiConfig = {

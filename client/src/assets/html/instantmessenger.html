@@ -29,6 +29,7 @@
                 max-height: 500px;
                 resize: both;
                 overflow: hidden;
+                z-index: 1
             }
 
             #im-header {
@@ -63,40 +64,58 @@
                 position: absolute;
                 top: 34px;
                 left: 4px;
-                /* border: 1px solid green; */
                 width: calc(100% - 8px);
                 height: calc(100% - 37px);
                 border-radius: 5px;
                 background-color: white;
+                display: grid;
+                grid-auto-flow: row;
+                grid-auto-rows: min-content;
             }
 
             #chat-tabs-container {
-                position: absolute;
-                left: 2px;
+                position: relative;
+                left: 3px;
                 width: calc(100% - 4px);
-                height: 56px;
+                height: 30px;
+                display: grid;
+                grid-auto-flow: column;
+                overflow: hidden;
+            }
+
+            #chat-tabs-top {
+                position: relative;
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: min-content;
+                width: 335px;
             }
 
             #chat-tabs-flexbox {
-                position: absolute;
+                position: relative;
                 top: 8px;
-                width: calc(100% - 70px);
+                width: 270px;
                 height: calc(100% - 8px);
                 display: grid;
                 grid-auto-flow: column;
-                overflow-x: scroll;
+                grid-auto-columns: min-content;
+                overflow-x: hidden;
                 overflow-y: hidden;
-                display: flex;
-                flex-direction: row;
+                scroll-behavior: smooth;
+            }
+
+            #chat-tabs-flexbox::-webkit-scrollbar {
+                display: none; /* Chrome, Safari, and Opera */
             }
 
             .chat-tab {
-                /* flex-shrink: 1; */
-                float: left;
+                position: relative;
                 width: 113px;
                 max-width: 113px;
                 height: calc(100%);
                 border-radius: 7px;
+                border-bottom-left-radius: 0%;
+                border-bottom-right-radius: 0%;
                 border-top: 1px solid #189af6;
                 border-left: 1px solid #189af6;
                 border-right: 1px solid #189af6;
@@ -108,10 +127,45 @@
                 cursor: pointer;
             }
             
+            #chat-tabs-buttons {
+                position: relative;
+                margin-top: 10px;
+                width: 60px;
+                height: 100%;
+                /* margin-left: 0px;
+                left: 0px; */
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: min-content;
+            }
+
+            .chat-tabs-scroll-buttons {
+                /* visibility: hidden; */
+                margin-left: 6px;
+                width: 15px;
+                height: 16px;
+            }
+
+            .chat-tabs-scroll-buttons:hover {
+                cursor: pointer;
+            }
+
+            #chat-tabs-scroll-left {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-left.png);
+            }
+
+            #chat-tabs-scroll-right {
+                background-image: url(/src/assets/scene/chat/im-scrollbar-right.png);
+            }
+
             #new-chat-button {
-                position: absolute;
-                top: 10px;
-                right: 11px;
+                margin-left: 6px;
+                height: 14px;
+                width: 14px;
+                /* position: relative; */
+                background-image: url(/src/assets/scene/chat/new-chat-icon.png);
+                /* top: 10px; */
+                /* right: 11px; */
             }
 
             #new-chat-button:hover {
@@ -119,13 +173,16 @@
             }
 
             #chat-tabs-bottom {
-                margin-left: 2px;
-                margin-right: 2px;
-                position: absolute;
-                top: 30px;
-                width: calc(100% - 4px);
+                margin-left: 3px;
+                margin-right: 3px;
+                /* position: absolute; */
+                position: relative;
+                /* top: 30px; */
+                width: calc(100% - 6px);
                 height: 26px;
                 border-radius: 5px;
+                border-top-left-radius: 0%;
+                border-top-right-radius: 0%;
                 background: linear-gradient(to bottom, #20a0f0, #3fccf0, #42d0f0);
             }
 
@@ -135,33 +192,94 @@
                 bottom: 3px;
             }
 
-            #chat-content-container {
-                position: absolute;
-                height: calc(100% - 121px);
+
+            #chat-sections {
+                position: relative;
+                display: flex;
+                height: calc(100% - 56px);
                 width: calc(100% - 2px);
-                top: 56px;
-                left: 2px;
+                /* top: 56px; */
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+
+            #chat-section {
+                /* position: absolute;
+                width: 50%;
+                height: 100%;
+                border: 1px solid green; */
+                flex: 1;
+                /* chat settings */
+                max-width: calc(100% - 2px);
+                height: 150px;
+                max-height: 150px;
+                /* avatar settings: */
+                /* max-width: calc(100% - 126px); */
+            }
+
+            #chat-avatar-section {
+                /* position: absolute;
+
+                /* chat settings */
+                flex: 0;
+                margin-right: 0px;
+                
+                /* avatar settings: */
+                /* margin-right: 4px; */
+                /* flex: 0 0 121px; */
+                height: 150px;
+                background-image: url(/src/assets/scene/chat/im-avatar-section.png);
+            }
+
+            #chat-avatar-section-container {
+                position: relative;
+                height: 100%;
+                width: 100%;
+            }
+
+            #chat-avatar-preview {
+                visibility: visible;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #chat-avatar-frame {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url(/src/assets/scene/chat/im-avatar-frame.png);
+            }
+
+            #chat-content-container {
+                position: relative;
+                height: calc(89px);
+                width: calc(100% - 4px);
             }
             
             #chat-input-top {
-                margin: 3px;
-                bottom: 40px;
-                position: absolute;
-                width: calc(100% - 6px);
+                /* margin-bottom: 1px; */
+                /* bottom: 42px; */
+                position: relative;
+                width: calc(100% - 4px);
                 height: 21px;
-                border-radius: 5px;
+                border-radius: 4px;
                 border-bottom-left-radius: 0%;
                 border-bottom-right-radius: 0%;
                 background-color: #42d0f0;
             }
 
             #chat-input-container {
-                margin: 3px;
-                bottom: 0px;
-                position: absolute;
-                width: calc(100% - 6px);
+                position: relative;
+                margin-top: 1px;
+                width: calc(100% - 4px);
                 height: 39px;
-                border-radius: 5px;
+                border-radius: 4px;
                 border-top-left-radius: 0%;
                 border-top-right-radius: 0%;
                 background-color: #a0e0e0;
@@ -169,11 +287,9 @@
             }
 
             #chat-input {
-                position: absolute;
                 font-size: 12px;
-                padding:3px;
                 vertical-align: top;
-                width: 100%;
+                width: calc(100% - 6px);
                 height: 100%;
                 left: 0px;
                 top: 0px;
@@ -202,7 +318,10 @@
                 -moz-user-select: none;
                 -o-user-select: none;
                 user-select: none;
-                /* pointer-events: none; */
+            }
+
+            .dragDisable {
+                pointer-events: none;
             }
 
             .selectEnable { 
@@ -233,18 +352,54 @@
                 color: black;
             }
 
+            #close-chat-avatar-preview-button {
+                visibility: hidden;
+                width: 11px;
+                height: 10px;
+                position: absolute;
+                top: 8px;
+                left: 219px;
+                background-image: url(/src/assets/scene/chat/im-close-avatar-preview.png);
+            }
+
+            #open-chat-avatar-preview-button {
+                visibility: hidden;
+                width: 11px;
+                height: 10px;
+                position: absolute;
+                top: 8px;
+                right: 27px;
+                background-image: url(/src/assets/scene/chat/im-open-avatar-preview.png);
+            }
+
+            #close-chat-tab-button {
+                visibility: hidden;
+                width: 12px;
+                height: 12px;
+                position: absolute;
+                top: 7px;
+                right: 5px;
+                background-image: url(/src/assets/scene/chat/im-close-chat.png);
+            }
+
+            #close-chat-tab-button:hover,
+            #close-chat-avatar-preview-button:hover,
+            #open-chat-avatar-preview-button:hover {
+                cursor: pointer;
+            }
+
             #chat-history {
                 margin-top: 2px;
-                margin-bottom: 2px;
+                margin-bottom: 1px;
                 text-align: left;
                 width: calc(100% - 7px);
-                height: calc(100% - 4px);
+                height: calc(100% - 3px);
                 overflow-y: auto;
                 overflow-wrap: break-word;
             }
 
             #chat-history::-webkit-scrollbar,
-            #buddies-container::-webkit-scrollbar {
+            .buddies-container::-webkit-scrollbar {
                 width: 16px;
                 height: 83px;
                 background-color: #dcdcdc;
@@ -252,7 +407,7 @@
             }
 
             #chat-history::-webkit-scrollbar-thumb,
-            #buddies-container::-webkit-scrollbar-thumb {
+            .buddies-container::-webkit-scrollbar-thumb {
                 background: linear-gradient(to left, #15406d 50%, #2c537b 50%);
                 border: 1px solid white;
                 margin-top: 1px;
@@ -260,7 +415,7 @@
             }
 
             #chat-history::-webkit-scrollbar-button:vertical,
-            #buddies-container::-webkit-scrollbar-button:vertical {
+            .buddies-container::-webkit-scrollbar-button:vertical {
                 height: 15px;
                 width: 16px;
                 outline: 1px solid white;
@@ -268,18 +423,18 @@
 
             #chat-history::-webkit-scrollbar-button:start:decrement,
             #chat-history::-webkit-scrollbar-button:end:increment,
-            #buddies-container::-webkit-scrollbar-button:start:decrement,
-            #buddies-container::-webkit-scrollbar-button:end:increment {
+            .buddies-container::-webkit-scrollbar-button:start:decrement,
+            .buddies-container::-webkit-scrollbar-button:end:increment {
                 display: block;
             }
 
             #chat-history::-webkit-scrollbar-button:start:decrement,
-            #buddies-container::-webkit-scrollbar-button:start:decrement {
+            .buddies-container::-webkit-scrollbar-button:start:decrement {
                 background-image: url(/src/assets/scene/chat/im-scrollbar-up.png);
             }
 
             #chat-history::-webkit-scrollbar-button:end:increment,
-            #buddies-container::-webkit-scrollbar-button:end:increment {
+            .buddies-container::-webkit-scrollbar-button:end:increment {
                 background-image: url(/src/assets/scene/chat/im-scrollbar-down.png);
             }
             
@@ -297,6 +452,7 @@
                 max-width: 350px;
                 max-height: 500px;
                 overflow: hidden;
+                z-index: 2;
             }
 
             #buddy-header {
@@ -411,7 +567,7 @@
                 bottom: 3px;
             }
 
-            #buddies-container {
+            .buddies-container {
                 position: absolute;
                 height: calc(100% - 66px);
                 width: calc(100% - 4px);
@@ -453,7 +609,7 @@
                 vertical-align: middle;
             }
 
-            .buddy_username:hover {
+            .buddy-username:hover {
                 cursor: pointer;
             }
 
@@ -471,7 +627,8 @@
                 padding-top: 2px;
                 padding-bottom: 2px;
                 width: 140px;
-                height: 68px;
+                /* height: 68px; */
+                height: 50px;
                 border-radius: 3px;
                 background-color: #016fff;
                 box-shadow: inset 1px 1px 1px 0 #55a9ff, inset -2px -2px 2px 0 rgba(0,82,195,255);
@@ -479,6 +636,7 @@
                 justify-content: space-evenly;
                 align-items: flex-start;
                 font-size: 14px;
+                z-index: 3;
             }
 
             #buddy-menu-divider {
@@ -492,7 +650,13 @@
                 padding-top: 2px;
             }
 
+            #chat-with-buddy-option {
+                display: none;
+            }
+
             .buddy-menu-option {
+                align-items: flex-start;
+                width: calc(100% - 8px);
                 display: flex;
                 gap: 5px;
             }
@@ -505,7 +669,7 @@
     <body>
         <div id="im-window">
             <div id="im-header"></div>
-            <img class="selectDisable" id="im-title" src="./src/assets/scene/chat/instant-messager-title.png"/>
+            <img class="selectDisable dragDisable" id="im-title" src="./src/assets/scene/chat/instant-messager-title.png"/>
             <div id="im-close-button">
                 <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
@@ -513,36 +677,54 @@
             <div id="im-container">
 
                 <div id="chat-tabs-container">
-                    <div id="chat-tabs-flexbox">
-                        <div class="chat-tab" id="Current Room">
-                            <div id="tabName" class="selectDisable">Current Room</div>
+                    <div id="chat-tabs-top">
+                        <div id="chat-tabs-flexbox">
+                            <div class="chat-tab" id="current-room">
+                                <div id="tabName" class="selectDisable">Current Room</div>
+                            </div>
+                        </div>
+                        <div id="chat-tabs-buttons">
+                            <div id="chat-tabs-scroll-left" class="chat-tabs-scroll-buttons"></div>
+                            <div id="chat-tabs-scroll-right" class="chat-tabs-scroll-buttons"></div>
+                            <div id="new-chat-button">
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div id="new-chat-button">
-                    <img src="./src/assets/scene/chat/new-chat-icon.png" class="selectDisable"/>
                 </div>
 
                 <div id="chat-tabs-bottom">
                     <img class="selectDisable" id="chat-icon" src="./src/assets/scene/chat/chat-icon.png"/>
                     <div id="chatName" class="selectDisable">Current Room</div>
+                    <div id="close-chat-avatar-preview-button"></div>
+                    <div id="open-chat-avatar-preview-button"></div>
+                    <div id="close-chat-tab-button"></div>
                 </div>
 
-                <div id="chat-content-container">
-                    <div id="chat-history"></div>
-                </div>
-                <div id="chat-input-top"></div>
-                <div id="chat-input-container">
-                    <textarea id="chat-input" spellcheck="false"></textarea>
+                <div id="chat-sections">
+                    <div id="chat-section">
+                        <div id="chat-content-container">
+                            <div id="chat-history"></div>
+                        </div>
+                        <div id="chat-input-top"></div>
+                        <div id="chat-input-container">
+                            <textarea id="chat-input" spellcheck="false"></textarea>
+                        </div>
+                    </div>
+                    <div id="chat-avatar-section">
+                        <div id="chat-avatar-section-container">
+                            <div id="chat-avatar-preview"></div>
+                            <!-- <canvas id="chat-avatar-preview" width="121" height="150"> -->
+                            <div id="chat-avatar-frame"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="buddy-window">
             <div id="buddy-header"></div>
-                <div id="myBuddiesLabel" class="selectDisable">My Buddies</div>
-                <div id="buddy-close-button">
+            <div id="myBuddiesLabel" class="selectDisable dragDisable">My Buddies</div>
+            <div id="buddy-close-button">
                 <img class="selectDisable" src="./src/assets/scene/chat/im-close-button.png"/>
             </div>
 
@@ -568,7 +750,7 @@
                     </div>
                 </div>
 
-                <div id="buddies-container">
+                <div class="buddies-container">
                     <table id="buddy-table" class="selectDisable">
                         <!-- <tr class="buddy-table-row">
                             <td class="buddy-table-data">

@@ -6,8 +6,11 @@ var io = require('socket.io')(server);
 
 var Client = require('./network/player').Client;
 const mongoose = require('mongoose');
-const { loginRequest, getUserAvatar, changeEquipped, addBuddy } = require('./database/queries');
+const { loginRequest, getUserAvatar, changeEquipped, addBuddy, deleteBuddy, 
+        getIdfoneData, getIdFromUsername
+        } = require('./database/queries');
 const { Player } = require('./network/player');
+const { FashionShow } = require('./entity/fashionShow');
 
 // store clients (id: socketid)
 // const clients = new Object();
@@ -15,7 +18,16 @@ const { Player } = require('./network/player');
 const players = {};
 const usernameToId = {};
 const usernameToPID = {};
-const rooms = {};
+// const rooms = {};
+const fashionShows = {};
+const chatRooms = {};
+
+// fashion show rooms structure
+/*
+{
+    'blueberry7': FashionShow obj
+}
+*/
 
 // connect to database
 main().catch(err => console.log(err));
@@ -28,6 +40,32 @@ app.use(express.static(__dirname + '/client'));
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
+
+function ChatRoom(chatName, chatOwner='', chatMembers=[], chatHistory='') {
+    this.chatName = chatName;
+    this.chatOwner = chatOwner;
+    this.chatMembers = chatMembers,
+    this.chatHistory = chatHistory;
+}
+
+function removeUserFromAllChatRooms(userToRemove) {
+    let emptyChatRooms = []
+
+    for (let chatRoomId in chatRooms) {
+        let chatRoom = chatRooms[chatRoomId];
+        let idx = chatRoom.chatMembers.indexOf(userToRemove);
+
+        if (idx !== -1)
+            chatRoom.chatMembers.splice(idx, 1);
+
+        if (chatRoom.chatMembers.length == 0)
+            emptyChatRooms.push(chatRoomId);
+    }
+
+    emptyChatRooms.forEach(chatId => {
+        delete chatRooms[chatId];
+    });
+}
 
 // socket connections
 io.on('connection', function (socket) {
@@ -42,8 +80,12 @@ io.on('connection', function (socket) {
             socket.to(players[socket.id].room).emit('removePlayer', socket.id);
             io.emit("playerOffline", players[socket.id].username);
 
+            // update if they were in a game room
+
             delete usernameToId[players[socket.id].username];
             delete usernameToPID[players[socket.id].username];
+            removeUserFromAllChatRooms(players[socket.id].username);
+            
             delete players[socket.id];
         }
         else
@@ -64,16 +106,24 @@ io.on('connection', function (socket) {
             usernameToPID[username] = result.id;
 
             // add player to room list
-            if (rooms['downtown'] == null)
-                rooms['downtown'] = [player];
-            else
-                rooms['downtown'].push(player);
+            // if (rooms['downtown'] == null)
+            //     rooms['downtown'] = [player];
+            // else
+            //     rooms['downtown'].push(player);
 
             console.log('Sucessfully logged in! Players online: ' + JSON.stringify(players));
             // load game
             socket.join('downtown');
             // load local player
-            io.to(socket.id).emit('login success', result.inventory, usernameToPID);
+            let usernameToPlayerMap = {};
+
+            for (let sid in players) {
+                if (players.hasOwnProperty(sid)) {
+                    let player = players[sid];
+                    usernameToPlayerMap[player.username] = player;
+                }
+            }
+            io.to(socket.id).emit('login success', result.inventory, usernameToPlayerMap);
         }
         else {
             console.log('Invalid username/password. Please try again.');
@@ -119,8 +169,17 @@ io.on('connection', function (socket) {
         socket.broadcast.to(players[socket.id].room).emit('chatMessageResponse', players[socket.id], msg);
     })
 
-    socket.on('privateMessage', function(msg, toUser) {
-        io.to(usernameToId[toUser]).emit('privateMessageResponse', players[socket.id], msg);
+    socket.on('privateMessage', function(chatId, msg, chatObj=null) {
+        if (chatObj)
+            chatRooms[chatId] = chatObj
+        else
+            chatRooms[chatId].chatHistory += msg;
+        
+        let fromUser = players[socket.id].username;
+        chatRooms[chatId].chatMembers.forEach(user => {
+            if (user != fromUser)
+                io.to(usernameToId[user]).emit('privateMessageResponse', chatId, chatRooms[chatId], fromUser, msg);
+        });
     })
 
     socket.on('buddyRequest', function(toUser) {
@@ -140,7 +199,32 @@ io.on('connection', function (socket) {
         }
     })
 
-    socket.on('changeRoom', function(room) {
+    socket.on('rejectBuddyRequest', async (username) => {
+        if (usernameToId.hasOwnProperty(username))
+            io.to(usernameToId[username]).emit('rejectBuddyRequestResponse', players[socket.id].username);
+    })
+
+    socket.on('deleteBuddy', async function(username) {
+        let buddyID = await getIdFromUsername(username);
+
+        players[socket.id].buddies =  await deleteBuddy(players[socket.id].pid, buddyID);
+        io.to(socket.id).emit('deleteBuddyResponse', players[socket.id].buddies);
+
+        let updatedBuddies = await deleteBuddy(buddyID, players[socket.id].pid);
+        if (usernameToId.hasOwnProperty(username)) {
+            players[usernameToId[username]].buddies = updatedBuddies;
+            io.to(usernameToId[username]).emit('deleteBuddyResponse', players[usernameToId[username]].buddies);
+        }
+    })
+
+    socket.on('getOfflineIdfone', async (userId) => {
+        let result = await getIdfoneData(userId);
+        let avatar = await getUserAvatar(userId);
+        let player = new Player(-1, userId, result.username, '', avatar, false, -1, -1, null, result.level, result.isMember, result.idfone, null, null, null);
+        io.to(socket.id).emit('getOfflineIdfoneResponse', player);
+    })
+
+    function handleRoomChange(room) {
         let currentRoom = players[socket.id].room;
 
         // for all the players in this player's room, remove this player
@@ -158,54 +242,152 @@ io.on('connection', function (socket) {
         players[socket.id].room = room;
         socket.leave(currentRoom);
         socket.join(room);
+        console.log(`${players[socket.id].username} is in ${room}`);
+    }
+
+    socket.on('changeRoom', function(room) {
+        handleRoomChange(room);
     })
 
-    socket.on('changeClothes', async (equipped) => {
+    socket.on('changeClothes', async (equipped, fashionShowHost) => {
         // similar to invent, but of changed clothes
         var changed = {"0":[], "1":[], "2":[], "3":[], "4":[], "5": [], "6":[], "7":[], "8":[], "9":[]};
         var numChanged = 0;
         // check that the player has these clothes
-        for (let i = 0; i < equipped.length; i++) {
 
-            var itemId = equipped[i];
+        if (equipped != null) {
+            for (let i = 0; i < equipped.length; i++) {
 
-            if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
+                var itemId = equipped[i];
 
-            if (itemId == -1) { // nothing of this type is equipped
-                players[socket.id].avatar.equipped[i] = itemId;
-                changed[i].push(-1)
-                numChanged++;
-            }
+                if (players[socket.id].avatar.equipped[i] == itemId) continue; // this item is already equipped
 
-            var itemExistsInInventory = false;
-
-            // Check if the item exists in the inventory
-            var itemArray = players[socket.id].inventory[i];
-            
-            for (let j = 0; j < itemArray.length; j++) {
-                const item = itemArray[j];
-                if (item.id === itemId) {
-                    itemExistsInInventory = true;
-                    changed[i].push(item);
+                if (itemId == -1) { // nothing of this type is equipped
                     players[socket.id].avatar.equipped[i] = itemId;
+                    changed[i].push(-1)
                     numChanged++;
-                    break;
+                }
+
+                var itemExistsInInventory = false;
+
+                // Check if the item exists in the inventory
+                var itemArray = players[socket.id].inventory[i];
+                
+                for (let j = 0; j < itemArray.length; j++) {
+                    const item = itemArray[j];
+                    if (item.id === itemId) {
+                        itemExistsInInventory = true;
+                        changed[i].push(item);
+                        players[socket.id].avatar.equipped[i] = itemId;
+                        numChanged++;
+                        break;
+                    }
+                }
+
+                if (!itemExistsInInventory) {
+                    console.log(`Item ${itemId} is not in the inventory.`);
                 }
             }
 
-            if (!itemExistsInInventory) {
-                console.log(`Item ${itemId} is not in the inventory.`);
+            if (numChanged == 0) return;
+
+            socket.to(players[socket.id].room).emit("changeClothesResponse", changed);
+            io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
+
+            // update player avatar database
+            await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
+        }
+
+        if (fashionShowHost != "") {
+            // call funciton to calculate fasion show score based on theme and items equipped
+            // for now, set score to 5.
+            console.log('player changed in fashion show, sending score');
+            var scoring = {
+                theme: 1,
+                originality: 3,
+                rare: 0,
+                pet: 0
+            }
+            fashionShows[fashionShowHost].currentScores[players[socket.id].username] = 5;
+            io.to('fashionShow-' + fashionShowHost).emit('fashionShowUpdateScores', fashionShows[fashionShowHost].currentScores, players[socket.id].username, scoring);
+        }
+
+    })
+
+    socket.on('hostFashionShow', function() {
+
+        var player = players[socket.id];
+        var fashionShow = new FashionShow(player.username, player.avatar.gender);
+        fashionShows[player.username] = fashionShow;
+        socket.to('topModels').emit('updateFashionShowList', fashionShow);
+        handleRoomChange('fashionShow-' + player.username);
+    })
+
+    socket.on('joinFashionShow', function(fashionShowRoom) {
+
+        var playerUser = players[socket.id].username;
+        var hostUser = fashionShowRoom.split('-')[1];
+
+        fashionShows[hostUser].players.push(playerUser);
+        fashionShows[hostUser].playerCount++;
+
+        socket.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
+
+        for (const [roomName, sockets] of io.sockets.adapter.rooms) {
+            console.log(roomName);
+            if (roomName.startsWith("fashionShow-")) {
+                io.to(roomName).emit("addFashionShowPlayer", fashionShows[hostUser], playerUser);
             }
         }
 
-        if (numChanged == 0) return;
+        handleRoomChange(fashionShowRoom);
+    })
 
-        socket.to(players[socket.id].room).emit("changeClothesResponse", changed);
-        io.in(players[socket.id].room).emit('changeClothesResponse', socket.id, changed);
+    socket.on('getFashionShows', function() {
+        io.to(socket.id).emit('getFashionShowsResponse', fashionShows);
+    })
 
-        // update player avatar database
-        await changeEquipped(players[socket.id].pid, players[socket.id].avatar.equipped);
+    socket.on('startFashionShowRequest', function(hostUser) {
+        var thisFS = fashionShows[hostUser];
 
+        thisFS.started = true;
+        thisFS.currentRound = 1;
+        
+        thisFS.players.forEach(player => {
+            thisFS.currentScores[player] = 0;
+        });
+
+        fashionShows[hostUser] = thisFS;
+
+        io.to('topModels').emit('updateFashionShowList',  fashionShows[hostUser]);
+        io.to(`fashionShow-${hostUser}`).emit('startFashionShow',  fashionShows[hostUser]);
+    })
+
+    socket.on('selectFashionShowTheme', function(hostUser, theme) {
+        io.to(`fashionShow-${hostUser}`).emit('selectedFashionShowTheme', theme);
+        var timer = 20;
+
+
+        
+        var x = setInterval(function() {
+            timer-=1;
+            if (timer < 0) {
+                clearInterval(x);
+                // force close inventories for those not done, then they wil send a message for server to calc score
+                io.to(`fashionShow-${hostUser}`).emit('fashionShowForceClose');
+
+                var prePosingTimer = 10;
+
+                var y = setInterval(function() {
+                    prePosingTimer-=1;
+                    if (prePosingTimer < 0) {
+                        clearInterval(y);
+                        // force close inventories for those not done, then they wil send a message for server to calc score
+                        io.to(`fashionShow-${hostUser}`).emit('fashionShowStartPosing');
+                    }
+                }, 1000);
+            }
+        }, 1000);
     })
 });
 
