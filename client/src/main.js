@@ -1298,9 +1298,6 @@ uiScene.create = function() {
             // Add listener: click to switch to chat tab
             uiScene.addChatTabListener();
 
-            // Add listener: buddy request icons
-            uiScene.addBuddyRequestListener();
-
             instantMessenger.getChildByID("Buddy List").onmousedown = () => {
                 instantMessenger.getChildByID("Buddy List").style.background = 'linear-gradient(to bottom, #3fccf0 2px, #20a0f0 13px, #20a0f0)';
                 instantMessenger.getChildByID("Ignore List").style.background = 'white';
@@ -1447,6 +1444,9 @@ uiScene.create = function() {
             // Load buddy list and requests
             uiScene.loadBuddyList();
             instantMessenger.getChildByID('buddy-tabs-bottom-flexbox').innerHTML = buddyRequests;
+
+            // Add listener: buddy request icons
+            uiScene.addBuddyRequestListener();
         }
         
     });
