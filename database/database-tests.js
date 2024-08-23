@@ -9,19 +9,22 @@ main().catch(err => console.log(err));
 async function main() {
     await mongoose.connect(process.env.DB_URI);
     // await userMigration();
-     await addToInventory(0, 2, 13, false);
+    //  await addToInventory(0, 2, 13, false);
     // let val = await itemInInventory(0, 0, 0, false);
     // console.log(`This user has ${val} copies of this item.`);
-    // for (let i = 9; i < 16; i++) {
-    //     if (i == 13)
-    //         continue;
-    //     else
-    //         await addToInventory(0, 2, i, false);
-    // }
-    // for (let i = 0; i < 4; i++) {
-    //     await addToInventory(0, 5, i, false);
-    // }
-    // await addToInventory(0, 4, 2, false);
+    for (let i = 0; i < 10; i++) {
+        await addToInventory(6, 0, i, false);
+    }
+    for (let i = 0; i < 16; i++) {
+        await addToInventory(6, 1, i, false);
+    }
+    for (let i = 0; i < 16; i++) {
+        await addToInventory(6, 2, i, false);
+    }
+    for (let i = 0; i < 4; i++) {
+        await addToInventory(6, 5, i, false);
+    }
+    await addToInventory(6, 4, 2, false);
     // await addToInventory(0, 2, 13, false);
     // await addToInventory(0, 3, 10, false);
     // await addToInventory(0, 1, 15, false);
@@ -30,7 +33,7 @@ async function main() {
     //await changeEquipped(0, [0, 15, 13, -1, 2, 0, -1, -1, -1, -1]);
     // REGISTER USER
     // var newId = await getNumberOfUsers();
-    // await registerUser(newId, 'girl0416', '123', 'f');
+    // await registerUser(newId, '', '123', 'f');
     // await addAvatar(newId, newId, 'f', 1, 1, [8, 6, 2, -1, 2, 0, -1, -1, -1, -1]);
     //await changeEquipped(2, [-1, -1, -1, -1, -1, 3, -1, -1, -1]);
 
