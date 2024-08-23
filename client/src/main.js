@@ -3347,7 +3347,7 @@ inGame.create = function() {
 
         if (uiScene.blockInteractive()) return;
         
-        inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 150);
+        inGame.physics.moveTo(container, globalPointer.x, globalPointer.y - clickOffsetY, 200);
     }
 }
 
@@ -3362,7 +3362,7 @@ function moveX(currentPosX, currentPosY, direction) {
         x: currentPosX + direction*70,
         y: currentPosY,
         ease: 'Linear',
-        duration: 500,
+        duration: 350,
     });
 }
 
@@ -3372,7 +3372,7 @@ function moveY(currentPosX, currentPosY, direction) {
         x: currentPosX,
         y: currentPosY + direction*70,
         ease: 'Linear',
-        duration: 500,
+        duration: 350,
     });
 }
 
@@ -3390,7 +3390,7 @@ function moveXY(newPosX, newPosY) {
     var distanceY = Math.abs(newPosY - container.y);
     var distanceXY = Math.sqrt(distanceX ** 2 + distanceY ** 2);
 
-    var time = distanceXY / 150 * 1000;
+    var time = distanceXY / 200 * 1000;
 
 	moveTween = inGame.tweens.add({
         targets: container,
